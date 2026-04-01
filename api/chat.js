@@ -1,7 +1,9 @@
 // Core identity — always loaded (compact, ~200 tokens)
 const CORE = `You are Bvmbino AI Agent for Tiegbe Bamba.
 Profile: Pro basketball coach/trainer · Purgo Clean owner (Île-de-France) · Keo Jus founder (Accor Hotels CI) · Mindset formateur · Marketing/AI consultant · FR & EN.
-Rules: Direct, zero filler. Bold headers, numbered steps, bullet lists, markdown tables. End structured docs with [EXPORT:type]. Never start with "I". No AI disclaimers.`;
+Rules: Direct, zero filler. Bold headers, numbered steps, bullet lists, markdown tables. End structured docs with [EXPORT:type]. Never start with "I". No AI disclaimers.
+MAXIMIZE OUTPUT: Every response must be complete, detailed, and immediately actionable. Never truncate. Never say "I can help with that" — just deliver it. If a skill is active, execute it fully. Default to the most thorough, structured answer possible.
+AVAILABLE SKILLS: /content (posts), /proposal, /sales (script), /outreach (DM/email), /course (curriculum), /roadmap (90-day), /psych (behavior), /purgo (cleaning ops), /enhance (prompt), /schedule (time-block), /search (web), /scrape (URL), /pdf (export).`;
 
 // Skills — loaded only when relevant (~150-300 tokens each)
 const SKILLS = {
@@ -98,8 +100,8 @@ function detectSkill(messages, system) {
 // Token budget per task type
 function getMaxTokens(skill, requested) {
   if (requested) return requested;
-  const budget = { course: 3000, proposal: 2500, roadmap: 2500, sales: 2000, content: 1200, outreach: 800 };
-  return budget[skill] || 1500;
+  const budget = { course: 4000, proposal: 3000, roadmap: 3000, sales: 2500, content: 1500, outreach: 1000, present: 4000, schedule: 2000 };
+  return budget[skill] || 2000;
 }
 
 export default async function handler(req, res) {
@@ -135,29 +137,38 @@ export default async function handler(req, res) {
       },
     };
 
-    const geminiModel = 'gemini-2.5-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+    const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    let lastError = null;
 
-    const upstream = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiBody),
-    });
-
-    const data = await upstream.json();
-
-    if (!upstream.ok) {
-      return res.status(upstream.status).json({ error: data.error?.message || 'Gemini error', detail: data });
+    for (const geminiModel of models) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+      try {
+        const upstream = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiBody),
+        });
+        const data = await upstream.json();
+        if (!upstream.ok) {
+          lastError = data.error?.message || `Gemini error (${upstream.status})`;
+          // On quota/overload errors try fallback model, on auth errors stop immediately
+          if (upstream.status === 401 || upstream.status === 403) break;
+          continue;
+        }
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        return res.status(200).json({
+          id: 'gemini',
+          content: [{ type: 'text', text }],
+          model: geminiModel,
+          role: 'assistant',
+          skill: skill || 'general',
+        });
+      } catch (fetchErr) {
+        lastError = fetchErr.message;
+        continue;
+      }
     }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return res.status(200).json({
-      id: 'gemini',
-      content: [{ type: 'text', text }],
-      model: geminiModel,
-      role: 'assistant',
-      skill: skill || 'general',
-    });
+    return res.status(500).json({ error: lastError || 'All Gemini models failed' });
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(500).json({ error: 'Proxy error', detail: err.message });
