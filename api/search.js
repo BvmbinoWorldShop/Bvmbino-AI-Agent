@@ -4,38 +4,48 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const apiKey = process.env.GEMINI_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_KEY not set' });
-
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { query, count = 6 } = body;
     if (!query) return res.status(400).json({ error: 'query required' });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Search and summarize: ${query}` }] }],
-          tools: [{ googleSearch: {} }],
-          generationConfig: { maxOutputTokens: 1024 },
-        }),
+    // Jina reader + DuckDuckGo lite — no API key, no quota, always free
+    const ddgUrl = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`;
+    const jinaUrl = `https://r.jina.ai/${ddgUrl}`;
+
+    const response = await fetch(jinaUrl, {
+      headers: {
+        'Accept': 'text/plain',
+        'X-Return-Format': 'markdown',
+        'X-Timeout': '15',
       }
-    );
+    });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'Gemini search error');
+    if (!response.ok) throw new Error(`Search fetch ${response.status}`);
+    const text = await response.text();
 
-    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const chunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    // Parse result links and snippets from markdown
+    const results = [];
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length && results.length < count; i++) {
+      const linkMatch = lines[i].match(/\[(.+?)\]\((https?:\/\/[^\)]+)\)/);
+      if (linkMatch && !linkMatch[2].includes('duckduckgo.com')) {
+        const snippet = lines[i + 1]?.replace(/[#*>`]/g, '').trim() || '';
+        results.push({
+          title: linkMatch[1].trim(),
+          url: linkMatch[2],
+          description: snippet.slice(0, 150),
+        });
+      }
+    }
 
-    const results = chunks.slice(0, count).map(c => ({
-      title: c.web?.title || query,
-      url: c.web?.uri || '',
-      description: c.web?.title || '',
-    }));
+    // Answer: extract clean text summary from the markdown
+    const answer = text
+      .split('\n')
+      .filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('[') && !l.includes('duckduckgo'))
+      .slice(0, 5)
+      .join(' ')
+      .slice(0, 500);
 
     return res.status(200).json({ results, answer, query });
   } catch (err) {

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Bvmbino AI Agent</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 :root{--bg:#080809;--s1:#0f0f11;--s2:#161619;--s3:#1e1e22;--s4:#26262b;--bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);--bd3:rgba(255,255,255,.18);--t1:#ededf0;--t2:#8888a0;--t3:#4a4a60;--t4:#2e2e3a;--pu:#7C5CFC;--pu2:#9b7dff;--pu3:rgba(124,92,252,.15);--gn:#22c55e;--am:#f59e0b;--rd:#ef4444;--r:10px;--rsm:6px;--font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
@@ -16,7 +16,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .lmark{width:34px;height:34px;background:var(--pu);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
 .lmark::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%)}
-.lname{font-size:15px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.lname{font-size:20px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;line-height:1;color:var(--t1)}
 .ltag{font-size:9px;color:var(--t3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1.2px}
 .nbtn{width:100%;padding:8px 12px;background:var(--pu);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity .15s,transform .1s}
 .nbtn:hover{opacity:.88}.nbtn:active{transform:scale(.97)}
@@ -53,7 +53,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 /* WELCOME */
 .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0}
 .worb{width:64px;height:64px;background:var(--pu);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px}
-.wt{font-size:26px;font-weight:700;letter-spacing:-1px;margin-bottom:10px}
+.wt{font-size:34px;font-family:'Bebas Neue',sans-serif;letter-spacing:3px;margin-bottom:10px}
 .ws{font-size:13px;color:var(--t2);max-width:360px;line-height:1.6;margin-bottom:28px}
 .wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:460px}
 .wcard{padding:14px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);text-align:left;cursor:pointer;transition:all .15s}
