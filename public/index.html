@@ -832,6 +832,24 @@ async function streamResponse(res){
     mw.appendChild(acts);
     unlock();
     updTok(full.length/3.5);addMem('response',full.slice(0,90));scrollBot();
+    // Auto-save session context after every AI response (silent, no toast)
+    try{
+      const userMsgs=msgs.filter(m=>m.role==='user');
+      const aiMsgs=msgs.filter(m=>m.role==='assistant');
+      if(userMsgs.length){
+        const topic=userMsgs[0].content.slice(0,80);
+        const requests=userMsgs.map(m=>'• '+m.content.slice(0,80)).join('\n');
+        const lastAI=aiMsgs.length?'\nLast answer: '+aiMsgs[aiMsgs.length-1].content.replace(/\*\*/g,'').slice(0,200):'';
+        const summary=`Topic: ${topic}\n${requests}${lastAI}`;
+        const entry={date:new Date().toLocaleDateString('en-GB'),summary};
+        const log=loadSessionMemory();
+        // Update last entry if same date, else push new
+        if(log.length&&log[log.length-1].date===entry.date){log[log.length-1]=entry;}
+        else{log.push(entry);}
+        if(log.length>MEM_MAX)log.splice(0,log.length-MEM_MAX);
+        localStorage.setItem(MEM_KEY,JSON.stringify(log));
+      }
+    }catch{}
   }
 }
 
@@ -876,22 +894,32 @@ function loadSessionMemory(){
 
 function saveSessionMemory(){
   if(!msgs.length)return;
-  const summary=msgs.filter(m=>m.role==='user').map(m=>'• '+m.content.slice(0,120)).join('\n');
-  if(!summary.trim())return;
+  // Build richer summary: topic + key user requests + last AI decision (truncated)
+  const userMsgs=msgs.filter(m=>m.role==='user');
+  const aiMsgs=msgs.filter(m=>m.role==='assistant');
+  if(!userMsgs.length)return;
+  // Topic = first user message (trimmed)
+  const topic=userMsgs[0].content.slice(0,80);
+  // Key requests = all user messages, max 80 chars each
+  const requests=userMsgs.map(m=>'• '+m.content.slice(0,80)).join('\n');
+  // Last AI output snippet (max 200 chars) to remember decisions
+  const lastAI=aiMsgs.length?'\nLast answer: '+aiMsgs[aiMsgs.length-1].content.replace(/\*\*/g,'').slice(0,200):'';
+  const summary=`Topic: ${topic}\n${requests}${lastAI}`;
   const entry={date:new Date().toLocaleDateString('en-GB'),summary};
   const log=loadSessionMemory();
   log.push(entry);
   if(log.length>MEM_MAX)log.splice(0,log.length-MEM_MAX);
   try{localStorage.setItem(MEM_KEY,JSON.stringify(log));}catch{}
-  addMem('session saved',entry.date+' — '+msgs.filter(m=>m.role==='user').length+' exchanges');
+  addMem('session saved',entry.date+' — '+userMsgs.length+' exchanges');
   toast('Session saved to memory ✓');
 }
 
 function getMemoryContext(){
   const log=loadSessionMemory();
   if(!log.length)return'';
-  const recent=log.slice(-5).map(e=>`[${e.date}]\n${e.summary}`).join('\n\n');
-  return`\n\nPREVIOUS SESSION CONTEXT (use to avoid re-explaining):\n${recent}`;
+  // Load last 3 sessions only — compact, ~300 tokens max
+  const recent=log.slice(-3).map(e=>`[${e.date}] ${e.summary.slice(0,300)}`).join('\n---\n');
+  return`\n\n## MEMORY (previous sessions — read before answering, don't repeat this back):\n${recent}\n## END MEMORY`;
 }
 
 // ── BUILD SYSTEM PROMPT ──
