@@ -191,6 +191,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <button class="qbtn" onclick="slash('strategy')"><span class="qi" style="background:rgba(34,197,94,.08)">📈</span><span>Strategy</span><span class="qsub">/strategy</span></button>
       <button class="qbtn" onclick="slash('scrape')"><span class="qi" style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span class="qsub">/scrape</span></button>
       <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
+      <button class="qbtn" onclick="slash('schedule')"><span class="qi" style="background:rgba(34,197,94,.1)">📅</span><span>Schedule Builder</span><span class="qsub">/schedule</span></button>
       <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(124,92,252,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
       <button class="qbtn" onclick="slash('present')"><span class="qi" style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span class="qsub">/present</span></button>
       <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
@@ -224,15 +225,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <div class="welcome" id="welcome">
         <div class="worb">🤖</div>
         <div class="wt">Bvmbino AI Agent</div>
-        <div class="ws">Your AI business partner — web search, web scraping, course builder, PDF export, and full business automation powered by Gemini 2.5 Flash.</div>
+        <div class="ws">Your personal expert AI — communication, sales, business scaling, content creation & script writing. Powered by Gemini 2.5 Flash.</div>
         <div class="wgrid">
-          <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">Growth plans, market analysis, investor docs</div></div>
-          <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Marketing Campaign</div><div class="wcd">Email sequences, ads, social content</div></div>
-          <div class="wcard" onclick="slash('scrape')"><div class="wci">🌐</div><div class="wct">Scrape Website</div><div class="wcd">Extract data from any URL instantly</div></div>
+          <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Scale My Business</div><div class="wcd">Growth systems, B2B acquisition, revenue funnels</div></div>
+          <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Content & Scripts</div><div class="wcd">Social posts, sales scripts, VSL, video narration</div></div>
+          <div class="wcard" onclick="slash('schedule')"><div class="wci">📅</div><div class="wct">Schedule Builder</div><div class="wcd">Weekly plan — training, coaching, family, business</div></div>
           <div class="wcard" onclick="slash('course')"><div class="wci">🎓</div><div class="wct">Course Builder</div><div class="wcd">Full curriculum with modules, activities & pricing</div></div>
-          <div class="wcard" onclick="slash('present')"><div class="wci">🖥️</div><div class="wct">Presentation</div><div class="wcd">Slide-by-slide deck with speaker notes</div></div>
+          <div class="wcard" onclick="slash('sales')"><div class="wci">💰</div><div class="wct">Sales Script</div><div class="wcd">Close more clients — scripts, objections, follow-up</div></div>
         </div>
-        <div class="shint">Type <code>/course topic</code> · <code>/present topic</code> · <code>/search query</code> · <code>/resume</code></div>
+        <div class="shint">Type <code>/schedule</code> · <code>/sales</code> · <code>/course topic</code> · <code>/search query</code> · <code>/resume</code></div>
       </div>
     </div>
   </div>
@@ -281,7 +282,8 @@ const CMDS=[
   {cmd:'/course',   desc:'Build full course: /course [topic]',   icon:'🎓'},
   {cmd:'/scrape',   desc:'Scrape website: /scrape [url]',        icon:'🌐'},
   {cmd:'/search',   desc:'Web search: /search [query]',          icon:'🔍'},
-{cmd:'/present',  desc:'Build presentation: /present [topic]', icon:'🖥️'},
+  {cmd:'/schedule', desc:'Build weekly schedule as PDF',          icon:'📅'},
+  {cmd:'/present',  desc:'Build presentation: /present [topic]', icon:'🖥️'},
   {cmd:'/automate', desc:'Automation workflow design',            icon:'⚡'},
   {cmd:'/pitch',    desc:'Investor pitch content',               icon:'💼'},
   {cmd:'/email',    desc:'Write professional email',             icon:'✉️'},
@@ -296,6 +298,7 @@ const PROMPTS={
   scrape:`I want to scrape a website. Please ask me which URL I should analyze and what information I'm looking for.`,
   search:`I want to search the web. Please ask me what I'd like to search for.`,
 course:`Build me a complete, professional training course curriculum. Ask me these 3 questions first: (1) What is the course topic? (2) Who is the target audience? (3) What is the delivery format (online / in-person / hybrid)? Then deliver the full course structure: **Program Title** + tagline, **Transformation Promise** (what learners gain), **Module Breakdown** (6-8 modules — each with: title, objective, 3-5 key content points, 1 hands-on activity), **Delivery Format & Schedule**, **Pricing Tiers** (Basic / Premium / VIP with what's included), **Module 1 Quick Win** (something learners apply in the first session). Format as a complete structured document ready to use. [EXPORT:course]`,
+  schedule:`Build my complete optimized weekly schedule. I need to organize all areas of my life: 🏀 Basketball personal training, 🏀 Basketball coaching sessions, 💼 Purgo Clean operations, 🥤 Keo Jus business, 🧠 Mindset formation & courses, 🎬 Content creation, 👨‍👩‍👧 Family time, 💪 Personal fitness, 📚 Learning & AI, 📣 Consulting & marketing. First ask me 3 quick questions: (1) How many days/week do I train personally? (2) How many coaching sessions per week do I run? (3) What are my fixed family commitments? Then build my full 7-day time-blocked schedule with zones, weekly KPIs, and a Sunday planning ritual. [EXPORT:schedule]`,
   present:`Build me a complete professional presentation. Ask me: (1) Topic/subject of the presentation, (2) Target audience (athletes, clients, corporate, students), (3) How many slides (default 10-12). Then deliver each slide as: **SLIDE N — TITLE**, bullet points (3-5 per slide), speaker note. Include: title slide, agenda, problem/challenge, solution, key modules or steps, proof/testimonials placeholder, call to action, closing. Format clean and ready to present. [EXPORT:presentation]`,
   pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
   email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
@@ -421,6 +424,9 @@ function detectIntent(text){
   if(t.startsWith('/search ')){
     return{type:'search',query:text.slice(8).trim()};
   }
+  if(t.startsWith('/schedule')){
+    return{type:'schedule'};
+  }
   if(t.startsWith('/course ')){
     return{type:'course',topic:text.slice(8).trim()};
   }
@@ -466,6 +472,7 @@ async function send(forcedText){
     if(intent.type==='scrape') await doScrape(intent.url,text);
     else if(intent.type==='search') await doSearch(intent.query);
     else if(intent.type==='pdf') await doPdf();
+    else if(intent.type==='schedule'){await callAI();await doPdf();}
     else if(intent.type==='course') await callAI();
     else if(intent.type==='present') await callAI();
     return;
