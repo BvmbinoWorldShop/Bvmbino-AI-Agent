@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       geminiBody.systemInstruction = { parts: [{ text: system }] };
     }
 
-    const geminiModel = 'gemini-1.5-flash';
+    const geminiModel = 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
     const upstream = await fetch(url, {
