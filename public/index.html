@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bvmbino AI Agent</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#080809;--s1:#0f0f11;--s2:#161619;--s3:#1e1e22;--s4:#26262b;--bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);--bd3:rgba(255,255,255,.18);--t1:#ededf0;--t2:#8888a0;--t3:#4a4a60;--t4:#2e2e3a;--pu:#7C5CFC;--pu2:#9b7dff;--pu3:rgba(124,92,252,.15);--gn:#22c55e;--am:#f59e0b;--rd:#ef4444;--r:10px;--rsm:6px;--font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;font-size:14px;line-height:1.5}
+/* SIDEBAR */
+.sb{width:256px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:10}
+.sb-top{padding:18px 14px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.lmark{width:34px;height:34px;background:var(--pu);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
+.lmark::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%)}
+.lname{font-size:15px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.ltag{font-size:9px;color:var(--t3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1.2px}
+.nbtn{width:100%;padding:8px 12px;background:var(--pu);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity .15s,transform .1s}
+.nbtn:hover{opacity:.88}.nbtn:active{transform:scale(.97)}
+.sbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.4px;font-family:var(--mono);margin-bottom:7px}
+.ssect{padding:10px 14px 6px;flex-shrink:0}
+.mtabs{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mtab{padding:7px 8px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);color:var(--t3);font-size:10px;font-family:var(--mono);cursor:pointer;text-align:center;transition:all .15s;position:relative;overflow:hidden}
+.mtab:hover{color:var(--t2);border-color:var(--bd2)}.mtab.on{background:var(--pu3);border-color:rgba(124,92,252,.4);color:var(--pu2)}
+.mtab.on::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--pu2);opacity:.5}
+.qacts{display:flex;flex-direction:column;gap:2px}
+.qbtn{padding:8px 10px;background:transparent;border:1px solid transparent;border-radius:var(--rsm);color:var(--t2);font-size:12px;font-family:var(--font);cursor:pointer;text-align:left;display:flex;align-items:center;gap:9px;transition:all .12s;width:100%}
+.qbtn:hover{background:var(--s3);border-color:var(--bd);color:var(--t1)}
+.qi{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.qsub{font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)}
+.sb-hist{flex:1;overflow-y:auto;padding:6px 10px 14px}
+.hi{padding:7px 10px;border-radius:var(--rsm);color:var(--t3);font-size:11px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .1s;display:flex;align-items:center;gap:6px}
+.hi:hover{background:var(--s2);color:var(--t2)}.hdot{width:4px;height:4px;background:var(--t4);border-radius:50%;flex-shrink:0}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{height:50px;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;background:rgba(8,8,9,.8);backdrop-filter:blur(10px)}
+.tb-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.tb-title{font-size:13px;font-weight:500;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px}
+.b-pu{background:var(--pu3);color:var(--pu2);border:1px solid rgba(124,92,252,.25)}
+.b-gn{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.b-am{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.pulse{width:5px;height:5px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.icobtn{width:30px;height:30px;background:none;border:1px solid var(--bd);border-radius:var(--rsm);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.icobtn:hover{background:var(--s2);color:var(--t2);border-color:var(--bd2)}
+/* CHAT */
+.chat{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.ci{max-width:720px;margin:0 auto;padding:28px 20px 20px;display:flex;flex-direction:column;min-height:100%}
+/* WELCOME */
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0}
+.worb{width:64px;height:64px;background:var(--pu);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px}
+.wt{font-size:26px;font-weight:700;letter-spacing:-1px;margin-bottom:10px}
+.ws{font-size:13px;color:var(--t2);max-width:360px;line-height:1.6;margin-bottom:28px}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:460px}
+.wcard{padding:14px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);text-align:left;cursor:pointer;transition:all .15s}
+.wcard:hover{background:var(--s3);border-color:var(--bd2);transform:translateY(-1px)}.wcard:active{transform:scale(.98)}
+.wci{font-size:16px;margin-bottom:7px}.wct{font-size:12px;font-weight:600;margin-bottom:3px}.wcd{font-size:10px;color:var(--t3);line-height:1.4}
+.shint{margin-top:20px;font-size:10px;color:var(--t3);font-family:var(--mono)}
+.shint code{background:var(--s3);padding:1px 5px;border-radius:3px;color:var(--pu2);border:1px solid var(--bd)}
+/* MESSAGES */
+.mrow{display:flex;gap:11px;padding:6px 0}.mrow.user{flex-direction:row-reverse}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:3px}
+.av-ai{background:var(--pu);color:#fff;font-family:var(--mono);font-size:8px}.av-us{background:var(--s4);color:var(--t2)}
+.mwrap{flex:1;min-width:0;max-width:85%}.mrow.user .mwrap{display:flex;flex-direction:column;align-items:flex-end}
+.mmeta{font-size:10px;color:var(--t3);font-family:var(--mono);margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mmtag{font-size:8px;padding:1px 5px;background:var(--pu3);color:var(--pu2);border-radius:10px;border:1px solid rgba(124,92,252,.2)}
+.tool-tag{font-size:8px;padding:1px 5px;border-radius:10px;border:1px solid}
+.tool-tag.search{background:rgba(34,197,94,.08);color:#4ade80;border-color:rgba(34,197,94,.2)}
+.tool-tag.scrape{background:rgba(245,158,11,.1);color:#fbbf24;border-color:rgba(245,158,11,.2)}
+.tool-tag.image{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)}
+.tool-tag.pdf{background:rgba(99,179,237,.1);color:#60a5fa;border-color:rgba(99,179,237,.2)}
+.bubble{padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.68}
+.b-ai{background:var(--s2);border:1px solid var(--bd);border-top-left-radius:3px}
+.b-us{background:var(--pu);color:#fff;border-top-right-radius:3px}
+.bubble strong{font-weight:600;color:var(--pu2)}.b-us strong{color:rgba(255,255,255,.9)}
+.bubble em{color:var(--t2);font-style:italic}
+.bubble .bh{font-size:14px;font-weight:700;color:var(--t1);display:block;margin:12px 0 5px;letter-spacing:-.2px}
+.bubble .bh:first-child{margin-top:0}
+.bubble .bl{display:flex;gap:7px;margin:3px 0}.bubble .bld{color:var(--pu2);flex-shrink:0;line-height:1.68}
+.bubble .bn{display:flex;gap:8px;margin:3px 0}.bubble .bnn{color:var(--pu2);flex-shrink:0;font-size:11px;font-family:var(--mono);line-height:1.68;min-width:18px}
+.bubble code{font-family:var(--mono);font-size:11px;background:var(--s4);padding:1px 6px;border-radius:4px;color:var(--pu2);border:1px solid var(--bd)}
+.b-us code{background:rgba(0,0,0,.2);color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.15)}
+.bubble pre{background:var(--s4);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;font-family:var(--mono);font-size:11px;line-height:1.6;color:#c9d1d9}
+.bubble pre code{background:none;padding:0;border:none;color:inherit}
+.bubble table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.bubble th{padding:7px 10px;background:var(--s3);color:var(--t2);font-size:10px;text-transform:uppercase;letter-spacing:.8px;text-align:left;border-bottom:1px solid var(--bd2)}
+.bubble td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--t1)}.bubble tr:last-child td{border-bottom:none}
+/* TOOL RESULT BANNERS */
+.tool-banner{padding:8px 12px;border-radius:var(--rsm);margin-bottom:8px;font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.tb-search{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);color:#4ade80}
+.tb-scrape{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);color:#fbbf24}
+.tb-image{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:#f87171}
+/* EXPORT CARD */
+.xcard{margin-top:10px;padding:12px 14px;background:var(--s3);border:1px solid var(--bd);border-radius:var(--r);animation:fi .3s ease}
+.xhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.xtype{font-size:9px;font-family:var(--mono);padding:2px 7px;background:rgba(245,158,11,.1);color:#fbbf24;border-radius:4px;border:1px solid rgba(245,158,11,.2);text-transform:uppercase;letter-spacing:.5px}
+.xlabel{font-size:11px;color:var(--t2);font-family:var(--mono)}
+.xbtns{display:flex;gap:5px;flex-wrap:wrap}
+.xbtn{padding:5px 10px;background:var(--s2);border:1px solid var(--bd2);border-radius:5px;color:var(--t2);font-size:10px;font-family:var(--mono);cursor:pointer;transition:all .1s;display:flex;align-items:center;gap:4px;text-decoration:none}
+.xbtn:hover{background:var(--s3);color:var(--t1);border-color:var(--bd3)}
+/* IMAGE CARD */
+.imgcard{margin-top:10px;background:var(--s3);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;animation:fi .3s ease}
+.imgcard img{width:100%;display:block}
+.imgcard-foot{padding:10px 14px;display:flex;align-items:center;gap:8px}
+.imgcard-label{font-size:10px;font-family:var(--mono);color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.img-spinner{width:100%;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--s3)}
+.spin-ring{width:28px;height:28px;border:2px solid var(--bd2);border-top-color:var(--pu);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-label{font-size:10px;font-family:var(--mono);color:var(--t3)}
+/* MSG ACTIONS */
+.macts{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity .15s}
+.mrow:hover .macts{opacity:1}
+.mact{padding:3px 7px;background:var(--s3);border:1px solid var(--bd);border-radius:5px;color:var(--t3);font-size:10px;cursor:pointer;font-family:var(--mono);transition:all .1s;display:flex;align-items:center;gap:4px}
+.mact:hover{background:var(--s4);color:var(--t2);border-color:var(--bd2)}.mact.liked{color:var(--gn);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.07)}
+/* TYPING */
+.tbub{padding:11px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;border-top-left-radius:3px;display:flex;align-items:center;gap:5px}
+.td{width:5px;height:5px;background:var(--t3);border-radius:50%;animation:tdance 1.2s ease-in-out infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tdance{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+@keyframes fi{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+/* INPUT */
+.inzone{padding:14px 18px 18px;border-top:1px solid var(--bd);flex-shrink:0}
+.inwrap{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);transition:border-color .15s,box-shadow .15s;position:relative}
+.inwrap:focus-within{border-color:rgba(124,92,252,.5);box-shadow:0 0 0 3px rgba(124,92,252,.07)}
+.intop{display:flex;align-items:flex-end}
+#inp{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:var(--font);font-size:13px;padding:13px 14px 10px;resize:none;max-height:160px;min-height:46px;line-height:1.55;width:100%}
+#inp::placeholder{color:var(--t3)}
+.sbtn{width:36px;height:36px;background:var(--pu);border:none;border-radius:7px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;flex-shrink:0;margin:0 8px 7px 0;font-size:14px}
+.sbtn:hover{opacity:.85}.sbtn:active{transform:scale(.93)}.sbtn:disabled{opacity:.3;cursor:default}
+.infoot{display:flex;align-items:center;padding:0 10px 8px;gap:5px;flex-wrap:wrap}
+.pill{padding:2px 8px;border-radius:20px;background:var(--s3);border:1px solid var(--bd);color:var(--t3);font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .1s;display:flex;align-items:center;gap:3px;letter-spacing:.3px}
+.pill:hover{color:var(--t2);border-color:var(--bd2)}.pill.on{background:var(--pu3);border-color:rgba(124,92,252,.35);color:var(--pu2)}
+.pdot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.kbhint{margin-left:auto;font-size:9px;color:var(--t4);font-family:var(--mono)}
+/* SLASH MENU */
+.smenu{position:absolute;bottom:calc(100% + 6px);left:10px;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);padding:5px;display:none;min-width:240px;z-index:50;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.smenu.show{display:block}
+.si{padding:7px 10px;border-radius:var(--rsm);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .1s}
+.si:hover,.si.sel{background:var(--s3)}
+.scmd{font-family:var(--mono);color:var(--pu2);font-size:11px;min-width:90px}.sdesc{color:var(--t3);font-size:11px}
+/* MEMORY PANEL */
+.mpanel{width:224px;background:var(--s1);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0}
+.mph{padding:12px 14px;border-bottom:1px solid var(--bd);font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);display:flex;align-items:center;gap:7px;flex-shrink:0}
+.mpe{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.me{padding:9px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);transition:border-color .5s}
+.mek{font-family:var(--mono);color:var(--pu2);font-size:8px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;opacity:.8}
+.mev{color:var(--t2);font-size:11px;line-height:1.4}.me.new{border-color:rgba(124,92,252,.45)}
+.mpf{border-top:1px solid var(--bd);padding:10px 14px;flex-shrink:0}
+.mpst{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mpsl{font-size:9px;color:var(--t3);font-family:var(--mono)}.mpsv{font-size:9px;color:var(--pu2);font-family:var(--mono)}
+.tbar{height:2px;background:var(--s4);border-radius:1px;overflow:hidden}.tfill{height:100%;background:var(--pu);border-radius:1px;transition:width .6s ease}
+/* TOAST */
+.twrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.toast{padding:8px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:20px;font-size:11px;font-family:var(--mono);color:var(--t1);white-space:nowrap;animation:tin .2s ease,tout .3s ease 1.7s forwards}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes tout{from{opacity:1}to{opacity:0;transform:translateY(-4px)}}
+.sc{display:inline-block;width:2px;height:14px;background:var(--pu);margin-left:2px;animation:tdance .8s infinite;vertical-align:middle}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}::-webkit-scrollbar-track{background:transparent}
+.mb-menu{display:none;background:none;border:1px solid var(--bd);color:var(--t3);cursor:pointer;border-radius:var(--rsm);width:30px;height:30px;align-items:center;justify-content:center;font-size:15px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9}
+@media(max-width:960px){.mpanel{display:none}}
+@media(max-width:640px){.sb{position:fixed;top:0;bottom:0;left:0;z-index:10;transform:translateX(-100%)}.sb.open{transform:none}.ov.open{display:block}.mb-menu{display:flex}.wgrid{grid-template-columns:1fr}.ci{padding:18px 14px 14px}}
+</style>
+</head>
+<body>
+<div class="ov" id="ov" onclick="closeSb()"></div>
+<aside class="sb" id="sb">
+  <div class="sb-top">
+    <div class="logo">
+      <div class="lmark">BV</div>
+      <div><div class="lname">Bvmbino</div><div class="ltag">AI Agent · v2.1</div></div>
+    </div>
+    <button class="nbtn" onclick="newChat()">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      New conversation
+    </button>
+  </div>
+  <div class="ssect">
+    <div class="sbl">AI Engine</div>
+    <div class="mtabs">
+      <div class="mtab on" onclick="setModel(this,'claude')">Claude</div>
+      <div class="mtab" onclick="setModel(this,'gpt4')">GPT-4o</div>
+      <div class="mtab" onclick="setModel(this,'gemini')">Gemini</div>
+      <div class="mtab" onclick="setModel(this,'grok')">Grok</div>
+    </div>
+  </div>
+  <div class="ssect">
+    <div class="sbl">Tools</div>
+    <div class="qacts">
+      <button class="qbtn" onclick="slash('resume')"><span class="qi" style="background:rgba(124,92,252,.12)">📄</span><span>Resume Builder</span><span class="qsub">/resume</span></button>
+      <button class="qbtn" onclick="slash('campaign')"><span class="qi" style="background:rgba(245,158,11,.1)">📣</span><span>Marketing</span><span class="qsub">/campaign</span></button>
+      <button class="qbtn" onclick="slash('strategy')"><span class="qi" style="background:rgba(34,197,94,.08)">📈</span><span>Strategy</span><span class="qsub">/strategy</span></button>
+      <button class="qbtn" onclick="slash('scrape')"><span class="qi" style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span class="qsub">/scrape</span></button>
+      <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
+      <button class="qbtn" onclick="slash('image')"><span class="qi" style="background:rgba(239,68,68,.08)">🎨</span><span>Generate Image</span><span class="qsub">/image</span></button>
+      <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
+    </div>
+  </div>
+  <div class="ssect" style="padding-bottom:4px"><div class="sbl">Recent</div></div>
+  <div class="sb-hist" id="hist">
+    <div class="hi"><span class="hdot"></span>Keo Jus brand strategy Q2</div>
+    <div class="hi"><span class="hdot"></span>Purgo Clean B2B acquisition</div>
+    <div class="hi"><span class="hdot"></span>LinkedIn content calendar</div>
+    <div class="hi"><span class="hdot"></span>Investor pitch outline</div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <button class="mb-menu" onclick="openSb()">☰</button>
+      <div class="tb-title" id="tbtitle">New conversation</div>
+    </div>
+    <div class="badge b-gn"><span class="pulse"></span>Memory</div>
+    <div class="badge b-am" id="toolbadge" style="display:none">⚡ tool active</div>
+    <div class="badge b-pu" id="mbadge">Claude Sonnet</div>
+    <button class="icobtn" onclick="newChat()" title="New chat (Ctrl+K)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="ci" id="ci">
+      <div class="welcome" id="welcome">
+        <div class="worb">🤖</div>
+        <div class="wt">Bvmbino AI Agent</div>
+        <div class="ws">Multi-model AI with real tools — web search, scraping, image generation, PDF export, and business automation.</div>
+        <div class="wgrid">
+          <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">Growth plans, market analysis, investor docs</div></div>
+          <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Marketing Campaign</div><div class="wcd">Email sequences, ads, social content</div></div>
+          <div class="wcard" onclick="slash('scrape')"><div class="wci">🌐</div><div class="wct">Scrape Website</div><div class="wcd">Extract data from any URL instantly</div></div>
+          <div class="wcard" onclick="slash('image')"><div class="wci">🎨</div><div class="wct">Generate Image</div><div class="wcd">AI images via Flux — logos, visuals, ads</div></div>
+        </div>
+        <div class="shint">Type <code>/scrape url</code> · <code>/search query</code> · <code>/image prompt</code> · <code>/resume</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="inzone">
+    <div class="inwrap" id="inwrap">
+      <div class="smenu" id="smenu"></div>
+      <div class="intop">
+        <textarea id="inp" placeholder="Ask anything… or type / for commands" rows="1" oninput="onInp()" onkeydown="onKey(event)"></textarea>
+        <button class="sbtn" id="sbtn" onclick="send()">↑</button>
+      </div>
+      <div class="infoot">
+        <div class="pill on" id="p-mem" onclick="togglePill(this)"><span class="pdot"></span>memory</div>
+        <div class="pill" id="p-web" onclick="togglePill(this)"><span class="pdot"></span>web search</div>
+        <div class="pill" id="p-img" onclick="togglePill(this)"><span class="pdot"></span>image gen</div>
+        <div class="pill" id="p-pdf" onclick="togglePill(this)"><span class="pdot"></span>PDF export</div>
+        <span class="kbhint">↵ send · ⇧↵ newline · Ctrl+K new</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<aside class="mpanel">
+  <div class="mph"><span class="pulse"></span>Agent Memory</div>
+  <div class="mpe" id="mems">
+    <div class="me"><div class="mek">user</div><div class="mev">Tiegbe Bamba · Entrepreneur · Purgo Clean · Keo Jus · Marketing consultancy</div></div>
+    <div class="me"><div class="mek">active model</div><div class="mev" id="mem-model">Claude Sonnet 4</div></div>
+    <div class="me"><div class="mek">project</div><div class="mev">Bvmbino AI Agent — cross-platform app</div></div>
+    <div class="me"><div class="mek">tools</div><div class="mev" id="mem-tools">memory</div></div>
+  </div>
+  <div class="mpf">
+    <div class="mpst"><span class="mpsl">Context window</span><span class="mpsv" id="tok-pct">1.8%</span></div>
+    <div class="mpst" style="margin-bottom:8px"><span class="mpsl" id="tok-count">1,840 / 100k tokens</span></div>
+    <div class="tbar"><div class="tfill" id="tbar" style="width:1.8%"></div></div>
+  </div>
+</aside>
+
+<div class="twrap" id="toasts"></div>
+
+<script>
+const MODELS={claude:'Claude Sonnet',gpt4:'GPT-4o',gemini:'Gemini 1.5',grok:'Grok 2'};
+const CMDS=[
+  {cmd:'/resume',   desc:'Build professional resume',     icon:'📄'},
+  {cmd:'/campaign', desc:'Create marketing campaign',     icon:'📣'},
+  {cmd:'/strategy', desc:'Business growth strategy',      icon:'📈'},
+  {cmd:'/scrape',   desc:'Scrape website: /scrape [url]', icon:'🌐'},
+  {cmd:'/search',   desc:'Web search: /search [query]',   icon:'🔍'},
+  {cmd:'/image',    desc:'Generate image: /image [desc]', icon:'🎨'},
+  {cmd:'/automate', desc:'Automation workflow design',     icon:'⚡'},
+  {cmd:'/pitch',    desc:'Investor pitch content',        icon:'💼'},
+  {cmd:'/email',    desc:'Write professional email',      icon:'✉️'},
+  {cmd:'/pdf',      desc:'Export last answer as PDF',     icon:'📋'},
+];
+
+const PROMPTS={
+  resume:`Build me a powerful one-page professional resume. Name: Tiegbe Bamba (NextLevel). Former professional basketball player: 15+ years, multiple countries, Côte d'Ivoire national team, Portland State University — Master's in Communication & Marketing. Current ventures: Purgo Clean (cleaning services, Île-de-France, France), Keo Jus (natural juice distribution to Accor Group hotels in Côte d'Ivoire), marketing consultancy. Format with bold section headers: Professional Summary, Core Competencies, Professional Experience, Education, Languages. Make it executive-level and impactful. [EXPORT:resume]`,
+  campaign:`Create a complete marketing campaign for Keo Jus — premium natural fruit juice brand distributing to Accor Group hotels in Côte d'Ivoire. Target audience: hotel procurement managers and F&B directors. Deliver: (1) 3-email launch sequence with subject lines and full copy, (2) 3 LinkedIn posts ready to publish, (3) Brand messaging pillars and key value propositions. Tone: premium, natural, African luxury. [EXPORT:campaign]`,
+  strategy:`Give me a precise 90-day B2B growth strategy for Purgo Clean, commercial cleaning company in Île-de-France. Include: new client acquisition playbook with specific outreach scripts, pricing positioning vs competitors, top 3 verticals to target (with reasoning), one automation to implement in week 1, and KPIs to track. Be specific with numbers. [EXPORT:strategy]`,
+  automate:`Design a complete client onboarding automation for my marketing consultancy. Trigger: new email inquiry arrives. Full workflow with: AI qualification scoring (criteria + scoring logic), Notion brief creation (all fields), Google Calendar invite logic, 3-email welcome sequence (full copy for each). Tech stack: Make.com + Notion + Gmail + Claude API. Number every step. [EXPORT:workflow]`,
+  scrape:`I want to scrape a website. Please ask me which URL I should analyze and what information I'm looking for.`,
+  search:`I want to search the web. Please ask me what I'd like to search for.`,
+  image:`I want to generate an image. Please ask me to describe what I want to create.`,
+  pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
+  email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
+};
+
+let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[];
+
+// ── SIDEBAR ──
+function openSb(){document.getElementById('sb').classList.add('open');document.getElementById('ov').classList.add('open')}
+function closeSb(){document.getElementById('sb').classList.remove('open');document.getElementById('ov').classList.remove('open')}
+
+function setModel(el,m){
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');model=m;
+  document.getElementById('mbadge').textContent=MODELS[m];
+  document.getElementById('mem-model').textContent=MODELS[m]+' 4';
+  addMem('model','Now using '+MODELS[m]);
+  toast('Switched to '+MODELS[m]);
+}
+
+function togglePill(el){
+  el.classList.toggle('on');
+  if(pills.has(el.id))pills.delete(el.id);else pills.add(el.id);
+  document.getElementById('mem-tools').textContent=[...pills].map(p=>p.replace('p-','')).join(', ')||'none';
+}
+
+// ── SLASH MENU ──
+function onInp(){
+  const el=document.getElementById('inp');
+  el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';
+  const v=el.value,menu=document.getElementById('smenu');
+  // Show slash menu on /command (before space)
+  const slashMatch=v.match(/^(\/\S*)$/);
+  if(slashMatch){
+    const q=slashMatch[1].toLowerCase();
+    slashItems=CMDS.filter(c=>c.cmd.startsWith(q));
+    if(slashItems.length){
+      menu.innerHTML=slashItems.map((c,i)=>
+        `<div class="si${i===slashSel?' sel':''}" onclick="applySlash('${c.cmd}')">
+          <span style="font-size:13px">${c.icon}</span>
+          <span class="scmd">${c.cmd}</span>
+          <span class="sdesc">${c.desc}</span>
+        </div>`).join('');
+      menu.classList.add('show');return;
+    }
+  }
+  menu.classList.remove('show');slashSel=-1;
+}
+
+function applySlash(cmd){
+  document.getElementById('smenu').classList.remove('show');
+  const key=cmd.slice(1);
+  // Commands that need argument: pre-fill with prefix
+  if(['scrape','search','image'].includes(key)){
+    const el=document.getElementById('inp');
+    el.value=cmd+' ';el.focus();onInp();
+    return;
+  }
+  if(PROMPTS[key]){rmWelcome();document.getElementById('inp').value='';send(PROMPTS[key]);}
+}
+
+function slash(key){
+  rmWelcome();
+  if(['scrape','search','image'].includes(key)){
+    const el=document.getElementById('inp');
+    el.value='/'+key+' ';el.focus();
+    if(key==='scrape')toast('Paste a URL after /scrape');
+    if(key==='search')toast('Type your search query after /search');
+    if(key==='image')toast('Describe the image after /image');
+    return;
+  }
+  if(PROMPTS[key])send(PROMPTS[key]);
+}
+
+function onKey(e){
+  const menu=document.getElementById('smenu');
+  if(menu.classList.contains('show')){
+    if(e.key==='ArrowDown'){e.preventDefault();slashSel=Math.min(slashSel+1,slashItems.length-1);onInp();return;}
+    if(e.key==='ArrowUp'){e.preventDefault();slashSel=Math.max(slashSel-1,-1);onInp();return;}
+    if((e.key==='Tab'||e.key==='Enter')&&slashSel>=0){e.preventDefault();applySlash(slashItems[slashSel].cmd);return;}
+    if(e.key==='Escape'){menu.classList.remove('show');slashSel=-1;return;}
+  }
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+}
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();newChat();}
+  if(e.key==='Escape')document.getElementById('smenu').classList.remove('show');
+});
+
+// ── CHAT ──
+function rmWelcome(){const w=document.getElementById('welcome');if(w)w.remove();}
+
+function newChat(){
+  msgs=[];tokens=1840;updTok(0);
+  document.getElementById('tbtitle').textContent='New conversation';
+  document.getElementById('ci').innerHTML=`
+    <div class="welcome" id="welcome">
+      <div class="worb">🤖</div>
+      <div class="wt">Bvmbino AI Agent</div>
+      <div class="ws">Multi-model AI with real tools — web search, scraping, image generation, PDF export, and business automation.</div>
+      <div class="wgrid">
+        <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">Growth plans, market analysis, investor docs</div></div>
+        <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Marketing Campaign</div><div class="wcd">Email sequences, ads, social content</div></div>
+        <div class="wcard" onclick="slash('scrape')"><div class="wci">🌐</div><div class="wct">Scrape Website</div><div class="wcd">Extract data from any URL instantly</div></div>
+        <div class="wcard" onclick="slash('image')"><div class="wci">🎨</div><div class="wct">Generate Image</div><div class="wcd">AI images via Flux — logos, visuals, ads</div></div>
+      </div>
+      <div class="shint">Type <code>/scrape url</code> · <code>/search query</code> · <code>/image prompt</code> · <code>/resume</code></div>
+    </div>`;
+  closeSb();toast('New conversation · Ctrl+K');
+}
+
+// ── INTENT DETECTION ──
+function detectIntent(text){
+  const t=text.toLowerCase().trim();
+  // /scrape command or URL-like input
+  if(t.startsWith('/scrape ')){
+    const url=text.slice(8).trim();
+    return url?{type:'scrape',url}:null;
+  }
+  if(t.startsWith('/search ')){
+    return{type:'search',query:text.slice(8).trim()};
+  }
+  if(t.startsWith('/image ')){
+    return{type:'image',prompt:text.slice(7).trim()};
+  }
+  if(t.startsWith('/pdf')){
+    return{type:'pdf'};
+  }
+  // Natural language URL detection
+  const urlMatch=text.match(/https?:\/\/[^\s]+/);
+  if(urlMatch&&(t.includes('scrape')||t.includes('analyze')||t.includes('extract')||t.includes('read')||t.includes('what does')||t.includes('summarize'))){
+    return{type:'scrape',url:urlMatch[0]};
+  }
+  // Natural language search
+  if(t.startsWith('search for ')||t.startsWith('search ')||t.startsWith('find information about ')||t.startsWith('look up ')){
+    const q=text.replace(/^(search for|search|find information about|look up) /i,'').trim();
+    return{type:'search',query:q};
+  }
+  // Natural image
+  const imgTriggers=['generate an image','create an image','make an image','generate a photo','create a photo','draw ','generate a logo','create a logo','make a logo','generate a visual','create a visual','generate a picture','create a picture'];
+  if(imgTriggers.some(t2=>t.startsWith(t2)||t.includes(t2))){
+    return{type:'image',prompt:text};
+  }
+  return null;
+}
+
+// ── SEND ──
+async function send(forcedText){
+  const el=document.getElementById('inp');
+  const text=(forcedText||el.value).trim();
+  if(!text||busy)return;
+  rmWelcome();
+  document.getElementById('smenu').classList.remove('show');
+  el.value='';el.style.height='auto';
+  addUserMsg(text);
+  msgs.push({role:'user',content:text});
+  const short=text.slice(0,42)+(text.length>42?'…':'');
+  document.getElementById('tbtitle').textContent=short;
+  updTok(text.length/3.5);
+  const hi=document.createElement('div');
+  hi.className='hi';hi.innerHTML=`<span class="hdot"></span>${esc(short)}`;
+  document.getElementById('hist').insertBefore(hi,document.getElementById('hist').firstChild);
+  // Route by intent
+  const intent=detectIntent(text);
+  if(intent){
+    busy=true;document.getElementById('sbtn').disabled=true;
+    if(intent.type==='scrape') await doScrape(intent.url,text);
+    else if(intent.type==='search') await doSearch(intent.query);
+    else if(intent.type==='image') await doImage(intent.prompt);
+    else if(intent.type==='pdf') await doPdf();
+    return;
+  }
+  await callAI();
+}
+
+function addUserMsg(text){
+  const ci=document.getElementById('ci');
+  const row=document.createElement('div');row.className='mrow user';
+  row.innerHTML=`<div class="av av-us">N</div><div class="mwrap"><div class="bubble b-us">${esc(text).replace(/\n/g,'<br>')}</div><div class="macts"><div class="mact" onclick="copyT(this,'${escA(text)}')">⎘ copy</div></div></div>`;
+  ci.appendChild(row);scrollBot();
+}
+
+function unlock(){busy=false;document.getElementById('sbtn').disabled=false;const tb=document.getElementById('toolbadge');if(tb)tb.style.display='none';}
+function lockTool(label){busy=true;document.getElementById('sbtn').disabled=true;const tb=document.getElementById('toolbadge');if(tb){tb.textContent='⚡ '+label;tb.style.display='flex';}}
+
+// ── SCRAPE ──
+async function doScrape(url,originalMsg){
+  lockTool('scraping…');
+  const rowId='tool-'+Date.now();
+  appendToolRow(rowId,'🌐','scrape','Scraping <code>'+esc(url)+'</code>…');
+  try{
+    const r=await fetch('/api/scrape',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    updateToolRow(rowId,'🌐','scrape',`Scraped ${data.chars.toLocaleString()} chars from <a href="${esc(url)}" target="_blank" style="color:var(--pu2)">${esc(url)}</a>`);
+    // Now ask Claude to analyze
+    const analysisMsg={role:'user',content:`Here is the scraped content from ${url}:\n\n${data.content}\n\nOriginal request: ${originalMsg}\n\nPlease analyze and respond to the request.`};
+    msgs.push(analysisMsg);
+    await callAI(true);
+  }catch(err){
+    updateToolRow(rowId,'🌐','scrape','Scrape failed: '+err.message,true);
+    appendAiText(`**Scrape failed:** ${err.message}\n\nMake sure the URL is correct and publicly accessible.`,null);
+    unlock();
+  }
+}
+
+// ── WEB SEARCH ──
+async function doSearch(query){
+  lockTool('searching…');
+  const rowId='tool-'+Date.now();
+  appendToolRow(rowId,'🔍','search',`Searching: "<em>${esc(query)}</em>"…`);
+  try{
+    const r=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,count:6})});
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    const results=data.results||[];
+    updateToolRow(rowId,'🔍','search',`Found ${results.length} results for "<em>${esc(query)}</em>"`);
+    // Format results for Claude
+    const formatted=results.map((r2,i)=>`${i+1}. **${r2.title}**\n   URL: ${r2.url}\n   ${r2.description}`).join('\n\n');
+    const searchMsg={role:'user',content:`Web search results for "${query}":\n\n${formatted}\n\nPlease analyze these results and give me a comprehensive answer.`};
+    msgs.push(searchMsg);
+    // Also show results preview
+    const preview=results.slice(0,3).map(r2=>`<div style="padding:6px 0;border-bottom:1px solid var(--bd)"><a href="${esc(r2.url)}" target="_blank" style="color:var(--pu2);font-size:12px;text-decoration:none">${esc(r2.title)}</a><div style="font-size:11px;color:var(--t3);margin-top:2px">${esc(r2.description||'').slice(0,120)}</div></div>`).join('');
+    appendRawHtml(`<div style="margin-top:8px">${preview}</div>`,rowId);
+    await callAI(true);
+  }catch(err){
+    updateToolRow(rowId,'🔍','search','Search failed: '+err.message,true);
+    appendAiText(`**Search failed:** ${err.message}\n\nMake sure BRAVE_KEY is set in your Vercel environment variables.\n\nGet a free key at **api.search.brave.com** (2,000 free searches/month).`,null);
+    unlock();
+  }
+}
+
+// ── IMAGE GENERATION ──
+async function doImage(prompt){
+  lockTool('generating…');
+  const rowId='img-'+Date.now();
+  const ci=document.getElementById('ci');
+  const row=document.createElement('div');row.id=rowId;row.className='mrow ai';
+  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap">
+    <div class="mmeta">Bvmbino Agent <span class="mmtag">Image Gen</span> <span class="tool-tag image">Flux</span></div>
+    <div class="bubble b-ai" id="${rowId}-b">
+      <div class="imgcard"><div class="img-spinner"><div class="spin-ring"></div><div class="spin-label">Generating · Flux.1-schnell</div></div></div>
+    </div></div>`;
+  ci.appendChild(row);scrollBot();
+  try{
+    // Enhance prompt with Claude first
+    let enhancedPrompt=prompt;
+    try{
+      const pr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,messages:[{role:'user',content:`Convert to a vivid image generation prompt (max 70 words, output ONLY the prompt, no intro): "${prompt}"`}]})});
+      const pd=await pr.json();
+      if(pd.content?.[0]?.text)enhancedPrompt=pd.content[0].text.trim();
+    }catch(e){}
+    const r=await fetch('/api/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:enhancedPrompt,width:1024,height:1024,steps:4,n:1})});
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    const imgUrl=data.data?.[0]?.url||data.output?.[0]||data.images?.[0]?.url;
+    if(!imgUrl)throw new Error('No image URL in response — check Together AI key');
+    const bub=document.getElementById(rowId+'-b');
+    if(bub){
+      bub.innerHTML=`<div class="imgcard">
+        <img src="${imgUrl}" alt="${esc(enhancedPrompt)}" loading="lazy" style="max-height:400px;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=padding:14px;font-size:11px;color:var(--rd)>Image failed to load</div>'">
+        <div class="imgcard-foot">
+          <span class="xtype" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)">Flux</span>
+          <span class="imgcard-label">${esc(enhancedPrompt.slice(0,80))}</span>
+          <a href="${imgUrl}" download="bvmbino-image.png" class="xbtn" style="text-decoration:none">↓ Save</a>
+        </div></div>`;
+    }
+    const mw=row.querySelector('.mwrap');
+    const acts=document.createElement('div');acts.className='macts';
+    acts.innerHTML=`<div class="mact" onclick="window.open('${imgUrl}','_blank')">⤢ open</div><div class="mact" onclick="doImage('${escA(prompt)}')">↻ regenerate</div>`;
+    mw.appendChild(acts);
+    msgs.push({role:'assistant',content:`[Image generated: ${enhancedPrompt}]`});
+    addMem('image generated',prompt.slice(0,80));
+    toast('Image generated ✓');
+  }catch(err){
+    const bub=document.getElementById(rowId+'-b');
+    if(bub){
+      bub.innerHTML=`<span class="bh" style="color:var(--rd)">Image generation failed</span>
+        <div class="bl"><span class="bld">›</span><span>${esc(err.message)}</span></div>
+        <div class="bl"><span class="bld">›</span><span>Add <code>TOGETHER_KEY</code> to Vercel env vars</span></div>
+        <div class="bl"><span class="bld">›</span><span>Free key at <strong>api.together.xyz</strong></span></div>`;
+    }
+    toast('Image API not configured');
+  }finally{unlock();}
+}
+
+// ── PDF EXPORT ──
+async function doPdf(){
+  lockTool('generating PDF…');
+  const last=msgs.filter(m=>m.role==='assistant').pop();
+  if(!last){appendAiText('No content to export yet. Generate something first.',null);unlock();return;}
+  try{
+    // Convert markdown to simple HTML
+    const html=mdToBasicHtml(last.content);
+    const r=await fetch('/api/pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html,filename:'bvmbino-export.pdf'})});
+    if(!r.ok){
+      const err=await r.json();
+      throw new Error(err.error||'PDF generation failed');
+    }
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='bvmbino-export.pdf';a.click();
+    appendAiText('**PDF exported successfully.** Your download should start automatically.',null);
+    toast('PDF downloaded ✓');
+  }catch(err){
+    appendAiText(`**PDF export failed:** ${err.message}\n\nAdd \`PDFSHIFT_KEY\` to Vercel env vars. Free key at **pdfshift.io** (50 PDFs/month free).`,null);
+    toast('PDF export failed');
+  }finally{unlock();}
+}
+
+// ── CLAUDE AI CALL ──
+function showTyping(){
+  busy=true;document.getElementById('sbtn').disabled=true;
+  const ci=document.getElementById('ci');
+  const d=document.createElement('div');d.className='mrow ai';d.id='typing';
+  d.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="tbub"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  ci.appendChild(d);scrollBot();
+}
+function hideTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+async function callAI(skipLock){
+  if(!skipLock)showTyping();
+  else{
+    // For tool-augmented calls, show typing after tool row
+    showTyping();
+  }
+  const sys=buildSys();
+  try{
+    const res=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sys,stream:true,messages:msgs})
+    });
+    if(res.ok&&res.headers.get('content-type')?.includes('text/event-stream')){
+      await streamResponse(res);
+    }else{
+      const data=await res.json();
+      hideTyping();
+      let reply=data.content?.[0]?.text||JSON.stringify(data.error||'No response');
+      let xtype=null;const m=reply.match(/\[EXPORT:(\w+)\]/);
+      if(m){reply=reply.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m[1];}
+      msgs.push({role:'assistant',content:reply});
+      appendAiText(reply,xtype);
+      updTok(reply.length/3.5);addMem('response',reply.slice(0,90));
+    }
+  }catch(err){
+    hideTyping();
+    const errTxt=`**Connection failed**\n\nCannot reach /api/chat. Make sure:\n1. \`ANTHROPIC_KEY\` is set in Vercel env vars\n2. App is deployed with \`vercel --prod\`\n3. Or run locally with \`vercel dev\`\n\nError: \`${err.message}\``;
+    msgs.push({role:'assistant',content:errTxt});
+    appendAiText(errTxt,null);
+  }finally{
+    unlock();
+  }
+}
+
+async function streamResponse(res){
+  const reader=res.body.getReader(),dec=new TextDecoder();
+  let full='',streamEl=null;
+  hideTyping();
+  const ci=document.getElementById('ci');
+  const stId='st-'+Date.now();
+  const row=document.createElement('div');row.className='mrow ai';
+  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai" id="${stId}"></div></div>`;
+  ci.appendChild(row);
+  streamEl=document.getElementById(stId);
+  scrollBot();
+  try{
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      const chunk=dec.decode(value);
+      for(const line of chunk.split('\n')){
+        if(!line.startsWith('data: '))continue;
+        const d=line.slice(6);if(d==='[DONE]')continue;
+        try{
+          const p=JSON.parse(d);
+          if(p.type==='content_block_delta'&&p.delta?.text){
+            full+=p.delta.text;
+            let disp=full;const mx=disp.match(/\[EXPORT:\w+\]/);if(mx)disp=disp.replace(/\[EXPORT:\w+\]/,'').trim();
+            if(streamEl)streamEl.innerHTML=mdHtml(disp)+'<span class="sc"></span>';
+            scrollBot();
+          }
+        }catch{}
+      }
+    }
+  }catch(streamErr){console.error('stream error',streamErr);}
+  finally{
+    let xtype=null;const m3=full.match(/\[EXPORT:(\w+)\]/);
+    if(m3){full=full.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m3[1];}
+    msgs.push({role:'assistant',content:full});
+    if(streamEl)streamEl.innerHTML=mdHtml(full)+(xtype?xcard(xtype):'');
+    const mw=row.querySelector('.mwrap');
+    const acts=document.createElement('div');acts.className='macts';
+    acts.innerHTML=`<div class="mact" onclick="likeMsg(this)">♡ like</div><div class="mact" onclick="copyLast()">⎘ copy</div><div class="mact" onclick="regenLast()">↻ regen</div>${xtype?`<div class="mact" onclick="doPdf()">📋 PDF</div>`:''}`;
+    mw.appendChild(acts);
+    unlock();
+    updTok(full.length/3.5);addMem('response',full.slice(0,90));scrollBot();
+  }
+}
+
+function appendAiText(text,xtype){
+  const ci=document.getElementById('ci');
+  const row=document.createElement('div');row.className='mrow ai';
+  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai">${mdHtml(text)}${xtype?xcard(xtype):''}</div><div class="macts"><div class="mact" onclick="likeMsg(this)">♡ like</div><div class="mact" onclick="copyLast()">⎘ copy</div><div class="mact" onclick="regenLast()">↻ regen</div>${xtype?`<div class="mact" onclick="doPdf()">📋 PDF</div>`:''}</div></div>`;
+  ci.appendChild(row);scrollBot();
+}
+
+function appendToolRow(id,icon,type,msg){
+  const ci=document.getElementById('ci');
+  const d=document.createElement('div');d.id=id+'-banner';
+  d.className=`tool-banner tb-${type}`;
+  d.innerHTML=`<span>${icon}</span><span id="${id}-msg">${msg}</span>`;
+  ci.appendChild(d);scrollBot();
+}
+
+function updateToolRow(id,icon,type,msg,isErr){
+  const el=document.getElementById(id+'-msg');
+  if(el)el.innerHTML=(isErr?'⚠ ':'')+msg;
+  const banner=document.getElementById(id+'-banner');
+  if(banner&&isErr)banner.style.background='rgba(239,68,68,.06)';
+}
+
+function appendRawHtml(html,afterId){
+  const ci=document.getElementById('ci');
+  const banner=document.getElementById(afterId+'-banner');
+  if(banner)banner.insertAdjacentHTML('afterend',html);
+  else ci.insertAdjacentHTML('beforeend',html);
+  scrollBot();
+}
+
+// ── BUILD SYSTEM PROMPT ──
+function buildSys(){
+  const tools=[...pills].map(p=>p.replace('p-','')).join(', ');
+  return `You are Bvmbino AI Agent — an autonomous AI business assistant for high-performance entrepreneurs.
+
+User: Tiegbe Bamba (NextLevel)
+- Former pro basketball player (15+ years, Côte d'Ivoire national team, Portland State MS Communication & Marketing)
+- Ventures: Purgo Clean (cleaning, Île-de-France), Keo Jus (natural juice, CI / Accor hotels), marketing consultancy, FormationPro (training business)
+- Building: Bvmbino AI Agent cross-platform app
+- Active tools: ${tools}
+
+Behavior:
+- Direct, strategic, action-oriented. Zero filler.
+- Format with **bold headers**, numbered steps, bullet lists, \`code\`, markdown tables, \`\`\`code blocks\`\`\`
+- For structured docs (resume, campaign, strategy, workflow) end with [EXPORT:type] on its own line
+- Max 800 words unless task requires more`;
+}
+
+// ── XCARD ──
+function xcard(type){
+  return `<div class="xcard"><div class="xhead"><span class="xtype">${type}</span><span class="xlabel">ready to export</span></div><div class="xbtns"><div class="xbtn" onclick="expDoc('txt','${type}')">↓ TXT</div><div class="xbtn" onclick="expDoc('md','${type}')">↓ MD</div><div class="xbtn" onclick="doPdf()">↓ PDF</div><div class="xbtn" onclick="copyLast()">⎘ Copy</div></div></div>`;
+}
+
+// ── MARKDOWN ──
+function mdHtml(text){
+  if(!text)return'';
+  const lines=text.split('\n');
+  let html='',inCode=false,codeBuf='',lang='',inTable=false,tableBuf=[];
+  for(let i=0;i<lines.length;i++){
+    const ln=lines[i];
+    if(ln.startsWith('```')){
+      if(!inCode){inCode=true;lang=ln.slice(3).trim();codeBuf='';continue;}
+      else{inCode=false;html+=`<pre><code class="lang-${esc(lang)}">${esc(codeBuf.trim())}</code></pre>`;codeBuf='';lang='';continue;}
+    }
+    if(inCode){codeBuf+=ln+'\n';continue;}
+    if(ln.includes('|')&&ln.trim().startsWith('|')){if(!inTable)inTable=true;tableBuf.push(ln);continue;}
+    else if(inTable){html+=mkTable(tableBuf);tableBuf=[];inTable=false;}
+    if(/^#{1,3} /.test(ln)){html+=`<span class="bh">${inl(ln.replace(/^#{1,3} /,''))}</span>`;continue;}
+    const nm=ln.match(/^(\d+)\. (.+)/);if(nm){html+=`<div class="bn"><span class="bnn">${nm[1]}.</span><span>${inl(nm[2])}</span></div>`;continue;}
+    const bm=ln.match(/^[-*•] (.+)/);if(bm){html+=`<div class="bl"><span class="bld">›</span><span>${inl(bm[1])}</span></div>`;continue;}
+    if(/^---+$/.test(ln.trim())){html+=`<hr style="border:none;border-top:1px solid var(--bd);margin:10px 0">`;continue;}
+    if(ln.trim()===''){html+='<br>';continue;}
+    html+=`<span>${inl(ln)}</span><br>`;
+  }
+  if(inTable)html+=mkTable(tableBuf);
+  return html;
+}
+
+function mkTable(lines){
+  const rows=lines.filter(l=>!/^[\s|:-]+$/.test(l));if(!rows.length)return'';
+  let html='<table>';
+  rows.forEach((row,i)=>{const cells=row.split('|').filter(c=>c.trim()!=='');const t=i===0?'th':'td';html+='<tr>'+cells.map(c=>`<${t}>${inl(c.trim())}</${t}>`).join('')+'</tr>';});
+  return html+'</table>';
+}
+
+function mdToBasicHtml(text){
+  return text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1 class="header">$1</h1>').replace(/^- (.+)$/gm,'<li>$1</li>').replace(/\n\n/g,'</p><p>').replace(/^/,'<p>').replace(/$/,'</p>');
+}
+
+function inl(t){return t.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--pu2)">$1</a>');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escA(s){return String(s).replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/</g,'').replace(/>/g,'');}
+
+// ── ACTIONS ──
+function likeMsg(el){el.classList.toggle('liked');el.textContent=el.classList.contains('liked')?'♥ liked':'♡ like';if(el.classList.contains('liked'))toast('Saved ✓');}
+
+function copyLast(){
+  const last=msgs.filter(m=>m.role==='assistant').pop();
+  if(last){navigator.clipboard.writeText(last.content).catch(()=>{});toast('Copied ✓');}
+}
+
+function copyT(el,text){
+  navigator.clipboard.writeText(text.replace(/\\n/g,'\n')).catch(()=>{});toast('Copied ✓');
+}
+
+function regenLast(){
+  if(msgs.length<2||busy)return;
+  const aiRows=document.querySelectorAll('.mrow.ai');
+  if(aiRows.length)aiRows[aiRows.length-1].remove();
+  const lastAiIdx=msgs.map(m=>m.role).lastIndexOf('assistant');
+  if(lastAiIdx>=0)msgs.splice(lastAiIdx,1);
+  toast('Regenerating…');callAI();
+}
+
+function expDoc(fmt,type){
+  const last=msgs.filter(m=>m.role==='assistant').pop();
+  if(!last)return;
+  const fn=`bvmbino-${type}-${Date.now()}.${fmt}`;
+  const blob=new Blob([last.content],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();
+  toast(`${fn} downloaded ✓`);
+}
+
+function addMem(key,val){
+  const c=document.getElementById('mems');
+  if(!c)return;
+  const d=document.createElement('div');d.className='me new';
+  d.innerHTML=`<div class="mek">${esc(key)}</div><div class="mev">${esc(String(val).slice(0,120))}</div>`;
+  c.insertBefore(d,c.firstChild);
+  setTimeout(()=>d.classList.remove('new'),3000);
+  while(c.children.length>8)c.removeChild(c.lastChild);
+}
+
+function updTok(add){
+  tokens+=Math.round(add);
+  const pct=Math.min(tokens/1000,100).toFixed(1);
+  const tc=document.getElementById('tok-count');const tp=document.getElementById('tok-pct');const tb=document.getElementById('tbar');
+  if(tc)tc.textContent=`${tokens.toLocaleString()} / 100k tokens`;
+  if(tp)tp.textContent=pct+'%';
+  if(tb)tb.style.width=pct+'%';
+}
+
+function toast(msg){
+  const w=document.getElementById('toasts');
+  const d=document.createElement('div');d.className='toast';d.textContent=msg;
+  w.appendChild(d);setTimeout(()=>d.remove(),2100);
+}
+
+function scrollBot(){
+  const c=document.getElementById('chat');
+  if(c)c.scrollTo({top:c.scrollHeight,behavior:'smooth'});
+}
+
+// ── PERSIST ──
+try{
+  const saved=localStorage.getItem('bvmbino_v3');
+  if(saved){
+    const s=JSON.parse(saved);
+    if(s.msgs&&s.msgs.length){
+      msgs=s.msgs;tokens=s.tokens||1840;rmWelcome();
+      msgs.forEach(m=>{
+        if(m.role==='user')addUserMsg(m.content);
+        else{let x=null,t=m.content;const mx=t.match(/\[EXPORT:(\w+)\]/);if(mx){t=t.replace(/\[EXPORT:\w+\]/,'').trim();x=mx[1];}appendAiText(t,x);}
+      });
+      updTok(0);
+    }
+  }
+}catch(e){}
+
+setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs,tokens}));}catch{}},4000);
+</script>
+</body>
+</html>
