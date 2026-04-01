@@ -4,48 +4,49 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const apiKey = process.env.GEMINI_KEY;
+
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { query, count = 6 } = body;
+    const { query, count = 5 } = body;
     if (!query) return res.status(400).json({ error: 'query required' });
 
-    // Jina reader + DuckDuckGo lite — no API key, no quota, always free
+    // Step 1: Fetch raw results via Jina + DuckDuckGo (no key, no quota)
     const ddgUrl = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`;
-    const jinaUrl = `https://r.jina.ai/${ddgUrl}`;
-
-    const response = await fetch(jinaUrl, {
-      headers: {
-        'Accept': 'text/plain',
-        'X-Return-Format': 'markdown',
-        'X-Timeout': '15',
-      }
+    const jinaRes = await fetch(`https://r.jina.ai/${ddgUrl}`, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown', 'X-Timeout': '12' }
     });
+    const rawText = jinaRes.ok ? await jinaRes.text() : '';
 
-    if (!response.ok) throw new Error(`Search fetch ${response.status}`);
-    const text = await response.text();
-
-    // Parse result links and snippets from markdown
+    // Step 2: Parse clickable results (DDG lite has links as plain URLs in the text)
     const results = [];
-    const lines = text.split('\n');
-    for (let i = 0; i < lines.length && results.length < count; i++) {
-      const linkMatch = lines[i].match(/\[(.+?)\]\((https?:\/\/[^\)]+)\)/);
-      if (linkMatch && !linkMatch[2].includes('duckduckgo.com')) {
-        const snippet = lines[i + 1]?.replace(/[#*>`]/g, '').trim() || '';
-        results.push({
-          title: linkMatch[1].trim(),
-          url: linkMatch[2],
-          description: snippet.slice(0, 150),
-        });
-      }
+    const urlRegex = /https?:\/\/(?!(?:www\.)?duckduckgo)[^\s<>"']+/g;
+    const titleRegex = /\*\*(.+?)\*\*/g;
+    const urls = [...rawText.matchAll(urlRegex)].map(m => m[0]).filter(u => !u.includes('duckduckgo'));
+    const titles = [...rawText.matchAll(titleRegex)].map(m => m[1]);
+
+    for (let i = 0; i < Math.min(urls.length, count); i++) {
+      results.push({ title: titles[i] || `Result ${i + 1}`, url: urls[i], description: '' });
     }
 
-    // Answer: extract clean text summary from the markdown
-    const answer = text
-      .split('\n')
-      .filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('[') && !l.includes('duckduckgo'))
-      .slice(0, 5)
-      .join(' ')
-      .slice(0, 500);
+    // Step 3: Summarize with Gemini chat (NO grounding tool = no quota issues)
+    let answer = '';
+    if (apiKey && rawText) {
+      const cleanText = rawText.replace(/[#*`]/g, '').slice(0, 3000);
+      const gRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `Based on these search results for "${query}", give a direct useful summary in 3-5 bullet points:\n\n${cleanText}` }] }],
+            generationConfig: { maxOutputTokens: 400 },
+          }),
+        }
+      );
+      const gData = await gRes.json();
+      answer = gData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
 
     return res.status(200).json({ results, answer, query });
   } catch (err) {

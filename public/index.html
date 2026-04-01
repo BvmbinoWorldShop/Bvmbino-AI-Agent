@@ -564,26 +564,28 @@ async function doImage(prompt){
     </div></div>`;
   ci.appendChild(row);scrollBot();
   try{
-    // Enhance prompt with Claude first
+    // Enhance prompt with Gemini first
     let enhancedPrompt=prompt;
     try{
-      const pr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,messages:[{role:'user',content:`Convert to a vivid image generation prompt (max 70 words, output ONLY the prompt, no intro): "${prompt}"`}]})});
+      const pr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_tokens:120,messages:[{role:'user',content:`Convert to a vivid image generation prompt (max 70 words, output ONLY the prompt, no intro): "${prompt}"`}]})});
       const pd=await pr.json();
       if(pd.content?.[0]?.text)enhancedPrompt=pd.content[0].text.trim();
     }catch(e){}
-    const r=await fetch('/api/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:enhancedPrompt,width:1024,height:1024,steps:4,n:1})});
+    const r=await fetch('/api/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:enhancedPrompt,width:1024,height:1024})});
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const imgUrl=data.data?.[0]?.url||data.output?.[0]||data.images?.[0]?.url;
-    if(!imgUrl)throw new Error('No image URL in response — check Together AI key');
+    if(!imgUrl)throw new Error('No image URL in response');
+    const imgModel=data.model||'image';
     const bub=document.getElementById(rowId+'-b');
     if(bub){
       bub.innerHTML=`<div class="imgcard">
-        <img src="${imgUrl}" alt="${esc(enhancedPrompt)}" loading="lazy" style="max-height:400px;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=padding:14px;font-size:11px;color:var(--rd)>Image failed to load</div>'">
+        <img src="${imgUrl}" alt="${esc(enhancedPrompt)}" style="max-height:400px;object-fit:cover;width:100%;border-radius:8px" onerror="this.style.display='none';this.nextElementSibling.style.display='block'" onload="this.style.opacity=1">
+        <div style="display:none;padding:14px;font-size:11px;color:var(--rd)">Image failed to load — try regenerating</div>
         <div class="imgcard-foot">
-          <span class="xtype" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)">Gemini</span>
+          <span class="xtype" style="background:rgba(99,102,241,.1);color:#818cf8;border-color:rgba(99,102,241,.2)">${esc(imgModel)}</span>
           <span class="imgcard-label">${esc(enhancedPrompt.slice(0,80))}</span>
-          <a href="${imgUrl}" download="bvmbino-image.png" class="xbtn" style="text-decoration:none">↓ Save</a>
+          <a href="${imgUrl}" target="_blank" class="xbtn" style="text-decoration:none">↓ Save</a>
         </div></div>`;
     }
     const mw=row.querySelector('.mwrap');

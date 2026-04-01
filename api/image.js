@@ -1,5 +1,3 @@
-export const config = { maxDuration: 55 };
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -9,26 +7,37 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { prompt, width = 1024, height = 1024 } = body;
+    const { prompt, width = 512, height = 512 } = body;
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
+    // Unsplash Source — instant, free, no key, high quality photos for any topic
+    const keywords = prompt
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, '')
+      .trim()
+      .split(' ')
+      .slice(0, 4)
+      .join(',');
+
+    const unsplashUrl = `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keywords)}`;
+
+    // Follow the redirect to get the actual image URL
+    const r = await fetch(unsplashUrl, { redirect: 'follow', signal: AbortSignal.timeout(8000) });
+    if (r.ok && r.url && r.url !== unsplashUrl) {
+      return res.status(200).json({ data: [{ url: r.url }], model: 'unsplash' });
+    }
+
+    // Fallback: Pollinations direct URL (browser loads it patiently)
     const encoded = encodeURIComponent(prompt);
     const pollUrl = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true&model=flux&seed=${Date.now()}`;
+    return res.status(200).json({ data: [{ url: pollUrl }], model: 'pollinations' });
 
-    // Fetch image bytes server-side — browser gets base64 instantly, no timeout
-    const imgRes = await fetch(pollUrl, { signal: AbortSignal.timeout(50000) });
-    if (!imgRes.ok) throw new Error(`Pollinations ${imgRes.status}`);
-
-    const buffer = await imgRes.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
-    const mime = imgRes.headers.get('content-type') || 'image/jpeg';
-
-    return res.status(200).json({
-      data: [{ url: `data:${mime};base64,${base64}` }],
-      model: 'pollinations-flux',
-    });
   } catch (err) {
-    console.error('Image error:', err.message);
-    return res.status(500).json({ error: 'Image generation failed: ' + err.message });
+    // Always fallback to Pollinations on any error
+    const encoded = encodeURIComponent(req.body?.prompt || 'abstract art');
+    return res.status(200).json({
+      data: [{ url: `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&nologo=true` }],
+      model: 'pollinations-fallback',
+    });
   }
 }
