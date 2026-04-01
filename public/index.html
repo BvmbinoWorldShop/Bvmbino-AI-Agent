@@ -197,6 +197,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <button class="qbtn" onclick="slash('scrape')"><span class="qi" style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span class="qsub">/scrape</span></button>
       <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
       <button class="qbtn" onclick="slash('image')"><span class="qi" style="background:rgba(239,68,68,.08)">🎨</span><span>Generate Image</span><span class="qsub">/image</span></button>
+      <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(124,92,252,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
       <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
     </div>
   </div>
@@ -217,7 +218,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
     </div>
     <div class="badge b-gn"><span class="pulse"></span>Memory</div>
     <div class="badge b-am" id="toolbadge" style="display:none">⚡ tool active</div>
-    <div class="badge b-pu" id="mbadge">Claude Sonnet</div>
+    <div class="badge b-pu" id="mbadge">Gemini Flash</div>
     <button class="icobtn" onclick="newChat()" title="New chat (Ctrl+K)">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
@@ -233,9 +234,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
           <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">Growth plans, market analysis, investor docs</div></div>
           <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Marketing Campaign</div><div class="wcd">Email sequences, ads, social content</div></div>
           <div class="wcard" onclick="slash('scrape')"><div class="wci">🌐</div><div class="wct">Scrape Website</div><div class="wcd">Extract data from any URL instantly</div></div>
-          <div class="wcard" onclick="slash('image')"><div class="wci">🎨</div><div class="wct">Generate Image</div><div class="wcd">AI images via Flux — logos, visuals, ads</div></div>
+          <div class="wcard" onclick="slash('image')"><div class="wci">🎨</div><div class="wct">Generate Image</div><div class="wcd">AI images via Gemini — logos, visuals, ads</div></div>
+          <div class="wcard" onclick="slash('course')"><div class="wci">🎓</div><div class="wct">Course Builder</div><div class="wcd">Full curriculum with modules, activities & pricing</div></div>
         </div>
-        <div class="shint">Type <code>/scrape url</code> · <code>/search query</code> · <code>/image prompt</code> · <code>/resume</code></div>
+        <div class="shint">Type <code>/course topic</code> · <code>/image prompt</code> · <code>/search query</code> · <code>/resume</code></div>
       </div>
     </div>
   </div>
@@ -261,8 +263,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <aside class="mpanel">
   <div class="mph"><span class="pulse"></span>Agent Memory</div>
   <div class="mpe" id="mems">
-    <div class="me"><div class="mek">user</div><div class="mev">Tiegbe Bamba · Entrepreneur · Purgo Clean · Keo Jus · Marketing consultancy</div></div>
-    <div class="me"><div class="mek">active model</div><div class="mev" id="mem-model">Claude Sonnet 4</div></div>
+    <div class="me"><div class="mek">user</div><div class="mev">Tiegbe Bamba · Pro Basketball Player/Coach · Personal Trainer · Purgo Clean (owner) · Mindset Formateur · AI Consultant · Marketing &amp; Communication</div></div>
+    <div class="me"><div class="mek">active model</div><div class="mev" id="mem-model">Gemini Flash</div></div>
+    <div class="me"><div class="mek">ventures</div><div class="mev">Purgo Clean (Île-de-France) · Keo Jus (Côte d'Ivoire / Accor Hotels) · FormationPro · Marketing Consultancy</div></div>
     <div class="me"><div class="mek">project</div><div class="mev">Bvmbino AI Agent — cross-platform app</div></div>
     <div class="me"><div class="mek">tools</div><div class="mev" id="mem-tools">memory</div></div>
   </div>
@@ -276,18 +279,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <div class="twrap" id="toasts"></div>
 
 <script>
-const MODELS={claude:'Claude Sonnet',gpt4:'GPT-4o',gemini:'Gemini 1.5',grok:'Grok 2'};
+const MODELS={claude:'Gemini Flash',gpt4:'GPT-4o',gemini:'Gemini Flash',grok:'Grok 2'};
 const CMDS=[
-  {cmd:'/resume',   desc:'Build professional resume',     icon:'📄'},
-  {cmd:'/campaign', desc:'Create marketing campaign',     icon:'📣'},
-  {cmd:'/strategy', desc:'Business growth strategy',      icon:'📈'},
-  {cmd:'/scrape',   desc:'Scrape website: /scrape [url]', icon:'🌐'},
-  {cmd:'/search',   desc:'Web search: /search [query]',   icon:'🔍'},
-  {cmd:'/image',    desc:'Generate image: /image [desc]', icon:'🎨'},
-  {cmd:'/automate', desc:'Automation workflow design',     icon:'⚡'},
-  {cmd:'/pitch',    desc:'Investor pitch content',        icon:'💼'},
-  {cmd:'/email',    desc:'Write professional email',      icon:'✉️'},
-  {cmd:'/pdf',      desc:'Export last answer as PDF',     icon:'📋'},
+  {cmd:'/resume',   desc:'Build professional resume',            icon:'📄'},
+  {cmd:'/campaign', desc:'Create marketing campaign',            icon:'📣'},
+  {cmd:'/strategy', desc:'Business growth strategy',             icon:'📈'},
+  {cmd:'/course',   desc:'Build full course: /course [topic]',   icon:'🎓'},
+  {cmd:'/scrape',   desc:'Scrape website: /scrape [url]',        icon:'🌐'},
+  {cmd:'/search',   desc:'Web search: /search [query]',          icon:'🔍'},
+  {cmd:'/image',    desc:'Generate image: /image [desc]',        icon:'🎨'},
+  {cmd:'/automate', desc:'Automation workflow design',            icon:'⚡'},
+  {cmd:'/pitch',    desc:'Investor pitch content',               icon:'💼'},
+  {cmd:'/email',    desc:'Write professional email',             icon:'✉️'},
+  {cmd:'/pdf',      desc:'Export last answer as PDF',            icon:'📋'},
 ];
 
 const PROMPTS={
@@ -298,6 +302,7 @@ const PROMPTS={
   scrape:`I want to scrape a website. Please ask me which URL I should analyze and what information I'm looking for.`,
   search:`I want to search the web. Please ask me what I'd like to search for.`,
   image:`I want to generate an image. Please ask me to describe what I want to create.`,
+  course:`Build me a complete, professional training course curriculum. Ask me these 3 questions first: (1) What is the course topic? (2) Who is the target audience? (3) What is the delivery format (online / in-person / hybrid)? Then deliver the full course structure: **Program Title** + tagline, **Transformation Promise** (what learners gain), **Module Breakdown** (6-8 modules — each with: title, objective, 3-5 key content points, 1 hands-on activity), **Delivery Format & Schedule**, **Pricing Tiers** (Basic / Premium / VIP with what's included), **Module 1 Quick Win** (something learners apply in the first session). Format as a complete structured document ready to use. [EXPORT:course]`,
   pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
   email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
 };
@@ -350,7 +355,7 @@ function applySlash(cmd){
   document.getElementById('smenu').classList.remove('show');
   const key=cmd.slice(1);
   // Commands that need argument: pre-fill with prefix
-  if(['scrape','search','image'].includes(key)){
+  if(['scrape','search','image','course'].includes(key)){
     const el=document.getElementById('inp');
     el.value=cmd+' ';el.focus();onInp();
     return;
@@ -360,12 +365,13 @@ function applySlash(cmd){
 
 function slash(key){
   rmWelcome();
-  if(['scrape','search','image'].includes(key)){
+  if(['scrape','search','image','course'].includes(key)){
     const el=document.getElementById('inp');
     el.value='/'+key+' ';el.focus();
     if(key==='scrape')toast('Paste a URL after /scrape');
     if(key==='search')toast('Type your search query after /search');
     if(key==='image')toast('Describe the image after /image');
+    if(key==='course')toast('Type your course topic after /course');
     return;
   }
   if(PROMPTS[key])send(PROMPTS[key]);
@@ -401,10 +407,10 @@ function newChat(){
       <div class="wgrid">
         <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">Growth plans, market analysis, investor docs</div></div>
         <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Marketing Campaign</div><div class="wcd">Email sequences, ads, social content</div></div>
-        <div class="wcard" onclick="slash('scrape')"><div class="wci">🌐</div><div class="wct">Scrape Website</div><div class="wcd">Extract data from any URL instantly</div></div>
-        <div class="wcard" onclick="slash('image')"><div class="wci">🎨</div><div class="wct">Generate Image</div><div class="wcd">AI images via Flux — logos, visuals, ads</div></div>
+        <div class="wcard" onclick="slash('course')"><div class="wci">🎓</div><div class="wct">Course Builder</div><div class="wcd">Full curriculum with modules, activities & pricing</div></div>
+        <div class="wcard" onclick="slash('image')"><div class="wci">🎨</div><div class="wct">Generate Image</div><div class="wcd">AI images via Gemini — logos, visuals, ads</div></div>
       </div>
-      <div class="shint">Type <code>/scrape url</code> · <code>/search query</code> · <code>/image prompt</code> · <code>/resume</code></div>
+      <div class="shint">Type <code>/course topic</code> · <code>/image prompt</code> · <code>/search query</code> · <code>/resume</code></div>
     </div>`;
   closeSb();toast('New conversation · Ctrl+K');
 }
@@ -422,6 +428,9 @@ function detectIntent(text){
   }
   if(t.startsWith('/image ')){
     return{type:'image',prompt:text.slice(7).trim()};
+  }
+  if(t.startsWith('/course ')){
+    return{type:'course',topic:text.slice(8).trim()};
   }
   if(t.startsWith('/pdf')){
     return{type:'pdf'};
@@ -468,6 +477,7 @@ async function send(forcedText){
     else if(intent.type==='search') await doSearch(intent.query);
     else if(intent.type==='image') await doImage(intent.prompt);
     else if(intent.type==='pdf') await doPdf();
+    else if(intent.type==='course') await callAI();
     return;
   }
   await callAI();
@@ -537,9 +547,9 @@ async function doImage(prompt){
   const ci=document.getElementById('ci');
   const row=document.createElement('div');row.id=rowId;row.className='mrow ai';
   row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap">
-    <div class="mmeta">Bvmbino Agent <span class="mmtag">Image Gen</span> <span class="tool-tag image">Flux</span></div>
+    <div class="mmeta">Bvmbino Agent <span class="mmtag">Image Gen</span> <span class="tool-tag image">Gemini</span></div>
     <div class="bubble b-ai" id="${rowId}-b">
-      <div class="imgcard"><div class="img-spinner"><div class="spin-ring"></div><div class="spin-label">Generating · Flux.1-schnell</div></div></div>
+      <div class="imgcard"><div class="img-spinner"><div class="spin-ring"></div><div class="spin-label">Generating · Gemini Vision</div></div></div>
     </div></div>`;
   ci.appendChild(row);scrollBot();
   try{
@@ -560,7 +570,7 @@ async function doImage(prompt){
       bub.innerHTML=`<div class="imgcard">
         <img src="${imgUrl}" alt="${esc(enhancedPrompt)}" loading="lazy" style="max-height:400px;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=padding:14px;font-size:11px;color:var(--rd)>Image failed to load</div>'">
         <div class="imgcard-foot">
-          <span class="xtype" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)">Flux</span>
+          <span class="xtype" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)">Gemini</span>
           <span class="imgcard-label">${esc(enhancedPrompt.slice(0,80))}</span>
           <a href="${imgUrl}" download="bvmbino-image.png" class="xbtn" style="text-decoration:none">↓ Save</a>
         </div></div>`;
@@ -577,8 +587,8 @@ async function doImage(prompt){
     if(bub){
       bub.innerHTML=`<span class="bh" style="color:var(--rd)">Image generation failed</span>
         <div class="bl"><span class="bld">›</span><span>${esc(err.message)}</span></div>
-        <div class="bl"><span class="bld">›</span><span>Add <code>TOGETHER_KEY</code> to Vercel env vars</span></div>
-        <div class="bl"><span class="bld">›</span><span>Free key at <strong>api.together.xyz</strong></span></div>`;
+        <div class="bl"><span class="bld">›</span><span>Check <code>GEMINI_KEY</code> in Vercel env vars</span></div>
+        <div class="bl"><span class="bld">›</span><span>Free key at <strong>aistudio.google.com</strong></span></div>`;
     }
     toast('Image API not configured');
   }finally{unlock();}
@@ -645,7 +655,7 @@ async function callAI(skipLock){
     }
   }catch(err){
     hideTyping();
-    const errTxt=`**Connection failed**\n\nCannot reach /api/chat. Make sure:\n1. \`ANTHROPIC_KEY\` is set in Vercel env vars\n2. App is deployed with \`vercel --prod\`\n3. Or run locally with \`vercel dev\`\n\nError: \`${err.message}\``;
+    const errTxt=`**Connection failed**\n\nCannot reach /api/chat. Make sure:\n1. \`GEMINI_KEY\` is set in Vercel env vars\n2. App is deployed with \`vercel --prod\`\n3. Or run locally with \`vercel dev\`\n\nError: \`${err.message}\``;
     msgs.push({role:'assistant',content:errTxt});
     appendAiText(errTxt,null);
   }finally{
@@ -732,16 +742,22 @@ function buildSys(){
   const tools=[...pills].map(p=>p.replace('p-','')).join(', ');
   return `You are Bvmbino AI Agent — an autonomous AI business assistant for high-performance entrepreneurs.
 
-User: Tiegbe Bamba (NextLevel)
-- Former pro basketball player (15+ years, Côte d'Ivoire national team, Portland State MS Communication & Marketing)
-- Ventures: Purgo Clean (cleaning, Île-de-France), Keo Jus (natural juice, CI / Accor hotels), marketing consultancy, FormationPro (training business)
-- Building: Bvmbino AI Agent cross-platform app
+User: Tiegbe Bamba
+- Pro basketball player/coach (15+ years, Côte d'Ivoire national team, Portland State University — MS Communication & Marketing)
+- Personal trainer & elite athlete performance coach
+- Formateur: Strong Mindset for elite athletes, post-injury depression recovery, Introduction to AI
+- Owner: Purgo Clean — commercial cleaning company, Île-de-France, France
+- Ventures: Keo Jus (natural juice distribution, Accor Hotels, Côte d'Ivoire), marketing consultancy
+- Consultant: Communication, marketing strategy, personal branding (B2B & B2C)
+- Building: Bvmbino AI Agent — cross-platform AI business assistant
+- Languages: French & English
 - Active tools: ${tools}
 
 Behavior:
 - Direct, strategic, action-oriented. Zero filler.
 - Format with **bold headers**, numbered steps, bullet lists, \`code\`, markdown tables, \`\`\`code blocks\`\`\`
-- For structured docs (resume, campaign, strategy, workflow) end with [EXPORT:type] on its own line
+- For structured docs (resume, campaign, strategy, workflow, course) end with [EXPORT:type] on its own line
+- For /course requests: build complete curriculum with 6-8 modules, each with title, objective, content points, activity, plus pricing tiers and quick win
 - Max 800 words unless task requires more`;
 }
 
