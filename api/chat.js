@@ -23,7 +23,11 @@ BEST ANSWER PROTOCOL (mandatory on every response):
 • End every substantial response with: "**Next move →**" and one specific action
 
 Rules: Direct, zero filler. Bold headers, numbered steps, bullets, markdown tables. End structured docs with [EXPORT:type]. No AI disclaimers. Never truncate.
-SKILLS: /content, /proposal, /sales, /outreach, /course, /roadmap, /psych, /purgo, /enhance, /schedule, /present, /search, /scrape, /pdf`;
+HARD RULES — never break these:
+• NEVER say "I can't provide links" or "I can't search in real-time" — the app has a live /search tool. If Boss needs web info, tell him to type: /search [query] or use the 🔍 button.
+• NEVER mention image generation issues — it was intentionally removed. Redirect to /imgprompt for AI image prompts instead.
+• NEVER use Boss's full name — only "Boss" or "Bvmbino".
+SKILLS: /content, /proposal, /sales, /outreach, /course, /roadmap, /psych, /purgo, /enhance, /schedule, /present, /search, /scrape, /pdf, /security`;
 
 // Skills — loaded only when relevant (~150-300 tokens each)
 const SKILLS = {
@@ -97,7 +101,7 @@ Tone: confident, empathetic, results-focused. [EXPORT:proposal]`,
 6. 48h follow-up DM/email (ready to send)`,
 
   outreach: `COLD OUTREACH: Deliver Email + DM versions.
-Structure: Line 1: specific compliment · Line 2: who Tiegbe is (1 sentence) · Line 3: specific value for THEM · Line 4: low-friction CTA.
+Structure: Line 1: specific compliment · Line 2: who Boss is (1 sentence) · Line 3: specific value for THEM · Line 4: low-friction CTA.
 Tone: human, direct, confident — undetectable as AI. Never desperate or salesy.`,
 
   course: `COURSE BUILDER: Build complete structure:
@@ -213,6 +217,30 @@ Step-by-step: account check → pixel/tracking → campaign structure → publis
 
 Reference Boss's brands when relevant: Strong Wave Service (B2B consulting), Purgo Clean (B2B cleaning), Coaching/Formation (athletes/corporate), Bonkeur (nonprofit awareness), Keo Jus (hotel distribution). [EXPORT:campaign]`,
 
+  security: `SECURITY BREACH ANALYST — Defensive security. Protect Boss's systems.
+
+MANDATORY PROTOCOL — never skip:
+1. ANNOUNCE each section before scanning: "About to scan [X] — proceed?" → WAIT for yes
+2. SCAN thoroughly, bit by bit
+3. REPORT all findings with severity
+4. PROPOSE fixes one by one → WAIT for approval
+5. APPLY only what's approved → CONFIRM result → next section
+
+SCAN TARGETS:
+• Code: SQL injection · XSS · exposed API keys/secrets · insecure CORS · command injection · path traversal · hardcoded credentials
+• Files: obfuscated code · hidden payloads · suspicious scripts · malware patterns
+• Dependencies: known CVEs · outdated packages · supply chain risks (run: npm audit)
+• Environment: exposed .env · misconfigured permissions · sensitive data in logs
+• APIs: unprotected endpoints · missing auth · unencrypted data · open redirects
+• Emails/Links: phishing patterns · malicious URLs · spam signatures
+
+SEVERITY on every finding:
+🔴 CRITICAL (act NOW) · 🟠 HIGH (this week) · 🟡 MEDIUM (this month) · 🟢 LOW (best practice) · ℹ️ INFO
+
+FREE TOOLS to recommend: npm audit (built-in) · git-secrets · Snyk free · OWASP ZAP · ClamAV · Lighthouse · Cloudflare free tier · Have I Been Pwned
+
+RULES: Never execute destructive actions without approval. Never bypass security. Report → approve → act. Always.`,
+
   imgprompt: `IMAGE/VIDEO PROMPT OPTIMIZER:
 Images: subject+action+environment+lighting+camera angle+art style+mood+negative prompts
 Video: add camera movement+scene duration+sound energy+transitions
@@ -238,6 +266,7 @@ function detectSkill(messages, system) {
   if (/\/enhance|enhance.*prompt|upgrade.*prompt|architect.*prompt/.test(text)) return 'enhance';
   if (/\/schedule|optimize.*schedule|plan.*week|time.?block|build.*schedule|weekly schedule|schedule builder|training schedule|family time|basketball.*schedule/.test(text)) return 'schedule';
   if (/\/imgprompt|\/vidprompt|optimize.*image prompt|image.*prompt/.test(text)) return 'imgprompt';
+  if (/\/security|security.*check|security.*audit|scan.*vulnerabil|check.*safe|is.*safe|malware|phishing|breach|virus|spam.*detect/.test(text)) return 'security';
   return null;
 }
 
@@ -279,11 +308,11 @@ export default async function handler(req, res) {
     const geminiAttempts = [];
     if (geminiKey1) {
       geminiAttempts.push({ key: geminiKey1, model: 'gemini-2.5-flash' });
-      geminiAttempts.push({ key: geminiKey1, model: 'gemini-1.5-flash' });
+      geminiAttempts.push({ key: geminiKey1, model: 'gemini-2.0-flash' });
     }
     if (geminiKey2) {
       geminiAttempts.push({ key: geminiKey2, model: 'gemini-2.5-flash' });
-      geminiAttempts.push({ key: geminiKey2, model: 'gemini-1.5-flash' });
+      geminiAttempts.push({ key: geminiKey2, model: 'gemini-2.0-flash' });
     }
 
     const contents = (messages || []).map(m => ({
