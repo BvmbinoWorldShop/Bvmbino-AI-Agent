@@ -58,8 +58,30 @@ const SKILLS = {
 
 Always tie content to one of Boss's real brands when relevant: Strong Wave Service, Purgo Clean, Coaching, Bonkeur, Keo Jus, Basketball.`,
 
+  resume: `JOB-TARGETED RESUME BUILDER — ATS-optimized for the specific role.
+
+BOSS'S REAL BACKGROUND (always draw from this):
+• Pro basketball player/coach 15+ years · Ivory Coast National Team (AfroBasket 2017, FIBA WC 2018-2019, China 2019) · Clubs: Chartres PRO B, STB Le Havre PRO B, CSP Limoges JEEP ELITE, CCRB Châlons-Reims JEEP ELITE, Psyhiko Athens A2, Timba Timisoara Romania, Grindavik Iceland, Portland State University NCAA1, Snow College UT, Midland College TX
+• Master's in Communication & Marketing — Portland State University
+• Strong Wave Service — consulting (communication, marketing strategy, business development, B2B/B2C client acquisition, brand positioning)
+• Purgo Clean — commercial cleaning operations (client acquisition, team management, B2B contracts Île-de-France, service delivery, quality control)
+• Personal & Mental Coaching / Formateur — program design, group & 1-on-1 coaching, corporate formation, mindset workshops, Introduction to AI, post-injury recovery
+• Association Bonkeur — nonprofit leadership, community programs, partnership development, event organization
+• Keo Jus — B2B distribution management, supply chain, hotel client management (Accor Group)
+• Bvmbino AI Agent — AI application development, prompt engineering, automation tools
+
+PROCESS:
+1. Extract from job posting: title, company, required skills, responsibilities, keywords, tone
+2. Map EVERY job requirement to a real experience from above
+3. Rewrite experiences using EXACT keywords from the job posting (ATS pass)
+4. Use strong action verbs matching the role context
+5. Quantify achievements wherever possible
+6. Sections: Header · Professional Summary (3 lines, role-specific) · Core Skills (matched to job) · Experience (reverse chronological, tailored bullets) · Education · Languages (FR/EN + others if relevant)
+
+OUTPUT: Complete ready-to-submit resume. [EXPORT:resume]`,
+
   proposal: `CLIENT PROPOSAL: Deliver:
-1. Executive Summary — their problem, Tiegbe's solution
+1. Executive Summary — their problem, Boss's solution
 2. About — credibility + experience
 3. Offer — deliverables, timeline, format (in-person/online/hybrid)
 4. Investment — Basic/Premium/VIP tiers
@@ -144,6 +166,53 @@ After all 7 days, add:
 Zone codes: DEEP = peak energy (revenue/creation/coaching), ADMIN = operations/follow-up, RECOVERY = rest/family/learning
 [EXPORT:schedule]`,
 
+  campaign: `MARKETING CAMPAIGN + AD DEPLOYMENT — Full runbook from strategy to live.
+
+**1. CAMPAIGN STRATEGY**
+- Objective: awareness / lead gen / sales / engagement (identify from context)
+- Target audience: demographics, interests, behaviors, pain points, platforms they're on
+- Budget allocation by platform (Facebook/Instagram · Google · LinkedIn · TikTok)
+- Campaign timeline: 30-day launch plan with milestones
+- Funnel: TOFU (awareness) → MOFU (engagement/lead) → BOFU (conversion)
+
+**2. AD CREATIVES — copy-paste ready**
+Facebook/Instagram:
+- Primary text: 3 A/B/C variants (hook + value + CTA)
+- Headlines: 5 variants (under 40 chars each)
+- Description: 2 variants
+- CTA button: which one and why
+- Visual brief: what image or video to use (specific direction)
+
+Google Ads (if relevant):
+- 3 Headlines (max 30 chars)
+- 2 Descriptions (max 90 chars)
+- 10-15 targeted keywords with match types
+
+LinkedIn (for B2B):
+- Sponsored content copy
+- InMail subject + body template
+
+TikTok/Reels:
+- Hook (first 3s spoken): what makes viewer stop
+- Script (15-30s): rapid value delivery
+- CTA
+
+**3. TARGETING SETUP** (step-by-step per platform)
+- Custom audiences, lookalikes, interests, behaviors
+- Budget per ad set, bid strategy
+- Ad scheduling (best times to run)
+
+**4. DEPLOYMENT CHECKLIST**
+Step-by-step: account check → pixel/tracking → campaign structure → publish sequence → launch timing
+
+**5. KPIs & OPTIMIZATION**
+- Daily/weekly metrics to track
+- When to scale a winning ad (threshold)
+- When to kill an underperformer (threshold)
+- 30-day optimization roadmap
+
+Reference Boss's brands when relevant: Strong Wave Service (B2B consulting), Purgo Clean (B2B cleaning), Coaching/Formation (athletes/corporate), Bonkeur (nonprofit awareness), Keo Jus (hotel distribution). [EXPORT:campaign]`,
+
   imgprompt: `IMAGE/VIDEO PROMPT OPTIMIZER:
 Images: subject+action+environment+lighting+camera angle+art style+mood+negative prompts
 Video: add camera movement+scene duration+sound energy+transitions
@@ -156,7 +225,9 @@ function detectSkill(messages, system) {
   const sys = (system || '').toLowerCase();
   const text = last + ' ' + sys;
 
-  if (/\/content|write a post|make a caption|create content|instagram|linkedin post/.test(text)) return 'content';
+  if (/\/content|write a post|make a caption|create content|instagram|linkedin post|reel script|social media post/.test(text)) return 'content';
+  if (/\/resume|tailored resume|job application|ats resume|job posting|apply.*job/.test(text)) return 'resume';
+  if (/\/campaign|marketing campaign|run.*ads?|facebook ads|instagram ads|google ads|social media ads|ad creative|ad copy|launch.*campaign|advertising/.test(text)) return 'campaign';
   if (/\/proposal|write a proposal|create an offer/.test(text)) return 'proposal';
   if (/\/sales|sales script|help me close/.test(text)) return 'sales';
   if (/\/outreach|cold email|write a dm|write outreach/.test(text)) return 'outreach';
@@ -173,7 +244,7 @@ function detectSkill(messages, system) {
 // Token budget per task type
 function getMaxTokens(skill, requested) {
   if (requested) return requested;
-  const budget = { course: 4000, proposal: 3000, roadmap: 3000, sales: 2500, content: 1500, outreach: 1000, present: 4000, schedule: 2000 };
+  const budget = { course: 4000, proposal: 3000, roadmap: 3000, sales: 2500, content: 2000, outreach: 1000, present: 4000, schedule: 2000, resume: 3000, campaign: 4000 };
   return budget[skill] || 2000;
 }
 

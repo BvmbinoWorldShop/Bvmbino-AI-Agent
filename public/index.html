@@ -276,8 +276,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <script>
 const MODELS={claude:'Gemini Flash',gpt4:'GPT-4o',gemini:'Gemini Flash',grok:'Grok 2'};
 const CMDS=[
-  {cmd:'/resume',   desc:'Build professional resume',            icon:'📄'},
-  {cmd:'/campaign', desc:'Create marketing campaign',            icon:'📣'},
+  {cmd:'/resume',   desc:'Tailored resume: /resume [url or job]', icon:'📄'},
+  {cmd:'/campaign', desc:'Full ad campaign + deployment guide',  icon:'📣'},
   {cmd:'/strategy', desc:'Business growth strategy',             icon:'📈'},
   {cmd:'/course',   desc:'Build full course: /course [topic]',   icon:'🎓'},
   {cmd:'/scrape',   desc:'Scrape website: /scrape [url]',        icon:'🌐'},
@@ -291,8 +291,8 @@ const CMDS=[
 ];
 
 const PROMPTS={
-  resume:`Build me a powerful one-page professional resume. Name: Tiegbe Bamba (NextLevel). Former professional basketball player: 15+ years, multiple countries, Côte d'Ivoire national team, Portland State University — Master's in Communication & Marketing. Current ventures: Purgo Clean (cleaning services, Île-de-France, France), Keo Jus (natural juice distribution to Accor Group hotels in Côte d'Ivoire), marketing consultancy. Format with bold section headers: Professional Summary, Core Competencies, Professional Experience, Education, Languages. Make it executive-level and impactful. [EXPORT:resume]`,
-  campaign:`Create a complete marketing campaign for Keo Jus — premium natural fruit juice brand distributing to Accor Group hotels in Côte d'Ivoire. Target audience: hotel procurement managers and F&B directors. Deliver: (1) 3-email launch sequence with subject lines and full copy, (2) 3 LinkedIn posts ready to publish, (3) Brand messaging pillars and key value propositions. Tone: premium, natural, African luxury. [EXPORT:campaign]`,
+  resume:`I want to build a tailored resume for a specific job. Paste the job URL or job description after /resume — example: /resume https://... or /resume [job description]. I'll match my real background to every requirement and ATS-optimize it for maximum chances.`,
+  campaign:`Build me a complete marketing campaign with full ad deployment. Tell me: (1) Which business/product? (Strong Wave Service, Purgo Clean, Coaching, Bonkeur, Keo Jus, or other) (2) Campaign objective? (leads / sales / awareness / followers) (3) Budget range? Then I'll deliver: strategy, ad creatives for Facebook/Instagram/Google/LinkedIn/TikTok (copy-paste ready), targeting setup, deployment checklist step-by-step, and KPI tracking. [EXPORT:campaign]`,
   strategy:`Give me a precise 90-day B2B growth strategy for Purgo Clean, commercial cleaning company in Île-de-France. Include: new client acquisition playbook with specific outreach scripts, pricing positioning vs competitors, top 3 verticals to target (with reasoning), one automation to implement in week 1, and KPIs to track. Be specific with numbers. [EXPORT:strategy]`,
   automate:`Design a complete client onboarding automation for my marketing consultancy. Trigger: new email inquiry arrives. Full workflow with: AI qualification scoring (criteria + scoring logic), Notion brief creation (all fields), Google Calendar invite logic, 3-email welcome sequence (full copy for each). Tech stack: Make.com + Notion + Gmail + Claude API. Number every step. [EXPORT:workflow]`,
   scrape:`I want to scrape a website. Please ask me which URL I should analyze and what information I'm looking for.`,
@@ -352,7 +352,7 @@ function applySlash(cmd){
   document.getElementById('smenu').classList.remove('show');
   const key=cmd.slice(1);
   // Commands that need argument: pre-fill with prefix
-  if(['scrape','search','course','present'].includes(key)){
+  if(['scrape','search','course','present','resume'].includes(key)){
     const el=document.getElementById('inp');
     el.value=cmd+' ';el.focus();onInp();
     return;
@@ -362,13 +362,14 @@ function applySlash(cmd){
 
 function slash(key){
   rmWelcome();
-  if(['scrape','search','course','present'].includes(key)){
+  if(['scrape','search','course','present','resume'].includes(key)){
     const el=document.getElementById('inp');
     el.value='/'+key+' ';el.focus();
     if(key==='scrape')toast('Paste a URL after /scrape');
     if(key==='search')toast('Type your search query after /search');
     if(key==='course')toast('Type your course topic after /course');
     if(key==='present')toast('Type your presentation topic after /present');
+    if(key==='resume')toast('Paste job URL or description after /resume');
     return;
   }
   if(PROMPTS[key])send(PROMPTS[key]);
@@ -424,6 +425,13 @@ function detectIntent(text){
   if(t.startsWith('/search ')){
     return{type:'search',query:text.slice(8).trim()};
   }
+  if(t.startsWith('/resume')){
+    const input=text.slice(7).trim();
+    return{type:'resume',input};
+  }
+  if(t.startsWith('/campaign')){
+    return{type:'campaign'};
+  }
   if(t.startsWith('/schedule')){
     const parts=text.trim().toLowerCase().split(/\s+/);
     const view=['daily','weekly','biweekly','monthly'].find(v=>parts.includes(v))||'weekly';
@@ -473,6 +481,8 @@ async function send(forcedText){
     busy=true;document.getElementById('sbtn').disabled=true;
     if(intent.type==='scrape') await doScrape(intent.url,text);
     else if(intent.type==='search') await doSearch(intent.query);
+    else if(intent.type==='resume') await doSmartResume(intent.input);
+    else if(intent.type==='campaign') await callAI();
     else if(intent.type==='pdf') await doPdf();
     else if(intent.type==='schedule'){await callAI();const lastMsg=msgs.filter(m=>m.role==='assistant').pop()?.content||'';await doScheduleExport(lastMsg,intent.view||'weekly');}
     else if(intent.type==='course') await callAI();
@@ -546,6 +556,28 @@ async function doSearch(query){
   }
 }
 
+
+// ── SMART RESUME BUILDER ──
+async function doSmartResume(jobInput){
+  // No job input — just send the help prompt
+  if(!jobInput){await callAI();return;}
+  const rowId='res-'+Date.now();
+  appendToolRow(rowId,'📄','scrape','Reading job posting…');
+  let jobContext=jobInput;
+  const urlMatch=jobInput.match(/https?:\/\/[^\s]+/);
+  if(urlMatch){
+    try{
+      const r=await fetch('/api/scrape',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:urlMatch[0]})});
+      const d=await r.json();
+      if(d.content){jobContext=d.content.slice(0,4000);updateToolRow(rowId,'📄','scrape','Job posting analyzed ✓');}
+      else updateToolRow(rowId,'📄','scrape','Could not read URL — using as text',true);
+    }catch(e){updateToolRow(rowId,'📄','scrape','URL scrape failed — proceeding with text',true);}
+  }else{
+    updateToolRow(rowId,'📄','scrape','Job description received ✓');
+  }
+  msgs.push({role:'user',content:`Build me a perfectly tailored, ATS-optimized resume for this specific job. Extract every requirement, map it to my real background, use exact keywords from the posting:\n\n${jobContext}\n\nMake it impossible to ignore. [EXPORT:resume]`});
+  await callAI();
+}
 
 // ── SCHEDULE CALENDAR BUILDER ──
 function parseScheduleBlocks(text){
