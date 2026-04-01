@@ -298,7 +298,7 @@ const PROMPTS={
   scrape:`I want to scrape a website. Please ask me which URL I should analyze and what information I'm looking for.`,
   search:`I want to search the web. Please ask me what I'd like to search for.`,
 course:`Build me a complete, professional training course curriculum. Ask me these 3 questions first: (1) What is the course topic? (2) Who is the target audience? (3) What is the delivery format (online / in-person / hybrid)? Then deliver the full course structure: **Program Title** + tagline, **Transformation Promise** (what learners gain), **Module Breakdown** (6-8 modules — each with: title, objective, 3-5 key content points, 1 hands-on activity), **Delivery Format & Schedule**, **Pricing Tiers** (Basic / Premium / VIP with what's included), **Module 1 Quick Win** (something learners apply in the first session). Format as a complete structured document ready to use. [EXPORT:course]`,
-  schedule:`Build my complete optimized weekly schedule. I need to organize all areas of my life: 🏀 Basketball personal training, 🏀 Basketball coaching sessions, 💼 Purgo Clean operations, 🥤 Keo Jus business, 🧠 Mindset formation & courses, 🎬 Content creation, 👨‍👩‍👧 Family time, 💪 Personal fitness, 📚 Learning & AI, 📣 Consulting & marketing. First ask me 3 quick questions: (1) How many days/week do I train personally? (2) How many coaching sessions per week do I run? (3) What are my fixed family commitments? Then build my full 7-day time-blocked schedule with zones, weekly KPIs, and a Sunday planning ritual. [EXPORT:schedule]`,
+  schedule:`Build my complete optimized weekly schedule. I need to organize: 🏀 Basketball personal training, 🏀 Coaching sessions, 💼 Purgo Clean ops, 🥤 Keo Jus, 🧠 Formation/courses, 🎬 Content creation, 👨‍👩‍👧 Family time, 💪 Fitness, 📚 Learning & AI, 📣 Consulting. Build a complete 7-day time-blocked schedule using the 3-zone system (🔴 Deep Work 06:00-12:00 / 🟡 Admin 12:00-17:00 / 🟢 Recovery 17:00-21:00), weekly KPIs, top 3 schedule killers, and 1 automation tip. Add /schedule daily, /schedule biweekly or /schedule monthly for different views. [EXPORT:schedule]`,
   present:`Build me a complete professional presentation. Ask me: (1) Topic/subject of the presentation, (2) Target audience (athletes, clients, corporate, students), (3) How many slides (default 10-12). Then deliver each slide as: **SLIDE N — TITLE**, bullet points (3-5 per slide), speaker note. Include: title slide, agenda, problem/challenge, solution, key modules or steps, proof/testimonials placeholder, call to action, closing. Format clean and ready to present. [EXPORT:presentation]`,
   pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
   email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
@@ -425,7 +425,9 @@ function detectIntent(text){
     return{type:'search',query:text.slice(8).trim()};
   }
   if(t.startsWith('/schedule')){
-    return{type:'schedule'};
+    const parts=text.trim().toLowerCase().split(/\s+/);
+    const view=['daily','weekly','biweekly','monthly'].find(v=>parts.includes(v))||'weekly';
+    return{type:'schedule',view};
   }
   if(t.startsWith('/course ')){
     return{type:'course',topic:text.slice(8).trim()};
@@ -472,7 +474,7 @@ async function send(forcedText){
     if(intent.type==='scrape') await doScrape(intent.url,text);
     else if(intent.type==='search') await doSearch(intent.query);
     else if(intent.type==='pdf') await doPdf();
-    else if(intent.type==='schedule'){await callAI();await doPdf();}
+    else if(intent.type==='schedule'){await callAI();const lastMsg=msgs.filter(m=>m.role==='assistant').pop()?.content||'';await doScheduleExport(lastMsg,intent.view||'weekly');}
     else if(intent.type==='course') await callAI();
     else if(intent.type==='present') await callAI();
     return;
@@ -544,6 +546,146 @@ async function doSearch(query){
   }
 }
 
+
+// ── SCHEDULE CALENDAR BUILDER ──
+function parseScheduleBlocks(text){
+  const DAYS=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+  const result={};let cur=null;
+  for(const line of text.split('\n')){
+    const dm=line.match(/===\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\s*===/i);
+    if(dm){cur=dm[1].toUpperCase();result[cur]=[];continue;}
+    if(cur){
+      const bm=line.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*\|\s*(.+?)\s*\|\s*(DEEP|ADMIN|RECOVERY)/i);
+      if(bm)result[cur].push({start:bm[1],end:bm[2],activity:bm[3].trim(),zone:bm[4].toUpperCase()});
+    }
+  }
+  return result;
+}
+
+function buildScheduleHTML(blocks,view,rawText){
+  const DAYS=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+  const SHORT=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const ZC={DEEP:'#ef4444',ADMIN:'#f59e0b',RECOVERY:'#22c55e'};
+  const ZB={DEEP:'#fff0f0',ADMIN:'#fffbeb',RECOVERY:'#f0fdf4'};
+  const ZL={DEEP:'🔴 Deep Work',ADMIN:'🟡 Admin',RECOVERY:'🟢 Recovery'};
+  const dateStr=new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const viewLabel={weekly:'Weekly',daily:'Daily',biweekly:'Bi-Weekly',monthly:'Monthly'};
+
+  // For daily view, show only first day that has blocks (or Monday)
+  let showDays=DAYS;
+  if(view==='daily'){
+    const dayWithBlocks=DAYS.find(d=>blocks[d]&&blocks[d].length)||'MONDAY';
+    showDays=[dayWithBlocks];
+  }
+
+  // Build day columns
+  let cols=``;
+  for(let i=0;i<showDays.length;i++){
+    const day=showDays[i];
+    const si=DAYS.indexOf(day);
+    const dayBlocks=blocks[day]||[];
+    const isWeekend=si>=5;
+    cols+=`<div class="day-col${isWeekend?' weekend':''}">
+      <div class="day-head">${view==='daily'?day:SHORT[si]}<br><span class="day-num">${isWeekend?'🟢':'⚡'}</span></div>`;
+    if(!dayBlocks.length){
+      cols+=`<div class="rest-block">Rest / Flex</div>`;
+    } else {
+      for(const b of dayBlocks){
+        cols+=`<div class="block" style="background:${ZB[b.zone]||'#f8f8ff'};border-left:3px solid ${ZC[b.zone]||'#7C5CFC'}">
+          <div class="bact">${b.activity}</div>
+          <div class="btime">${b.start}–${b.end}</div>
+          <div class="bzone" style="color:${ZC[b.zone]||'#7C5CFC'}">${ZL[b.zone]||b.zone}</div>
+        </div>`;
+      }
+    }
+    cols+=`</div>`;
+  }
+
+  // Extract extras
+  const kpiM=rawText.match(/===\s*KPIs?\s*===([\s\S]*?)(?:===|$)/i);
+  const killM=rawText.match(/===\s*SCHEDULE KILLERS?\s*===([\s\S]*?)(?:===|$)/i);
+  const autoM=rawText.match(/===\s*AUTOMATION TIP\s*===([\s\S]*?)(?:===|\[EXPORT|$)/i);
+  let extras='';
+  if(kpiM||killM||autoM){
+    extras+=`<div class="extras">`;
+    if(kpiM)extras+=`<div class="extra-box"><div class="extra-title">📊 Weekly KPIs</div><div class="extra-body">${kpiM[1].trim().replace(/\n/g,'<br>')}</div></div>`;
+    if(killM)extras+=`<div class="extra-box"><div class="extra-title">⚠️ Schedule Killers to Cut</div><div class="extra-body">${killM[1].trim().replace(/\n/g,'<br>')}</div></div>`;
+    if(autoM)extras+=`<div class="extra-box"><div class="extra-title">⚡ Automation Tip</div><div class="extra-body">${autoM[1].trim()}</div></div>`;
+    extras+=`</div>`;
+  }
+
+  const numCols=showDays.length;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0eeff;padding:24px;}
+.wrap{max-width:${numCols<=1?'500px':'1100px'};margin:0 auto;}
+.hdr{background:linear-gradient(135deg,#7C5CFC,#9b7dff);color:white;border-radius:12px 12px 0 0;padding:24px 28px;}
+.hdr h1{font-size:22px;font-weight:700;letter-spacing:.5px;}
+.hdr p{font-size:12px;opacity:.8;margin-top:5px;}
+.leg{display:flex;gap:16px;padding:12px 28px;background:white;border-bottom:1px solid #ede9ff;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:#555;}
+.ld{width:10px;height:10px;border-radius:2px;}
+.grid{display:grid;grid-template-columns:repeat(${numCols},1fr);gap:1px;background:#ede9ff;border-radius:0 0 12px 12px;overflow:hidden;}
+.day-col{background:white;display:flex;flex-direction:column;}
+.day-col.weekend{background:#fafff9;}
+.day-head{padding:10px 8px;text-align:center;background:#f8f7ff;font-weight:700;font-size:11px;color:#7C5CFC;letter-spacing:.8px;border-bottom:2px solid #ede9ff;}
+.day-num{font-size:12px;}
+.block{margin:3px 5px;border-radius:5px;padding:5px 7px;}
+.bact{font-size:10px;font-weight:600;color:#1a1a2e;line-height:1.3;}
+.btime{font-size:9px;color:#888;margin-top:2px;}
+.bzone{font-size:8px;margin-top:2px;font-weight:500;}
+.rest-block{padding:16px 8px;text-align:center;color:#bbb;font-size:10px;font-style:italic;}
+.extras{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
+.extra-box{background:white;border-radius:8px;padding:16px;border-top:3px solid #7C5CFC;}
+.extra-title{font-size:12px;font-weight:700;color:#7C5CFC;margin-bottom:8px;}
+.extra-body{font-size:11px;color:#555;line-height:1.7;}
+.foot{text-align:center;font-size:10px;color:#aaa;margin-top:12px;}
+</style></head><body><div class="wrap">
+<div class="hdr"><h1>📅 BVMBINO ${viewLabel[view]||'Weekly'} SCHEDULE</h1><p>Tiegbe Bamba · ${dateStr}</p></div>
+<div class="leg">
+  <div class="li"><div class="ld" style="background:#ef4444"></div>Deep Work — Peak Energy (Revenue / Creation)</div>
+  <div class="li"><div class="ld" style="background:#f59e0b"></div>Admin — Operations & Follow-up</div>
+  <div class="li"><div class="ld" style="background:#22c55e"></div>Recovery — Family / Rest / Learning</div>
+</div>
+<div class="grid">${cols}</div>
+${extras}
+<div class="foot">Generated by Bvmbino AI Agent</div>
+</div></body></html>`;
+}
+
+async function doScheduleExport(aiText,view){
+  lockTool('building calendar…');
+  const ci=document.getElementById('ci');
+  const rowId='sched-'+Date.now();
+  const row=document.createElement('div');row.id=rowId;row.className='mrow ai';
+  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap">
+    <div class="mmeta">Bvmbino Agent <span class="mmtag">Schedule</span> <span class="tool-tag" style="background:rgba(34,197,94,.1);color:#22c55e;border-color:rgba(34,197,94,.2)">📅 ${view} view</span></div>
+    <div class="bubble b-ai" id="${rowId}-b"><div style="padding:12px;font-size:12px;color:var(--t2)">Building visual calendar…</div></div>
+  </div>`;
+  ci.appendChild(row);scrollBot();
+  try{
+    const blocks=parseScheduleBlocks(aiText);
+    const calHtml=buildScheduleHTML(blocks,view,aiText);
+    const hasBlocks=Object.values(blocks).some(d=>d.length>0);
+    if(!hasBlocks)throw new Error('Could not parse schedule blocks from AI response. Ask again using /schedule.');
+    const r=await fetch('/api/pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:calHtml,filename:`bvmbino-schedule-${view}.pdf`,landscape:view!=='daily',raw_html:true})});
+    if(!r.ok){const err=await r.json();throw new Error(err.error||'PDF failed');}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=`bvmbino-schedule-${view}.pdf`;a.click();
+    const totalBlocks=Object.values(blocks).reduce((s,d)=>s+d.length,0);
+    const bub=document.getElementById(rowId+'-b');
+    if(bub)bub.innerHTML=`<div style="padding:14px">
+      <div style="color:var(--gn);font-weight:600;font-size:13px;margin-bottom:6px">📅 Visual schedule exported</div>
+      <div style="font-size:11px;color:var(--t2);line-height:1.8">View: <strong style="color:var(--t1)">${view}</strong> · ${totalBlocks} time blocks · Color-coded by energy zone<br>Download started automatically · Change view: <code>/schedule daily</code> · <code>/schedule biweekly</code> · <code>/schedule monthly</code></div>
+    </div>`;
+    toast('Schedule PDF downloaded ✓');
+  }catch(err){
+    const bub=document.getElementById(rowId+'-b');
+    if(bub)bub.innerHTML=`<div style="padding:12px;color:var(--rd);font-size:12px">Export failed: ${esc(err.message)}</div>`;
+    toast('Export failed');
+  }finally{unlock();}
+}
 
 // ── PDF EXPORT ──
 async function doPdf(){

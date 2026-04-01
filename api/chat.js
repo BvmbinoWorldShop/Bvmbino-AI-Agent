@@ -73,18 +73,40 @@ Always position as: reliable, professional, detail-oriented, premium service.`,
 C: Context (Tiegbe's background) · R: Role (ideal expert) · A: Action (specific + results-oriented) · F: Format (best output type) · T: Tone (match audience)
 Output: 1) Enhanced prompt 2) Why it's better (2-3 sentences) 3) 2 optional variations`,
 
-  schedule: `SCHEDULE BUILDER — Build Tiegbe's complete optimized weekly schedule.
-Domains to block: 🏀 Basketball training (personal) · 🏀 Coaching sessions · 💼 Purgo Clean ops · 🥤 Keo Jus business · 🧠 Mindset formation/courses · 🎬 Content creation · 👨‍👩‍👧 Family time · 💪 Personal training · 📚 Learning & AI · 📣 Marketing & consulting.
-3-zone system:
-🔴 Deep Work Zone (06:00–12:00, peak energy): revenue-generating tasks, content creation, coaching, formation
-🟡 Admin Zone (12:00–17:00, medium energy): Purgo ops, emails, client follow-ups, planning, Keo Jus calls
-🟢 Recovery Zone (17:00–21:00, low energy): family time, personal training, learning, basketball training
-Output:
-1. **7-day master schedule table** (Day | Time Block | Activity | Zone 🔴🟡🟢 | Priority | Duration)
-2. **Weekly performance KPIs** (training sessions, content pieces produced, client contacts, revenue actions)
-3. **Top 3 schedule killers** to eliminate immediately
-4. **1 automation** to free 3+ hours per week
-5. **Weekly review checkpoint** — Sunday 30-min planning ritual
+  schedule: `SCHEDULE BUILDER — Build Tiegbe's complete optimized schedule.
+Domains: 🏀 Basketball training · 🏀 Coaching · 💼 Purgo Clean · 🥤 Keo Jus · 🧠 Formation · 🎬 Content · 👨‍👩‍👧 Family · 💪 Fitness · 📚 Learning · 📣 Consulting.
+
+CRITICAL: Use EXACTLY this output format — the app parses it to build a visual calendar:
+
+=== MONDAY ===
+06:00-08:00 | Basketball Personal Training | DEEP
+08:00-10:00 | Content Creation (posts/scripts) | DEEP
+10:00-12:00 | Coaching Session or Consulting | DEEP
+12:00-13:00 | Lunch & Decompression | RECOVERY
+13:00-15:00 | Purgo Clean Operations | ADMIN
+15:00-17:00 | Keo Jus Business / Follow-ups | ADMIN
+17:00-19:00 | Family Time | RECOVERY
+19:00-20:30 | Personal Training / Fitness | RECOVERY
+20:30-21:30 | Learning & AI / Planning | RECOVERY
+
+(Repeat for TUESDAY through SUNDAY — vary activities by day. Saturday/Sunday: more family, less business.)
+
+After all 7 days, add:
+=== KPIs ===
+- Training sessions per week: X
+- Content pieces produced: X
+- Client contacts made: X
+- Revenue-generating hours: X
+
+=== SCHEDULE KILLERS ===
+- [specific time-wasting habit to cut]
+- [another one]
+- [another one]
+
+=== AUTOMATION TIP ===
+[One specific automation using free tools to save 3+ hours/week]
+
+Zone codes: DEEP = peak energy (revenue/creation/coaching), ADMIN = operations/follow-up, RECOVERY = rest/family/learning
 [EXPORT:schedule]`,
 
   imgprompt: `IMAGE/VIDEO PROMPT OPTIMIZER:

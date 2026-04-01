@@ -11,10 +11,11 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { html, filename = 'bvmbino-export.pdf' } = body;
+    const { html, filename = 'bvmbino-export.pdf', landscape = false, raw_html = false } = body;
     if (!html) return res.status(400).json({ error: 'html required' });
 
-    const styledHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    // raw_html = true means the html is already a complete styled document (e.g. schedule calendar)
+    const styledHtml = raw_html ? html : `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <style>
       body { font-family: 'Helvetica Neue', sans-serif; color: #1a1a2e; line-height: 1.7; padding: 48px; font-size: 13px; }
       h1 { font-size: 24px; font-weight: 700; color: #7C5CFC; margin-bottom: 4px; }
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'Authorization': 'Basic ' + Buffer.from(`api:${apiKey}`).toString('base64'),
       },
-      body: JSON.stringify({ source: styledHtml, landscape: false, use_print: false }),
+      body: JSON.stringify({ source: styledHtml, landscape, use_print: false }),
     });
 
     if (!response.ok) {
