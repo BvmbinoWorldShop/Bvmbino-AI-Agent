@@ -39,11 +39,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fallback: Pollinations (free, no key)
+    // Pollinations — free, no key, generates on first load (no HEAD check needed)
     const encoded = encodeURIComponent(prompt);
     const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true&seed=${Date.now()}`;
-    const check = await fetch(imageUrl, { method: 'HEAD' });
-    if (!check.ok) throw new Error(`Pollinations returned ${check.status}`);
     return res.status(200).json({ data: [{ url: imageUrl }], model: 'pollinations' });
 
   } catch (err) {

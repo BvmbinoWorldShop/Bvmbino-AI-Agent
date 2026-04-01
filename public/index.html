@@ -396,6 +396,7 @@ document.addEventListener('keydown',e=>{
 function rmWelcome(){const w=document.getElementById('welcome');if(w)w.remove();}
 
 function newChat(){
+  saveSessionMemory();
   msgs=[];tokens=1840;updTok(0);
   document.getElementById('tbtitle').textContent='New conversation';
   document.getElementById('ci').innerHTML=`
@@ -747,9 +748,39 @@ function appendRawHtml(html,afterId){
   scrollBot();
 }
 
+// ── SESSION MEMORY (localStorage) ──
+const MEM_KEY='bvmbino_session_log';
+const MEM_MAX=20;
+
+function loadSessionMemory(){
+  try{const d=JSON.parse(localStorage.getItem(MEM_KEY)||'[]');return d.slice(-MEM_MAX);}
+  catch{return[];}
+}
+
+function saveSessionMemory(){
+  if(!msgs.length)return;
+  const summary=msgs.filter(m=>m.role==='user').map(m=>'• '+m.content.slice(0,120)).join('\n');
+  if(!summary.trim())return;
+  const entry={date:new Date().toLocaleDateString('en-GB'),summary};
+  const log=loadSessionMemory();
+  log.push(entry);
+  if(log.length>MEM_MAX)log.splice(0,log.length-MEM_MAX);
+  try{localStorage.setItem(MEM_KEY,JSON.stringify(log));}catch{}
+  addMem('session saved',entry.date+' — '+msgs.filter(m=>m.role==='user').length+' exchanges');
+  toast('Session saved to memory ✓');
+}
+
+function getMemoryContext(){
+  const log=loadSessionMemory();
+  if(!log.length)return'';
+  const recent=log.slice(-5).map(e=>`[${e.date}]\n${e.summary}`).join('\n\n');
+  return`\n\nPREVIOUS SESSION CONTEXT (use to avoid re-explaining):\n${recent}`;
+}
+
 // ── BUILD SYSTEM PROMPT ──
 function buildSys(){
   const tools=[...pills].map(p=>p.replace('p-','')).join(', ');
+  const mem=getMemoryContext();
   return `You are Bvmbino AI Agent — an autonomous AI business assistant for high-performance entrepreneurs.
 
 User: Tiegbe Bamba
@@ -765,10 +796,10 @@ User: Tiegbe Bamba
 
 Behavior:
 - Direct, strategic, action-oriented. Zero filler.
-- Format with **bold headers**, numbered steps, bullet lists, \`code\`, markdown tables, \`\`\`code blocks\`\`\`
-- For structured docs (resume, campaign, strategy, workflow, course) end with [EXPORT:type] on its own line
-- For /course requests: build complete curriculum with 6-8 modules, each with title, objective, content points, activity, plus pricing tiers and quick win
-- Max 800 words unless task requires more`;
+- Auto-optimize every user input — infer missing context, expand vague requests, match domain tone.
+- Format with **bold headers**, numbered steps, bullet lists, markdown tables.
+- For structured docs end with [EXPORT:type] on its own line.
+- Max 800 words unless task requires more.${mem}`;
 }
 
 // ── XCARD ──
