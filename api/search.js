@@ -9,31 +9,33 @@ export default async function handler(req, res) {
     const { query, count = 5 } = body;
     if (!query) return res.status(400).json({ error: 'query required' });
 
-    const url = `https://s.jina.ai/${encodeURIComponent(query)}`;
+    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
     const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'X-Retain-Images': 'none',
-      }
+      headers: { 'Accept': 'application/json' }
     });
 
-    if (!response.ok) throw new Error(`Jina search ${response.status}: ${await response.text()}`);
-    const text = await response.text();
+    if (!response.ok) throw new Error(`DuckDuckGo ${response.status}`);
+    const data = await response.json();
 
-    const results = text
-      .split('\n\n')
-      .filter(block => block.trim())
-      .slice(0, count)
-      .map(block => {
-        const titleMatch = block.match(/Title:\s*(.+)/);
-        const urlMatch = block.match(/URL:\s*(.+)/);
-        const descMatch = block.match(/Description:\s*(.+)/);
-        return {
-          title: titleMatch?.[1]?.trim() || 'Result',
-          url: urlMatch?.[1]?.trim() || '',
-          description: descMatch?.[1]?.trim() || block.slice(0, 200),
-        };
+    const results = [];
+
+    if (data.AbstractText) {
+      results.push({
+        title: data.Heading || query,
+        url: data.AbstractURL || '',
+        description: data.AbstractText,
       });
+    }
+
+    (data.RelatedTopics || []).slice(0, count - results.length).forEach(t => {
+      if (t.Text && t.FirstURL) {
+        results.push({
+          title: t.Text.split(' - ')[0] || t.Text.slice(0, 60),
+          url: t.FirstURL,
+          description: t.Text,
+        });
+      }
+    });
 
     return res.status(200).json({ results, query });
   } catch (err) {
