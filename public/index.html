@@ -193,6 +193,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
       <button class="qbtn" onclick="slash('image')"><span class="qi" style="background:rgba(239,68,68,.08)">🎨</span><span>Generate Image</span><span class="qsub">/image</span></button>
       <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(124,92,252,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
+      <button class="qbtn" onclick="slash('present')"><span class="qi" style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span class="qsub">/present</span></button>
       <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
     </div>
   </div>
@@ -283,6 +284,7 @@ const CMDS=[
   {cmd:'/scrape',   desc:'Scrape website: /scrape [url]',        icon:'🌐'},
   {cmd:'/search',   desc:'Web search: /search [query]',          icon:'🔍'},
   {cmd:'/image',    desc:'Generate image: /image [desc]',        icon:'🎨'},
+  {cmd:'/present',  desc:'Build presentation: /present [topic]', icon:'🖥️'},
   {cmd:'/automate', desc:'Automation workflow design',            icon:'⚡'},
   {cmd:'/pitch',    desc:'Investor pitch content',               icon:'💼'},
   {cmd:'/email',    desc:'Write professional email',             icon:'✉️'},
@@ -298,6 +300,7 @@ const PROMPTS={
   search:`I want to search the web. Please ask me what I'd like to search for.`,
   image:`I want to generate an image. Please ask me to describe what I want to create.`,
   course:`Build me a complete, professional training course curriculum. Ask me these 3 questions first: (1) What is the course topic? (2) Who is the target audience? (3) What is the delivery format (online / in-person / hybrid)? Then deliver the full course structure: **Program Title** + tagline, **Transformation Promise** (what learners gain), **Module Breakdown** (6-8 modules — each with: title, objective, 3-5 key content points, 1 hands-on activity), **Delivery Format & Schedule**, **Pricing Tiers** (Basic / Premium / VIP with what's included), **Module 1 Quick Win** (something learners apply in the first session). Format as a complete structured document ready to use. [EXPORT:course]`,
+  present:`Build me a complete professional presentation. Ask me: (1) Topic/subject of the presentation, (2) Target audience (athletes, clients, corporate, students), (3) How many slides (default 10-12). Then deliver each slide as: **SLIDE N — TITLE**, bullet points (3-5 per slide), speaker note. Include: title slide, agenda, problem/challenge, solution, key modules or steps, proof/testimonials placeholder, call to action, closing. Format clean and ready to present. [EXPORT:presentation]`,
   pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
   email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
 };
@@ -350,7 +353,7 @@ function applySlash(cmd){
   document.getElementById('smenu').classList.remove('show');
   const key=cmd.slice(1);
   // Commands that need argument: pre-fill with prefix
-  if(['scrape','search','image','course'].includes(key)){
+  if(['scrape','search','image','course','present'].includes(key)){
     const el=document.getElementById('inp');
     el.value=cmd+' ';el.focus();onInp();
     return;
@@ -360,13 +363,14 @@ function applySlash(cmd){
 
 function slash(key){
   rmWelcome();
-  if(['scrape','search','image','course'].includes(key)){
+  if(['scrape','search','image','course','present'].includes(key)){
     const el=document.getElementById('inp');
     el.value='/'+key+' ';el.focus();
     if(key==='scrape')toast('Paste a URL after /scrape');
     if(key==='search')toast('Type your search query after /search');
     if(key==='image')toast('Describe the image after /image');
     if(key==='course')toast('Type your course topic after /course');
+    if(key==='present')toast('Type your presentation topic after /present');
     return;
   }
   if(PROMPTS[key])send(PROMPTS[key]);
@@ -427,6 +431,9 @@ function detectIntent(text){
   if(t.startsWith('/course ')){
     return{type:'course',topic:text.slice(8).trim()};
   }
+  if(t.startsWith('/present ')){
+    return{type:'present',topic:text.slice(9).trim()};
+  }
   if(t.startsWith('/pdf')){
     return{type:'pdf'};
   }
@@ -472,7 +479,8 @@ async function send(forcedText){
     else if(intent.type==='search') await doSearch(intent.query);
     else if(intent.type==='image') await doImage(intent.prompt);
     else if(intent.type==='pdf') await doPdf();
-    else if(intent.type==='course') await callAI();
+    else if(intent.type==='course'){await callAI();doImage('professional training course cover: '+intent.topic+', modern design, clean, inspiring');}
+    else if(intent.type==='present'){await callAI();doImage('professional presentation cover slide: '+intent.topic+', modern corporate design, clean minimal');}
     return;
   }
   await callAI();
@@ -519,18 +527,25 @@ async function doSearch(query){
     const data=await r.json();
     if(data.error)throw new Error(data.error);
     const results=data.results||[];
-    updateToolRow(rowId,'🔍','search',`Found ${results.length} results for "<em>${esc(query)}</em>"`);
-    // Format results for Claude
-    const formatted=results.map((r2,i)=>`${i+1}. **${r2.title}**\n   URL: ${r2.url}\n   ${r2.description}`).join('\n\n');
-    const searchMsg={role:'user',content:`Web search results for "${query}":\n\n${formatted}\n\nPlease analyze these results and give me a comprehensive answer.`};
-    msgs.push(searchMsg);
-    // Also show results preview
-    const preview=results.slice(0,3).map(r2=>`<div style="padding:6px 0;border-bottom:1px solid var(--bd)"><a href="${esc(r2.url)}" target="_blank" style="color:var(--pu2);font-size:12px;text-decoration:none">${esc(r2.title)}</a><div style="font-size:11px;color:var(--t3);margin-top:2px">${esc(r2.description||'').slice(0,120)}</div></div>`).join('');
-    appendRawHtml(`<div style="margin-top:8px">${preview}</div>`,rowId);
-    await callAI(true);
+    const answer=data.answer||'';
+    updateToolRow(rowId,'🔍','search',`Google search: "<em>${esc(query)}</em>" — ${results.length} sources`);
+    // Show source links preview
+    const preview=results.slice(0,4).map(r2=>`<div style="padding:5px 0;border-bottom:1px solid var(--bd)"><a href="${esc(r2.url)}" target="_blank" style="color:var(--pu2);font-size:11px;text-decoration:none;font-family:var(--mono)">${esc(r2.title).slice(0,80)}</a></div>`).join('');
+    if(preview)appendRawHtml(`<div style="margin-top:6px;padding:8px;background:var(--s2);border-radius:6px">${preview}</div>`,rowId);
+    // If Gemini already returned grounded answer, display it directly
+    if(answer){
+      msgs.push({role:'assistant',content:answer});
+      appendAiText(answer,null);
+      updTok(answer.length/3.5);
+      unlock();
+    } else {
+      const formatted=results.map((r2,i)=>`${i+1}. ${r2.title}\n   URL: ${r2.url}`).join('\n\n');
+      msgs.push({role:'user',content:`Web search results for "${query}":\n\n${formatted}\n\nSummarize key findings.`});
+      await callAI(true);
+    }
   }catch(err){
     updateToolRow(rowId,'🔍','search','Search failed: '+err.message,true);
-    appendAiText(`**Search failed:** ${err.message}\n\nMake sure BRAVE_KEY is set in your Vercel environment variables.\n\nGet a free key at **api.search.brave.com** (2,000 free searches/month).`,null);
+    appendAiText(`**Search failed:** ${err.message}\n\nMake sure GEMINI_KEY is set in your Vercel environment variables.`,null);
     unlock();
   }
 }

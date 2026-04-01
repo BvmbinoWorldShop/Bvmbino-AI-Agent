@@ -4,40 +4,40 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const apiKey = process.env.GEMINI_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'GEMINI_KEY not set' });
+
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { query, count = 5 } = body;
+    const { query, count = 6 } = body;
     if (!query) return res.status(400).json({ error: 'query required' });
 
-    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!response.ok) throw new Error(`DuckDuckGo ${response.status}`);
-    const data = await response.json();
-
-    const results = [];
-
-    if (data.AbstractText) {
-      results.push({
-        title: data.Heading || query,
-        url: data.AbstractURL || '',
-        description: data.AbstractText,
-      });
-    }
-
-    (data.RelatedTopics || []).slice(0, count - results.length).forEach(t => {
-      if (t.Text && t.FirstURL) {
-        results.push({
-          title: t.Text.split(' - ')[0] || t.Text.slice(0, 60),
-          url: t.FirstURL,
-          description: t.Text,
-        });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Search and summarize: ${query}` }] }],
+          tools: [{ googleSearch: {} }],
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
       }
-    });
+    );
 
-    return res.status(200).json({ results, query });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'Gemini search error');
+
+    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const chunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+
+    const results = chunks.slice(0, count).map(c => ({
+      title: c.web?.title || query,
+      url: c.web?.uri || '',
+      description: c.web?.title || '',
+    }));
+
+    return res.status(200).json({ results, answer, query });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
