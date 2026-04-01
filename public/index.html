@@ -774,7 +774,11 @@ async function callAI(skipLock){
     }else{
       const data=await res.json();
       hideTyping();
-      let reply=data.content?.[0]?.text||JSON.stringify(data.error||'No response');
+      // Update model badge to show actual provider used
+      if(data.model){const mb=document.getElementById('mbadge');if(mb)mb.textContent=data.model;}
+      // Show error hint if all providers failed
+      if(data.hint&&!data.content){appendAiText(`**All AI providers failed**\n\n${data.hint}`,null);unlock();return;}
+      let reply=data.content?.[0]?.text||data.error||'No response from AI';
       let xtype=null;const m=reply.match(/\[EXPORT:(\w+)\]/);
       if(m){reply=reply.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m[1];}
       msgs.push({role:'assistant',content:reply});
@@ -783,7 +787,7 @@ async function callAI(skipLock){
     }
   }catch(err){
     hideTyping();
-    const errTxt=`**Connection failed**\n\nCannot reach /api/chat. Make sure:\n1. \`GEMINI_KEY\` is set in Vercel env vars\n2. App is deployed with \`vercel --prod\`\n3. Or run locally with \`vercel dev\`\n\nError: \`${err.message}\``;
+    const errTxt=`**Connection failed** — \`${err.message}\`\n\n**Free API keys to add in Vercel env vars:**\n- \`GROQ_KEY\` → groq.com *(14,400 req/day — fastest)*\n- \`CEREBRAS_KEY\` → cloud.cerebras.ai *(1M tokens/day)*\n- \`OPENROUTER_KEY\` → openrouter.ai *(50 free req/day, 28+ models)*\n- \`GEMINI_KEY\` → aistudio.google.com *(1,500 req/day)*\n\nRun locally: \`vercel dev\` · Deploy: \`vercel --prod\``;
     msgs.push({role:'assistant',content:errTxt});
     appendAiText(errTxt,null);
   }finally{
