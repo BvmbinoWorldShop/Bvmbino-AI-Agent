@@ -256,8 +256,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.GEMINI_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_KEY not set. Get free key at aistudio.google.com' });
+  const geminiKey1 = process.env.GEMINI_KEY;
+  const geminiKey2 = process.env.GEMINI_KEY_2; // optional second key — doubles free quota
+  const groqKey    = process.env.GROQ_KEY;      // free forever fallback (console.groq.com)
+
+  if (!geminiKey1 && !groqKey) {
+    return res.status(500).json({ error: 'No AI key configured. Set GEMINI_KEY (aistudio.google.com) or GROQ_KEY (console.groq.com) — both free.' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -266,53 +271,69 @@ export default async function handler(req, res) {
     const skill = detectSkill(messages, system);
     const skillPrompt = skill ? `\n\n## ACTIVE SKILL: ${skill.toUpperCase()}\n${SKILLS[skill]}` : '';
     const fullSystem = CORE + skillPrompt + (system ? `\n\n${system}` : '');
+    const maxTok = getMaxTokens(skill, body.max_tokens);
+    const temp = body.temperature ?? 0.7;
+
+    // ── GEMINI ATTEMPTS ───────────────────────────────────────────────────────
+    // Try each key × each model. Stops on auth error, continues on quota/overload.
+    const geminiAttempts = [];
+    if (geminiKey1) {
+      geminiAttempts.push({ key: geminiKey1, model: 'gemini-2.5-flash' });
+      geminiAttempts.push({ key: geminiKey1, model: 'gemini-1.5-flash' });
+    }
+    if (geminiKey2) {
+      geminiAttempts.push({ key: geminiKey2, model: 'gemini-2.5-flash' });
+      geminiAttempts.push({ key: geminiKey2, model: 'gemini-1.5-flash' });
+    }
 
     const contents = (messages || []).map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }));
-
     const geminiBody = {
       contents,
       systemInstruction: { parts: [{ text: fullSystem }] },
-      generationConfig: {
-        maxOutputTokens: getMaxTokens(skill, body.max_tokens),
-        temperature: body.temperature ?? 0.7,
-      },
+      generationConfig: { maxOutputTokens: maxTok, temperature: temp },
     };
 
-    const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
     let lastError = null;
-
-    for (const geminiModel of models) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+    for (const { key, model } of geminiAttempts) {
       try {
-        const upstream = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(geminiBody),
-        });
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+        const upstream = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody) });
         const data = await upstream.json();
         if (!upstream.ok) {
-          lastError = data.error?.message || `Gemini error (${upstream.status})`;
-          // On quota/overload errors try fallback model, on auth errors stop immediately
-          if (upstream.status === 401 || upstream.status === 403) break;
-          continue;
+          lastError = data.error?.message || `Gemini ${model} error (${upstream.status})`;
+          if (upstream.status === 401 || upstream.status === 403) break; // bad key — stop trying this key
+          continue; // quota/overload — try next
         }
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        return res.status(200).json({
-          id: 'gemini',
-          content: [{ type: 'text', text }],
-          model: geminiModel,
-          role: 'assistant',
-          skill: skill || 'general',
-        });
-      } catch (fetchErr) {
-        lastError = fetchErr.message;
-        continue;
-      }
+        return res.status(200).json({ id: 'gemini', content: [{ type: 'text', text }], model, role: 'assistant', skill: skill || 'general' });
+      } catch (e) { lastError = e.message; continue; }
     }
-    return res.status(500).json({ error: lastError || 'All Gemini models failed' });
+
+    // ── GROQ FALLBACK (free forever — Llama 3.3 70B) ─────────────────────────
+    if (groqKey) {
+      try {
+        const groqMessages = [
+          { role: 'system', content: fullSystem },
+          ...(messages || []).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+        ];
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+          body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: groqMessages, max_tokens: Math.min(maxTok, 8000), temperature: temp }),
+        });
+        const groqData = await groqRes.json();
+        if (groqRes.ok) {
+          const text = groqData.choices?.[0]?.message?.content || '';
+          return res.status(200).json({ id: 'groq', content: [{ type: 'text', text }], model: 'llama-3.3-70b', role: 'assistant', skill: skill || 'general' });
+        }
+        lastError = groqData.error?.message || `Groq error (${groqRes.status})`;
+      } catch (e) { lastError = e.message; }
+    }
+
+    return res.status(500).json({ error: lastError || 'All AI providers failed. Check API keys.' });
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(500).json({ error: 'Proxy error', detail: err.message });
