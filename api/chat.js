@@ -7,43 +7,52 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.ANTHROPIC_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_KEY not set in environment variables' });
+  const apiKey = process.env.GEMINI_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'GEMINI_KEY not set. Get free key at aistudio.google.com' });
 
   try {
-    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-    const parsed = JSON.parse(body);
-    const isStream = parsed.stream === true;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const { messages, system } = body;
 
-    const upstream = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+    const contents = (messages || []).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+
+    const geminiBody = {
+      contents,
+      generationConfig: {
+        maxOutputTokens: body.max_tokens || 1024,
+        temperature: body.temperature ?? 0.7,
       },
-      body: JSON.stringify(parsed),
+    };
+
+    if (system) {
+      geminiBody.systemInstruction = { parts: [{ text: system }] };
+    }
+
+    const geminiModel = 'gemini-1.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(geminiBody),
     });
 
-    if (isStream) {
-      // Stream SSE directly to client
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
+    const data = await upstream.json();
 
-      const reader = upstream.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(decoder.decode(value));
-      }
-      res.end();
-    } else {
-      const data = await upstream.json();
-      res.status(upstream.status).json(data);
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({ error: data.error?.message || 'Gemini error', detail: data });
     }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return res.status(200).json({
+      id: 'gemini',
+      content: [{ type: 'text', text }],
+      model: geminiModel,
+      role: 'assistant',
+    });
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(500).json({ error: 'Proxy error', detail: err.message });
