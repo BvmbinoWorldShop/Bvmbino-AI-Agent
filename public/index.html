@@ -279,18 +279,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 const MODELS={claude:'Groq · Llama 3.3',gpt4:'Groq · Llama 3.3',gemini:'Groq · Llama 3.3',grok:'Groq · Llama 3.3'};
 const CMDS=[
   {cmd:'/resume',   desc:'Tailored resume: /resume [url or job]', icon:'📄'},
-  {cmd:'/campaign', desc:'Full ad campaign + deployment guide',  icon:'📣'},
-  {cmd:'/strategy', desc:'Business growth strategy',             icon:'📈'},
-  {cmd:'/course',   desc:'Build full course: /course [topic]',   icon:'🎓'},
-  {cmd:'/scrape',   desc:'Scrape website: /scrape [url]',        icon:'🌐'},
-  {cmd:'/search',   desc:'Web search: /search [query]',          icon:'🔍'},
-  {cmd:'/schedule', desc:'Build weekly schedule as PDF',          icon:'📅'},
-  {cmd:'/present',  desc:'Build presentation: /present [topic]', icon:'🖥️'},
-  {cmd:'/automate', desc:'Automation workflow design',            icon:'⚡'},
-  {cmd:'/pitch',    desc:'Investor pitch content',               icon:'💼'},
-  {cmd:'/email',    desc:'Write professional email',             icon:'✉️'},
-  {cmd:'/pdf',      desc:'Export last answer as PDF',            icon:'📋'},
-  {cmd:'/security', desc:'Security audit — scan code & deps',    icon:'🔐'},
+  {cmd:'/campaign', desc:'Full ad campaign + deployment guide',   icon:'📣'},
+  {cmd:'/strategy', desc:'Business growth strategy',              icon:'📈'},
+  {cmd:'/sales',    desc:'Sales script + objection handlers',     icon:'💰'},
+  {cmd:'/content',  desc:'Social post: /content [topic]',         icon:'🎬'},
+  {cmd:'/imgprompt',desc:'AI image prompt: /imgprompt [idea]',    icon:'🎨'},
+  {cmd:'/course',   desc:'Build full course: /course [topic]',    icon:'🎓'},
+  {cmd:'/scrape',   desc:'Scrape website: /scrape [url]',         icon:'🌐'},
+  {cmd:'/search',   desc:'Web search: /search [query]',           icon:'🔍'},
+  {cmd:'/schedule', desc:'Build weekly schedule as PDF',           icon:'📅'},
+  {cmd:'/present',  desc:'Build presentation: /present [topic]',  icon:'🖥️'},
+  {cmd:'/automate', desc:'Automation workflow design',             icon:'⚡'},
+  {cmd:'/pitch',    desc:'Investor pitch content',                icon:'💼'},
+  {cmd:'/email',    desc:'Write professional email',              icon:'✉️'},
+  {cmd:'/pdf',      desc:'Export last answer as PDF',             icon:'📋'},
+  {cmd:'/security', desc:'Security audit — scan code & deps',     icon:'🔐'},
 ];
 
 const PROMPTS={
@@ -303,9 +306,14 @@ const PROMPTS={
 course:`Build me a complete, professional training course curriculum. Ask me these 3 questions first: (1) What is the course topic? (2) Who is the target audience? (3) What is the delivery format (online / in-person / hybrid)? Then deliver the full course structure: **Program Title** + tagline, **Transformation Promise** (what learners gain), **Module Breakdown** (6-8 modules — each with: title, objective, 3-5 key content points, 1 hands-on activity), **Delivery Format & Schedule**, **Pricing Tiers** (Basic / Premium / VIP with what's included), **Module 1 Quick Win** (something learners apply in the first session). Format as a complete structured document ready to use. [EXPORT:course]`,
   schedule:`Build my complete optimized weekly schedule. Activities: 🏀 Basketball training, 🏀 Coaching, 💼 Purgo Clean, 🥤 Keo Jus, 🧠 Formation, 🎬 Content, 👨‍👩‍👧 Family, 💪 Fitness, 📚 Learning, 📣 Consulting. CRITICAL — use EXACTLY this format (required for PDF export):\n\n=== MONDAY ===\n06:00-08:00 | Basketball Training | DEEP\n08:00-10:00 | Content Creation | DEEP\n\n=== TUESDAY ===\n06:00-08:00 | Coaching Session | DEEP\n\n(continue all 7 days, then add KPIs, SCHEDULE KILLERS, AUTOMATION TIP sections). Zones: DEEP=peak energy, ADMIN=operations, RECOVERY=rest/family. [EXPORT:schedule]`,
   present:`Build me a complete professional presentation. Ask me: (1) Topic/subject of the presentation, (2) Target audience (athletes, clients, corporate, students), (3) How many slides (default 10-12). Then deliver each slide as: **SLIDE N — TITLE**, bullet points (3-5 per slide), speaker note. Include: title slide, agenda, problem/challenge, solution, key modules or steps, proof/testimonials placeholder, call to action, closing. Format clean and ready to present. [EXPORT:presentation]`,
-  pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
+  pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing, persistent memory, and built-in business tools. Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
   email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
   security:`/security — Run a full security audit on this project. Start by announcing what you will scan first and wait for my approval before proceeding. Cover: code vulnerabilities (XSS, injection, exposed keys), dependencies (npm audit), environment (.env exposure), API endpoints (auth, CORS), and any suspicious patterns. Use severity levels: 🔴 CRITICAL · 🟠 HIGH · 🟡 MEDIUM · 🟢 LOW. Propose fixes one by one. Never apply anything without my go-ahead.`,
+  sales:`/sales — Generate a complete sales script for closing new clients. Include: warm opener, 5 discovery questions to uncover pain points, bridge from pain to my solution, top 3 objection handlers (price / timing / "need to think"), soft close + assumptive close techniques, and a ready-to-send 48h follow-up DM. Adapt to my businesses: Strong Wave Service (consulting/marketing), Purgo Clean (commercial cleaning B2B), Coaching/Formation (mindset, AI, basketball). [EXPORT:sales]`,
+  content:`/content — Act as my Personal Content Strategist. Generate ALL of the following for this topic: 1) Instagram caption (hook + value + CTA, max 150 words), 2) LinkedIn post (storytelling angle, 250-300 words), 3) X/Twitter thread (5 tweets), 4) Reel/video script (30-60 sec, shoot-ready with B-roll directions), 5) AI image prompt (hyperrealistic, camera specs, lighting, texture). Domains: basketball, mindset, Purgo Clean, AI consulting, marketing. [EXPORT:content]`,
+  imgprompt:`/imgprompt — Act as a professional AI media director. Transform my visual idea into a production-grade, hyperrealistic prompt. Include: subject + action + expression, environment + lighting (golden hour / studio / neon / cinematic), camera system (Sony A7R V / Canon EOS R5), lens (85mm f/1.4 / 35mm f/2.8), shot type (close-up / Dutch angle / low angle / aerial), texture details (skin pores / fabric / sweat / surface reflections), color grade (warm filmic / cool editorial), style (hyperrealistic editorial / sports magazine / Nike campaign). Add negative prompt. Recommend best free AI tool. Describe your visual idea after /imgprompt.`,
+  outreach:`/outreach — Write personalized cold outreach for a potential client or partner. Structure: Line 1: specific compliment/observation, Line 2: who I am in one sentence, Line 3: specific value I can add to THEM, Line 4: low-friction CTA. Deliver both email version + DM version. Tone: human, direct, confident — never salesy. Who are you reaching out to?`,
+  proposal:`/proposal — Write a high-ticket client proposal. Include: Executive Summary (their problem + my solution), About Me (credibility + relevant experience), Offer Details (deliverables, timeline, format), Investment tiers (Basic / Premium / VIP), Next Steps (CTA + booking link placeholder). Tone: confident, empathetic, results-focused. Which client type is this for? [EXPORT:proposal]`,
 };
 
 let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[],msgStore={};
@@ -359,12 +367,14 @@ function onInp(){
 function applySlash(cmd){
   document.getElementById('smenu').classList.remove('show');
   const key=cmd.slice(1);
-  // Commands that need argument: pre-fill with prefix
-  if(['scrape','search','course','present','resume'].includes(key)){
+  // Commands that need an argument typed after them
+  if(['scrape','search','course','present','resume','content','imgprompt','outreach','proposal'].includes(key)){
     const el=document.getElementById('inp');
     el.value=cmd+' ';el.focus();onInp();
     return;
   }
+  // /pdf is handled separately (exports last message)
+  if(key==='pdf'){rmWelcome();doPdf();return;}
   if(PROMPTS[key]){rmWelcome();document.getElementById('inp').value='';send(PROMPTS[key]);}
 }
 
@@ -452,6 +462,17 @@ function detectIntent(text){
   if(t.startsWith('/present ')){
     return{type:'present',topic:text.slice(9).trim()};
   }
+  if(t.startsWith('/content ')){
+    const topic=text.slice(9).trim();
+    return{type:'content',topic};
+  }
+  if(t.startsWith('/imgprompt ')){
+    const idea=text.slice(11).trim();
+    return{type:'imgprompt',idea};
+  }
+  if(t.startsWith('/outreach ')||t.startsWith('/proposal ')){
+    return{type:'ai'};// route straight to callAI with message intact
+  }
   if(t.startsWith('/pdf')){
     return{type:'pdf'};
   }
@@ -494,11 +515,9 @@ async function send(forcedText){
       if(intent.type==='scrape') await doScrape(intent.url,text);
       else if(intent.type==='search') await doSearch(intent.query);
       else if(intent.type==='resume') await doSmartResume(intent.input);
-      else if(intent.type==='campaign') await callAI();
       else if(intent.type==='pdf') await doPdf();
       else if(intent.type==='schedule'){await callAI();const lastMsg=msgs.filter(m=>m.role==='assistant').pop()?.content||'';await doScheduleExport(lastMsg,intent.view||'weekly');}
-      else if(intent.type==='course') await callAI();
-      else if(intent.type==='present') await callAI();
+      else await callAI(); // campaign, course, present, content, imgprompt, outreach, proposal, ai → all go to callAI
       return;
     }
     await callAI();
@@ -954,9 +973,8 @@ async function callAI(skipLock){
     }
   }catch(err){
     hideTyping();
-    const errTxt=`**Connection failed** — \`${err.message}\`\n\n**Free API keys to add in Vercel env vars:**\n- \`GROQ_KEY\` → groq.com *(14,400 req/day — fastest)*\n- \`CEREBRAS_KEY\` → cloud.cerebras.ai *(1M tokens/day)*\n- \`OPENROUTER_KEY\` → openrouter.ai *(50 free req/day, 28+ models)*\n\nRun locally: \`vercel dev\` · Deploy: \`vercel --prod\``;
-    msgs.push({role:'assistant',content:errTxt});
-    appendAiText(errTxt,null);
+    // Do NOT push error messages into msgs — it corrupts conversation history on retry
+    appendAiText(`**Connection failed** — \`${err.message}\`\n\nCheck that \`GROQ_KEY\` is set in Vercel → Settings → Environment Variables.`,null);
   }finally{
     unlock();
   }
@@ -1008,9 +1026,10 @@ async function streamResponse(res){
   finally{
     let xtype=null;const m3=full.match(/\[EXPORT:(\w+)\]/);
     if(m3){full=full.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m3[1];}
-    msgs.push({role:'assistant',content:full});
+    // Only push to msgs if we actually got content — empty stream = error, don't corrupt history
+    if(full.trim()) msgs.push({role:'assistant',content:full});
     // Final render of complete response (no cursor)
-    if(streamEl)streamEl.innerHTML=mdHtml(full)+(xtype?xcard(xtype):'');
+    if(streamEl)streamEl.innerHTML=full.trim()?mdHtml(full)+(xtype?xcard(xtype):''):'<span style="color:var(--rd);font-size:12px">No response received — check API keys</span>';
     const mw=row.querySelector('.mwrap');
     const mid='m'+Date.now();msgStore[mid]={text:full,xtype};
     const acts=document.createElement('div');acts.className='macts';
@@ -1359,6 +1378,31 @@ document.addEventListener('touchend',e=>{
 
 // Init history on load
 renderHistory();
+
+// ── STARTUP PING — test API on load, show live status in engine badge ──
+(async()=>{
+  const badge=document.getElementById('ai-engine-badge');
+  const sidebar=document.getElementById('ai-engine-badge');
+  try{
+    const r=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:'ping'}],max_tokens:5})
+    });
+    if(r.ok){
+      const model=r.headers.get('x-model')||'Groq';
+      const providers=r.headers.get('x-providers')||'';
+      if(badge)badge.innerHTML=`<span class="pulse"></span>${model}`;
+      const mb=document.getElementById('mbadge');if(mb)mb.textContent=model;
+      // Drain stream silently
+      if(r.body){const rd=r.body.getReader();let done=false;while(!done){const c=await rd.read();done=c.done;}}
+    }else{
+      if(badge)badge.innerHTML=`<span style="color:var(--rd)">⚠ API Error ${r.status}</span>`;
+    }
+  }catch(e){
+    if(badge)badge.innerHTML=`<span style="color:var(--rd)">⚠ No connection</span>`;
+  }
+})();
 </script>
 </body>
 </html>
