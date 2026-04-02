@@ -296,6 +296,9 @@ export default async function handler(req, res) {
   const geminiKey2    = process.env.GEMINI_KEY_2;      // second Gemini key — +1,500/day FREE FOREVER
   const openrouterKey = process.env.OPENROUTER_KEY;   // openrouter.ai — 50 free req/day, 28+ free models
 
+  // Debug: tell the frontend which keys are loaded (safe — no key values exposed)
+  res.setHeader('x-providers', [groqKey?'groq':'',cerebrasKey?'cerebras':'',geminiKey1?'gemini1':'',geminiKey2?'gemini2':'',openrouterKey?'openrouter':''].filter(Boolean).join(','));
+
   if (!groqKey && !cerebrasKey && !geminiKey1 && !openrouterKey) {
     return res.status(500).json({
       error: 'No AI key configured.',
@@ -339,7 +342,7 @@ export default async function handler(req, res) {
         const d = await r.json();
         if (r.ok) {
           const text = d.choices?.[0]?.message?.content || '';
-          return res.status(200).json({ id: 'groq', content: [{ type: 'text', text }], model: 'Llama 3.3 70B', role: 'assistant', skill: skill || 'general' });
+          return res.status(200).json({ id: 'groq', content: [{ type: 'text', text }], model: 'Groq · Llama 3.3 70B', role: 'assistant', skill: skill || 'general' });
         }
         lastError = d.error?.message || `Groq error (${r.status})`;
         if (r.status === 401 || r.status === 403) lastError = 'Groq: invalid key — add GROQ_KEY at groq.com (free)';
@@ -357,7 +360,7 @@ export default async function handler(req, res) {
         const d = await r.json();
         if (r.ok) {
           const text = d.choices?.[0]?.message?.content || '';
-          return res.status(200).json({ id: 'cerebras', content: [{ type: 'text', text }], model: 'Cerebras Llama 70B', role: 'assistant', skill: skill || 'general' });
+          return res.status(200).json({ id: 'cerebras', content: [{ type: 'text', text }], model: 'Cerebras · Llama 70B', role: 'assistant', skill: skill || 'general' });
         }
         lastError = d.error?.message || `Cerebras error (${r.status})`;
       } catch (e) { lastError = `Cerebras timeout: ${e.message}`; }

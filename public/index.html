@@ -841,19 +841,17 @@ code{background:#f0eeff;color:#7C5CFC;padding:1px 5px;border-radius:4px;font-siz
 </div></body></html>`;
 }
 
-async function expMsgPdf(mid){
-  const {text,xtype}=msgStore[mid]||{};if(!text)return;
-  lockTool('exporting PDF…');
-  try{
-    const html=buildExportHtml(text,xtype);
-    const fname=`bvmbino-${xtype||'export'}.pdf`;
-    const r=await fetch('/api/pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html,filename:fname,raw_html:true})});
-    if(!r.ok){const e=await r.json();throw new Error(e.error||'PDF failed');}
-    const blob=await r.blob();
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
-    toast('PDF downloaded ✓');
-  }catch(e){toast('PDF failed: '+e.message);}
-  finally{unlock();}
+function expMsgPdf(mid){
+  const {text,xtype}=msgStore[mid]||{};if(!text){toast('No content to export');return;}
+  const html=buildExportHtml(text,xtype);
+  // Open styled document in new tab → browser Print → Save as PDF (free, no API needed)
+  const win=window.open('','_blank');
+  if(!win){toast('Allow popups to export PDF');return;}
+  win.document.write(html);
+  win.document.close();
+  // Auto-trigger print dialog after page renders
+  win.onload=()=>{setTimeout(()=>{win.print();},300);};
+  toast('Print dialog → Save as PDF ✓');
 }
 
 function expMsgHtml(mid){
@@ -917,8 +915,10 @@ async function callAI(skipLock){
     }else{
       const data=await res.json();
       hideTyping();
-      // Update model badge to show actual provider used
+      // Show which provider fired + which keys are loaded
       if(data.model){const mb=document.getElementById('mbadge');if(mb)mb.textContent=data.model;}
+      const providers=res.headers.get('x-providers');
+      if(providers)addMem('providers loaded',providers);
       // Show error hint if all providers failed
       if(data.hint&&!data.content){appendAiText(`**All AI providers failed**\n\n${data.hint}`,null);unlock();return;}
       let reply=data.content?.[0]?.text||data.error||'No response from AI';
