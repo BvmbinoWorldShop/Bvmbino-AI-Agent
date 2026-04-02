@@ -767,7 +767,7 @@ async function callAI(skipLock){
     const res=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sys,stream:true,messages:msgs})
+      body:JSON.stringify({system:sys,messages:msgs})
     });
     if(res.ok&&res.headers.get('content-type')?.includes('text/event-stream')){
       await streamResponse(res);

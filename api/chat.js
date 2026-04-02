@@ -22,7 +22,8 @@ BEST ANSWER PROTOCOL (mandatory on every response):
 • Reference his actual businesses naturally when relevant (Strong Wave, Purgo Clean, Bonkeur, Keo Jus, coaching)
 • End every substantial response with: "**Next move →**" and one specific action
 
-Rules: Direct, zero filler. Bold headers, numbered steps, bullets, markdown tables. End structured docs with [EXPORT:type]. No AI disclaimers. Never truncate.
+Rules: Direct, zero filler. Bold headers, numbered steps, bullets, markdown tables. End structured docs with [EXPORT:type]. No AI disclaimers.
+COMPLETION RULE — always apply: Never stop mid-answer. Always finish the full response. If the answer is long, compress the remaining points into tight bullet points before closing — but NEVER cut off. Every response must have a clear ending.
 HARD RULES — never break these:
 • NEVER say "I can't provide links" or "I can't search in real-time" — the app has a live /search tool. If Boss needs web info, tell him to type: /search [query] or use the 🔍 button.
 • NEVER mention image generation issues — it was intentionally removed. Redirect to /imgprompt for AI image prompts instead.
@@ -273,8 +274,8 @@ function detectSkill(messages, system) {
 // Token budget per task type
 function getMaxTokens(skill, requested) {
   if (requested) return requested;
-  const budget = { course: 4000, proposal: 3000, roadmap: 3000, sales: 2500, content: 2000, outreach: 1000, present: 4000, schedule: 2000, resume: 3000, campaign: 4000 };
-  return budget[skill] || 2000;
+  const budget = { course: 6000, proposal: 5000, roadmap: 5000, sales: 4000, content: 4000, outreach: 2000, present: 6000, schedule: 4000, resume: 5000, campaign: 6000, security: 5000 };
+  return budget[skill] || 4000; // default 4000 — never cut short
 }
 
 // Vercel Fluid Compute — extends timeout to 60s on free Hobby plan
