@@ -1,10 +1,11 @@
-// PDF generation using WeasyPrint-compatible approach via gotenberg or html2pdf service
-// Uses PDFShift (free tier: 50 credits/month) — no server setup needed
+import { setCors, isRateLimited } from './_cors.js';
+
+// PDF generation via PDFShift (free tier: 50 credits/month)
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (isRateLimited(req)) return res.status(429).json({ error: 'Rate limit exceeded (30 req/min)' });
 
   const apiKey = process.env.PDFSHIFT_KEY;
   if (!apiKey) return res.status(500).json({ error: 'PDFSHIFT_KEY not set. Get free key at pdfshift.io' });

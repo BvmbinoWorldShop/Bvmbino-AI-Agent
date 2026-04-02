@@ -278,16 +278,17 @@ function getMaxTokens(skill, requested) {
   return budget[skill] || 4000; // default 4000 — never cut short
 }
 
+import { setCors, isRateLimited, validateMessages } from './_cors.js';
+
 // Vercel Fluid Compute — extends timeout to 60s on free Hobby plan
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCors(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (isRateLimited(req)) return res.status(429).json({ error: 'Rate limit exceeded (30 req/min)' });
 
   // ── FREE API KEYS (add to Vercel env vars) ───────────────────────────────
   const groqKey       = process.env.GROQ_KEY;         // groq.com — 14,400 req/day FREE FOREVER
@@ -316,6 +317,9 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { messages, system } = body;
+
+    const validErr = validateMessages(messages);
+    if (validErr) return res.status(400).json({ error: validErr });
 
     const skill = detectSkill(messages, system);
     const skillPrompt = skill ? `\n\n## ACTIVE SKILL: ${skill.toUpperCase()}\n${SKILLS[skill]}` : '';

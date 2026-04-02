@@ -1,10 +1,13 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+import { setCors, isRateLimited } from './_cors.js';
 
-  const apiKey = process.env.GEMINI_KEY;
+export default async function handler(req, res) {
+  setCors(req, res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (isRateLimited(req)) return res.status(429).json({ error: 'Rate limit exceeded (30 req/min)' });
+
+  // Uses GEMINI_KEY_2 — separate from chat.js GEMINI_KEY to avoid quota sharing
+  const apiKey = process.env.GEMINI_KEY_2;
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -29,12 +32,12 @@ export default async function handler(req, res) {
       results.push({ title: titles[i] || `Result ${i + 1}`, url: urls[i], description: '' });
     }
 
-    // Step 3: Summarize with Gemini chat (NO grounding tool = no quota issues)
+    // Step 3: Summarize with Gemini (uses GEMINI_KEY_2 — separate quota from chat)
     let answer = '';
     if (apiKey && rawText) {
       const cleanText = rawText.replace(/[#*`]/g, '').slice(0, 3000);
       const gRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
