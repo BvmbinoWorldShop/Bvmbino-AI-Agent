@@ -65,37 +65,52 @@ export default async function handler(req, res) {
 
     // ── 1. GROQ — streaming, 14,400 req/day free (groq.com) ─────────────────
     if (groqKey) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 55000);
-        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
-          body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: oaiMessages, max_tokens: Math.min(maxTok, 8000), temperature: temp, stream: true }),
-          signal: ctrl.signal,
-        });
-        clearTimeout(tid);
-        if (r.ok) { await pipeStream(r, 'Groq · Llama 3.3 70B'); return; }
-        lastError = `Groq error (${r.status})`;
-        if (r.status === 401 || r.status === 403) lastError = 'Groq: invalid key — add GROQ_KEY at groq.com (free)';
-      } catch (e) { lastError = `Groq: ${e.message}`; }
+      const groqModels = [
+        { id: 'llama-3.3-70b-versatile',  label: 'Groq · Llama 3.3 70B' },
+        { id: 'llama-3.1-70b-versatile',  label: 'Groq · Llama 3.1 70B' },
+        { id: 'mixtral-8x7b-32768',       label: 'Groq · Mixtral 8x7B'  },
+      ];
+      for (const { id, label } of groqModels) {
+        try {
+          const ctrl = new AbortController();
+          const tid = setTimeout(() => ctrl.abort(), 55000);
+          const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+            body: JSON.stringify({ model: id, messages: oaiMessages, max_tokens: Math.min(maxTok, 8000), temperature: temp, stream: true }),
+            signal: ctrl.signal,
+          });
+          clearTimeout(tid);
+          if (r.ok) { await pipeStream(r, label); return; }
+          lastError = `Groq ${id} error (${r.status})`;
+          if (r.status === 401 || r.status === 403) { lastError = 'Groq: invalid key — add GROQ_KEY at groq.com (free)'; break; }
+        } catch (e) { lastError = `Groq: ${e.message}`; }
+      }
     }
 
     // ── 2. CEREBRAS — streaming, 1M tokens/day free (cloud.cerebras.ai) ─────
     if (cerebrasKey) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 55000);
-        const r = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cerebrasKey}` },
-          body: JSON.stringify({ model: 'llama-3.3-70b', messages: oaiMessages, max_tokens: Math.min(maxTok, 8192), temperature: temp, stream: true }),
-          signal: ctrl.signal,
-        });
-        clearTimeout(tid);
-        if (r.ok) { await pipeStream(r, 'Cerebras · Llama 70B'); return; }
-        lastError = `Cerebras error (${r.status})`;
-      } catch (e) { lastError = `Cerebras: ${e.message}`; }
+      const cerebrasModels = [
+        { id: 'llama-3.3-70b',  label: 'Cerebras · Llama 3.3 70B' },
+        { id: 'llama3.1-70b',   label: 'Cerebras · Llama 3.1 70B' },
+        { id: 'llama3.1-8b',    label: 'Cerebras · Llama 3.1 8B'  },
+      ];
+      for (const { id, label } of cerebrasModels) {
+        try {
+          const ctrl = new AbortController();
+          const tid = setTimeout(() => ctrl.abort(), 55000);
+          const r = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cerebrasKey}` },
+            body: JSON.stringify({ model: id, messages: oaiMessages, max_tokens: Math.min(maxTok, 8192), temperature: temp, stream: true }),
+            signal: ctrl.signal,
+          });
+          clearTimeout(tid);
+          if (r.ok) { await pipeStream(r, label); return; }
+          lastError = `Cerebras ${id} error (${r.status})`;
+          if (r.status === 401 || r.status === 403) break;
+        } catch (e) { lastError = `Cerebras: ${e.message}`; }
+      }
     }
 
     // ── 3. GEMINI — JSON fallback, 1,500 req/day per key ────────────────────
@@ -134,10 +149,12 @@ export default async function handler(req, res) {
     // ── 4. OPENROUTER — streaming, 50 free req/day (openrouter.ai) ──────────
     if (openrouterKey) {
       const orModels = [
-        'google/gemini-2.0-flash-exp:free',
-        'meta-llama/llama-3.3-70b-instruct:free',
-        'deepseek/deepseek-chat-v3-0324:free',
-        'mistralai/mistral-small-3.1-24b-instruct:free',
+        'google/gemini-2.0-flash-exp:free',           // Google – fast & capable
+        'deepseek/deepseek-r1:free',                  // DeepSeek R1 – top reasoning
+        'deepseek/deepseek-chat-v3-0324:free',        // DeepSeek V3 – fast general
+        'meta-llama/llama-3.3-70b-instruct:free',     // Llama 3.3 70B
+        'mistralai/mistral-small-3.1-24b-instruct:free', // Mistral small but fast
+        'qwen/qwen3-235b-a22b:free',                  // Qwen3 – very capable
       ];
       for (const orModel of orModels) {
         try {
