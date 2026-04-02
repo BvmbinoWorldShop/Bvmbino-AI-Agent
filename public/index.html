@@ -300,7 +300,7 @@ const PROMPTS={
   scrape:`I want to scrape a website. Please ask me which URL I should analyze and what information I'm looking for.`,
   search:`I want to search the web. Please ask me what I'd like to search for.`,
 course:`Build me a complete, professional training course curriculum. Ask me these 3 questions first: (1) What is the course topic? (2) Who is the target audience? (3) What is the delivery format (online / in-person / hybrid)? Then deliver the full course structure: **Program Title** + tagline, **Transformation Promise** (what learners gain), **Module Breakdown** (6-8 modules — each with: title, objective, 3-5 key content points, 1 hands-on activity), **Delivery Format & Schedule**, **Pricing Tiers** (Basic / Premium / VIP with what's included), **Module 1 Quick Win** (something learners apply in the first session). Format as a complete structured document ready to use. [EXPORT:course]`,
-  schedule:`Build my complete optimized weekly schedule. I need to organize: 🏀 Basketball personal training, 🏀 Coaching sessions, 💼 Purgo Clean ops, 🥤 Keo Jus, 🧠 Formation/courses, 🎬 Content creation, 👨‍👩‍👧 Family time, 💪 Fitness, 📚 Learning & AI, 📣 Consulting. Build a complete 7-day time-blocked schedule using the 3-zone system (🔴 Deep Work 06:00-12:00 / 🟡 Admin 12:00-17:00 / 🟢 Recovery 17:00-21:00), weekly KPIs, top 3 schedule killers, and 1 automation tip. Add /schedule daily, /schedule biweekly or /schedule monthly for different views. [EXPORT:schedule]`,
+  schedule:`Build my complete optimized weekly schedule. Activities: 🏀 Basketball training, 🏀 Coaching, 💼 Purgo Clean, 🥤 Keo Jus, 🧠 Formation, 🎬 Content, 👨‍👩‍👧 Family, 💪 Fitness, 📚 Learning, 📣 Consulting. CRITICAL — use EXACTLY this format (required for PDF export):\n\n=== MONDAY ===\n06:00-08:00 | Basketball Training | DEEP\n08:00-10:00 | Content Creation | DEEP\n\n=== TUESDAY ===\n06:00-08:00 | Coaching Session | DEEP\n\n(continue all 7 days, then add KPIs, SCHEDULE KILLERS, AUTOMATION TIP sections). Zones: DEEP=peak energy, ADMIN=operations, RECOVERY=rest/family. [EXPORT:schedule]`,
   present:`Build me a complete professional presentation. Ask me: (1) Topic/subject of the presentation, (2) Target audience (athletes, clients, corporate, students), (3) How many slides (default 10-12). Then deliver each slide as: **SLIDE N — TITLE**, bullet points (3-5 per slide), speaker note. Include: title slide, agenda, problem/challenge, solution, key modules or steps, proof/testimonials placeholder, call to action, closing. Format clean and ready to present. [EXPORT:presentation]`,
   pitch:`Create compelling investor pitch content for Bvmbino AI Agent — a cross-platform AI business assistant app with multi-model routing (Claude, GPT-4o, Gemini, Grok), persistent memory, and built-in business tools (resume builder, campaign generator, web scraping, image generation). Market: African entrepreneurs and SMEs. Include: problem statement, solution, market size, revenue model, traction, ask. [EXPORT:pitch]`,
   email:`Help me write a professional email. Ask me: who it's to, what the goal is, and the key points to include.`,
@@ -584,14 +584,26 @@ async function doSmartResume(jobInput){
 
 // ── SCHEDULE CALENDAR BUILDER ──
 function parseScheduleBlocks(text){
-  const DAYS=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+  const DAY_NAMES=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
   const result={};let cur=null;
-  for(const line of text.split('\n')){
-    const dm=line.match(/===\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\s*===/i);
-    if(dm){cur=dm[1].toUpperCase();result[cur]=[];continue;}
+  // Strip markdown bold/italic around lines before parsing
+  const clean=s=>s.replace(/\*\*/g,'').replace(/\*/g,'').replace(/__/g,'').trim();
+  for(const rawLine of text.split('\n')){
+    const line=clean(rawLine);
+    // Match day header — flexible: === DAY ===, ## DAY, **DAY**, or just DAY: alone
+    const dm=line.match(/(?:===\s*)?(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)(?:\s*===|:|\s*$)/i);
+    if(dm){cur=dm[1].toUpperCase();if(!result[cur])result[cur]=[];continue;}
     if(cur){
-      const bm=line.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*\|\s*(.+?)\s*\|\s*(DEEP|ADMIN|RECOVERY)/i);
-      if(bm)result[cur].push({start:bm[1],end:bm[2],activity:bm[3].trim(),zone:bm[4].toUpperCase()});
+      // Format 1 (primary): HH:MM - HH:MM | Activity | ZONE
+      const bm=line.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\s*[|–-]\s*(.+?)\s*[|–-]\s*(DEEP|ADMIN|RECOVERY)/i);
+      if(bm){result[cur].push({start:bm[1],end:bm[2],activity:bm[3].trim(),zone:bm[4].toUpperCase()});continue;}
+      // Format 2 (fallback): HH:MM - HH:MM Activity (no zone — auto-assign by time)
+      const bm2=line.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\s+(.+)/);
+      if(bm2){
+        const h=parseInt(bm2[1]);
+        const zone=h<12?'DEEP':h<17?'ADMIN':'RECOVERY';
+        result[cur].push({start:bm2[1],end:bm2[2],activity:bm2[3].trim(),zone});
+      }
     }
   }
   return result;
