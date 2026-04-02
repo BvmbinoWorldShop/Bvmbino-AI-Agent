@@ -294,10 +294,8 @@ export default async function handler(req, res) {
   const geminiKey1    = process.env.GEMINI_KEY;        // aistudio.google.com — 1,500 req/day FREE FOREVER
   const geminiKey2    = process.env.GEMINI_KEY_2;      // second Gemini key — +1,500/day FREE FOREVER
   const openrouterKey = process.env.OPENROUTER_KEY;   // openrouter.ai — 50 free req/day, 28+ free models
-  const kimiKey       = process.env.KIMI_KEY;          // platform.moonshot.cn — free credits at signup
-  const openaiKey     = process.env.OPENAI_KEY;        // platform.openai.com — $5 free credits at signup, gpt-4o-mini
 
-  if (!groqKey && !cerebrasKey && !geminiKey1 && !openrouterKey && !kimiKey && !openaiKey) {
+  if (!groqKey && !cerebrasKey && !geminiKey1 && !openrouterKey) {
     return res.status(500).json({
       error: 'No AI key configured.',
       hint: 'Add GROQ_KEY free at groq.com (fastest, 14k req/day) or CEREBRAS_KEY at cloud.cerebras.ai (1M tokens/day) to Vercel env vars.',
@@ -425,44 +423,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── 5. KIMI (Moonshot AI) — free credits at signup (platform.moonshot.cn) ─
-    if (kimiKey) {
-      try {
-        const r = await fetchWithTimeout('https://api.moonshot.cn/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${kimiKey}` },
-          body: JSON.stringify({ model: 'moonshot-v1-32k', messages: oaiMessages, max_tokens: Math.min(maxTok, 4096), temperature: temp }),
-        });
-        const d = await r.json();
-        if (r.ok) {
-          const text = d.choices?.[0]?.message?.content || '';
-          return res.status(200).json({ id: 'kimi', content: [{ type: 'text', text }], model: 'Kimi 32K', role: 'assistant', skill: skill || 'general' });
-        }
-        lastError = d.error?.message || `Kimi error (${r.status})`;
-      } catch (e) { lastError = `Kimi timeout: ${e.message}`; }
-    }
-
-    // ── 6. OPENAI — gpt-4o-mini ($5 free credits at signup, then pay-as-you-go) ─
-    if (openaiKey) {
-      try {
-        const r = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
-          body: JSON.stringify({ model: 'gpt-4o-mini', messages: oaiMessages, max_tokens: Math.min(maxTok, 4096), temperature: temp }),
-        });
-        const d = await r.json();
-        if (r.ok) {
-          const text = d.choices?.[0]?.message?.content || '';
-          return res.status(200).json({ id: 'openai', content: [{ type: 'text', text }], model: 'GPT-4o mini', role: 'assistant', skill: skill || 'general' });
-        }
-        lastError = d.error?.message || `OpenAI error (${r.status})`;
-      } catch (e) { lastError = `OpenAI timeout: ${e.message}`; }
-    }
-
     // All providers exhausted
     return res.status(500).json({
       error: lastError || 'All AI providers failed.',
-      hint: 'Free keys: GROQ_KEY → groq.com | CEREBRAS_KEY → cloud.cerebras.ai | OPENROUTER_KEY → openrouter.ai | KIMI_KEY → platform.moonshot.cn | OPENAI_KEY → platform.openai.com',
+      hint: 'Free keys: GROQ_KEY → groq.com | CEREBRAS_KEY → cloud.cerebras.ai | OPENROUTER_KEY → openrouter.ai',
     });
   } catch (err) {
     console.error('Proxy error:', err);
