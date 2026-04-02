@@ -1244,7 +1244,7 @@ function toggleVoice(){
   if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){toast('Voice not supported in this browser');return;}
   if(!recognition){
     recognition=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-    recognition.lang='fr-FR';recognition.interimResults=true;recognition.continuous=false;
+    const bl=navigator.language||'';recognition.lang=bl.startsWith('fr')?'fr-FR':'en-US';recognition.interimResults=true;recognition.continuous=false;
     recognition.onresult=e=>{
       const t=[...e.results].map(r=>r[0].transcript).join('');
       document.getElementById('inp').value=t;onInp();
