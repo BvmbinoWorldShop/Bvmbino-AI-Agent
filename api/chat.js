@@ -13,11 +13,12 @@ export default async function handler(req, res) {
   const groqKey       = process.env.GROQ_KEY;
   const cerebrasKey   = process.env.CEREBRAS_KEY;
   const openrouterKey = process.env.OPENROUTER_KEY;
+  const mistralKey    = process.env.MISTRAL_KEY;
 
-  const providersLoaded = [groqKey?'groq':'', cerebrasKey?'cerebras':'', openrouterKey?'openrouter':''].filter(Boolean).join(',');
+  const providersLoaded = [groqKey?'groq':'', cerebrasKey?'cerebras':'', openrouterKey?'openrouter':'', mistralKey?'mistral':''].filter(Boolean).join(',');
   res.setHeader('x-providers', providersLoaded);
 
-  if (!groqKey && !cerebrasKey && !openrouterKey) {
+  if (!groqKey && !cerebrasKey && !openrouterKey && !mistralKey) {
     return res.status(500).json({
       error: 'No AI key configured.',
       hint: 'Add GROQ_KEY free at groq.com (14k req/day) or CEREBRAS_KEY at cloud.cerebras.ai (1M tokens/day)',
@@ -70,9 +71,11 @@ export default async function handler(req, res) {
     if (groqKey) {
       const groqModels = [
         { id: 'llama-3.3-70b-versatile', label: 'Groq - Llama 3.3 70B' },
-        { id: 'llama-3.1-70b-versatile', label: 'Groq - Llama 3.1 70B' },
-        { id: 'mixtral-8x7b-32768',      label: 'Groq - Mixtral 8x7B'  },
+        { id: 'llama3-70b-8192',          label: 'Groq - Llama 3 70B'   },
+        { id: 'llama-3.1-8b-instant',     label: 'Groq - Llama 3.1 8B'  },
+        { id: 'gemma2-9b-it',             label: 'Groq - Gemma 2 9B'    },
       ];
+      let groqQuotaHit = false;
       for (const { id, label } of groqModels) {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 55000);
@@ -85,8 +88,9 @@ export default async function handler(req, res) {
           });
           if (r.ok) { await pipeStream(r, label, tid); return; }
           clearTimeout(tid);
-          lastError = `Groq ${id} error (${r.status})`;
           if (r.status === 401 || r.status === 403) { lastError = 'Groq: invalid key'; break; }
+          if (r.status === 429) { groqQuotaHit = true; lastError = 'Groq: daily quota exhausted (14,400 req/day limit)'; break; }
+          lastError = `Groq ${id} error (${r.status})`;
         } catch (e) { clearTimeout(tid); lastError = `Groq: ${e.message}`; }
       }
     }
@@ -152,9 +156,37 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── 4. MISTRAL — 1B tokens/month free, 2 req/min ───────────────────────
+    if (mistralKey) {
+      const mistralModels = [
+        { id: 'mistral-small-latest', label: 'Mistral - Small Latest' },
+        { id: 'open-mistral-7b',      label: 'Mistral - 7B'           },
+      ];
+      for (const { id, label } of mistralModels) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 55000);
+        try {
+          const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${mistralKey}` },
+            body: JSON.stringify({ model: id, messages: oaiMessages, max_tokens: Math.min(maxTok, 4096), temperature: temp, stream: true }),
+            signal: ctrl.signal,
+          });
+          if (r.ok) { await pipeStream(r, label, tid); return; }
+          clearTimeout(tid);
+          if (r.status === 401 || r.status === 403) { lastError = 'Mistral: invalid key'; break; }
+          lastError = `Mistral ${id} error (${r.status})`;
+        } catch (e) { clearTimeout(tid); lastError = `Mistral: ${e.message}`; }
+      }
+    }
+
+    const isQuotaErr = lastError && lastError.includes('quota');
     return res.status(500).json({
-      error: lastError || 'All AI providers failed.',
-      hint: 'Free keys: GROQ_KEY -> groq.com | CEREBRAS_KEY -> cloud.cerebras.ai | OPENROUTER_KEY -> openrouter.ai',
+      error: isQuotaErr
+        ? `Quota exhausted on all providers. Last: ${lastError}`
+        : lastError || 'All AI providers failed.',
+      quota_exhausted: isQuotaErr,
+      hint: 'Free keys: GROQ_KEY -> groq.com | CEREBRAS_KEY -> cloud.cerebras.ai | OPENROUTER_KEY -> openrouter.ai | MISTRAL_KEY -> console.mistral.ai',
     });
   } catch (err) {
     console.error('Proxy error:', err);

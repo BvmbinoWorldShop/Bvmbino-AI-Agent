@@ -961,7 +961,19 @@ async function callAI(skipLock){
       // Show error hint if all providers failed
       if(data.hint&&!data.content){
         const loaded=res.headers.get('x-providers')||'none';
-        appendAiText(`**AI quota exhausted or no keys set**\n\nKeys loaded in production: \`${loaded}\`\n\n**Fix in 2 min:**\n1. Go to [vercel.com](https://vercel.com) → your project → **Settings → Environment Variables**\n2. Add \`GROQ_KEY\` (free forever at groq.com — 14,400 req/day) → tick ✅ **Production**\n3. Add \`CEREBRAS_KEY\` (free at cloud.cerebras.ai — 1M tokens/day) → tick ✅ **Production**\n4. Add \`OPENROUTER_KEY\` (free at openrouter.ai — backup) → tick ✅ **Production**\n5. Keys auto-load on next request — no redeploy needed`,null);
+        const actualErr=data.error||'Unknown error';
+        const isQuota=data.quota_exhausted||actualErr.toLowerCase().includes('quota')||actualErr.includes('429');
+        const isNoKeys=loaded==='none';
+        let title=isNoKeys?'**No API keys configured**':isQuota?'**Daily quota exhausted on all providers**':'**All AI providers failed**';
+        let body=`${title}\n\n> ${actualErr}\n\nKeys loaded: \`${loaded}\`\n\n`;
+        if(isNoKeys){
+          body+=`**Quick fix:**\n1. Go to [vercel.com](https://vercel.com) → project → **Settings → Environment Variables**\n2. Add \`GROQ_KEY\` → free at groq.com (14,400 req/day)\n3. Add \`CEREBRAS_KEY\` → free at cloud.cerebras.ai (1M tokens/day)\n4. Add \`OPENROUTER_KEY\` → free at openrouter.ai (28+ free models)\n5. Add \`MISTRAL_KEY\` → free at console.mistral.ai (1B tokens/month)`;
+        }else if(isQuota){
+          body+=`**Quota resets daily.** Add more providers to avoid downtime:\n- \`OPENROUTER_KEY\` → openrouter.ai (free, 28+ models)\n- \`MISTRAL_KEY\` → console.mistral.ai (1B tokens/month free)`;
+        }else{
+          body+=`**Try again** — may be a temporary API issue.\nIf it keeps failing, check Vercel → Settings → Environment Variables.`;
+        }
+        appendAiText(body,null);
         unlock();return;
       }
       let reply=data.content?.[0]?.text||data.error||'No response from AI';
