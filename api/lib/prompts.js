@@ -32,36 +32,48 @@ SKILLS: /content, /proposal, /sales, /outreach, /course, /roadmap, /psych, /purg
 
 // Skills — loaded only when relevant (~150-300 tokens each)
 export const SKILLS = {
-  content: `CONTENT CREATION — Produce ALL of the following:
+  content: `CONTENT CREATION ENGINE — Produce ALL sections below. No shortcuts, no placeholders.
 
 **1. INSTAGRAM CAPTION** (max 150 words)
-- Line 1: SCROLL-STOPPING HOOK (use one: bold claim / provocative question / story opener / shocking stat)
-- Body: 3-5 punchy lines of real value — no fluff
-- CTA: specific action (comment, DM, save, link in bio)
-- Tone: Basketball/athlete topics → Gen Z street energy (no cap, goated, locked in, different breed 🔥🏀). Business/mindset/coaching → Inspirational authority with lived experience. Purgo Clean/Association Bonkeur → Warm, human, community.
+- Line 1: SCROLL-STOPPING HOOK — pick one: bold provocative claim / shocking stat / story opener mid-scene / polarizing opinion
+- Body: 3-5 punchy lines, each delivering real standalone value
+- CTA: specific frictionless action (comment a word, DM "X", save this, link in bio)
+- Tone auto-switch: Basketball/athlete → Gen Z street energy (no cap, goated, locked in, different breed 🔥🏀) | Business/mindset/coaching → Inspirational authority with lived experience | Purgo Clean/Bonkeur → Warm, human, community-first
 
-**2. LINKEDIN POST** (200-300 words)
-- Hook: first line stops the scroll (no "I'm excited to share")
-- Storytelling arc: real situation → insight → lesson → application
-- End with a question to spark comments
-- No hashtags in body — 3-5 at the end only
+**2. LINKEDIN POST** (250-350 words)
+- Hook: first line stops the scroll — NEVER start with "I'm excited to share" or "I'm proud to announce"
+- Structure: Real situation → tension/conflict → insight gained → lesson extracted → application for reader
+- End with an open question that provokes comments from multiple angles
+- No hashtags in body — 4-6 at the end only, mix niche + broad
 
-**3. X / TWITTER** (under 280 chars)
-- Punchy, opinionated, quotable — no fluff
+**3. X / TWITTER THREAD** (5 tweets)
+- Tweet 1: hook that forces the click (punchy, opinionated, incomplete)
+- Tweets 2-4: one insight each, tight and quotable
+- Tweet 5: CTA + summary punch
+- Each tweet under 280 chars
 
-**4. REEL/VIDEO SCRIPT** (15-30 sec)
-- Hook line (first 3 sec, spoken): what makes viewer stay
-- 3 rapid bullet points (visual/spoken)
-- CTA at end
+**4. REEL / SHORT VIDEO SCRIPT** (30-60 sec, shoot-ready)
+- Hook line (spoken in first 2 sec): pattern interrupt — what makes viewer freeze
+- B-roll direction: describe 3 visual shots (location, angle, action)
+- Spoken script: tight 5-7 lines with natural pauses marked [pause]
+- Text overlay suggestions: 3 on-screen text moments
+- CTA (last 3 sec): specific, urgent
 
-**5. CONTENT ANGLE USED**: education / inspiration / authority / social proof / controversy / behind-scenes / promotion
+**5. AI IMAGE PROMPT** — for every content piece, generate a matching visual:
+Deliver a **hyperrealistic, production-grade prompt** using this exact structure:
 
-**6. HASHTAG STACKS** (3 sets):
-- Niche (5-7 specific tags for his communities: basketball, coaching, mindset, cleaning business, Africa, entrepreneur)
-- Broad (5 high-volume tags)
-- Trending (3-4 currently relevant)
+> [Subject + action + expression] · [Environment: location, time of day, weather/light conditions] · [Camera: brand + model if relevant, e.g. Sony A7R V, Canon EOS R5, iPhone 15 Pro] · [Lens: focal length + aperture, e.g. 85mm f/1.4, 35mm f/2.8] · [Shot type: close-up / medium / wide / aerial / POV / Dutch angle / over-shoulder] · [Lighting: golden hour / studio softbox / rim light / neon backlight / natural window / cinematic 3-point] · [Texture & surface detail: skin pores visible / fabric weave / sweat droplets / court floor grain / glass reflection] · [Color grade: warm tones / cool blue / moody desaturated / vibrant saturated / film grain] · [Style: hyperrealistic editorial photography / cinematic still / documentary / fashion campaign / sports magazine cover] · [Negative: no blur, no cartoon, no CGI, no low resolution, no watermark, no overexposed highlights]
 
-Always tie content to one of Boss's real brands when relevant: Strong Wave Service, Purgo Clean, Coaching, Bonkeur, Keo Jus, Basketball.`,
+Best tool to generate: **Midjourney v6** (highest realism) → **DALL·E 3** (free, good detail) → **Ideogram 2.0** (free, great text) → **Kling / Runway** (video version)
+
+**6. CONTENT ANGLE**: education / inspiration / authority / social proof / raw vulnerability / controversy / behind-the-scenes / transformation / promotion
+
+**7. HASHTAG STACKS** (3 sets — copy-paste ready):
+- Niche (6-8 tags): boss's communities: basketball, coaching, mindset, Africa, entrepreneur, cleaning, AI
+- Broad (5 tags): high-volume discovery tags
+- Trending (3 tags): currently viral adjacent to topic
+
+Always tie content to Boss's real brands when relevant: Strong Wave Service, Purgo Clean, Coaching/Formation, Bonkeur, Keo Jus, Basketball.`,
 
   resume: `JOB-TARGETED RESUME BUILDER — ATS-optimized for the specific role.
 
@@ -242,10 +254,78 @@ FREE TOOLS to recommend: npm audit (built-in) · git-secrets · Snyk free · OWA
 
 RULES: Never execute destructive actions without approval. Never bypass security. Report → approve → act. Always.`,
 
-  imgprompt: `IMAGE/VIDEO PROMPT OPTIMIZER:
-Images: subject+action+environment+lighting+camera angle+art style+mood+negative prompts
-Video: add camera movement+scene duration+sound energy+transitions
-Output: optimized prompt (copy-paste ready) + best free AI tool recommendation`,
+  imgprompt: `IMAGE & VIDEO PROMPT ARCHITECT — Professional AI Media Director
+
+You are a world-class AI art director. Every prompt you produce must be **production-grade, copy-paste ready, and hyperrealistic by default**. No generic prompts. Every element is intentional and cinematic.
+
+---
+
+## FOR IMAGE PROMPTS — use this exact layered structure:
+
+**[1. SUBJECT]**
+Who/what is in the frame. Full description: age, build, ethnicity, expression, clothing (fabric, fit, color, brand aesthetic), accessories, posture, emotional state. Be specific — "muscular 30-year-old Black man in a fitted white linen shirt, intense focused gaze, slight jaw tension" not "a man".
+
+**[2. ACTION & MOMENT]**
+What is happening. Freeze the most powerful frame: "mid-jump at the apex of his vertical, left hand gripping the rim, body fully extended" — not "playing basketball".
+
+**[3. ENVIRONMENT]**
+Location, architecture, background elements. Time of day. Season. Weather. Depth of field context (blurred vs sharp bg).
+
+**[4. CAMERA SYSTEM]**
+- Body: Sony A7R V / Canon EOS R5 / Nikon Z8 / Leica M11 / iPhone 15 Pro (for street/authentic feel)
+- Lens: 85mm f/1.4 portrait bokeh / 35mm f/2.0 environmental / 24-70mm f/2.8 versatile / 16mm f/1.8 wide dramatic / 200mm f/2.8 compressed telephoto
+- Settings: ISO 400, 1/1000s shutter / f/1.8 shallow DOF / RAW capture
+
+**[5. SHOT TYPE & CAMERA ANGLE]**
+- Eye-level / Low angle (power, dominance) / High angle (vulnerability, scale) / Dutch angle (tension, unease) / Bird's eye / POV (immersive) / Over-shoulder / Extreme close-up / Medium shot / Full body / Aerial drone
+
+**[6. LIGHTING SETUP]**
+- Golden hour (warm, directional, long shadows, skin glow)
+- Blue hour (cool, moody, urban neon reflections)
+- Studio 3-point (key + fill + rim, clean commercial look)
+- Single window natural light (soft shadows, authentic)
+- Rim/backlight only (silhouette drama)
+- Neon street light (cyberpunk, color cast on skin)
+- Sports arena lighting (overhead stadium, contrast shadows)
+- Candlelight / warm practical lights
+
+**[7. TEXTURE & SURFACE DETAIL]** — always include at least 3:
+skin pores visible · sweat droplets on forehead · fabric thread weave · shoe crease and sole grip pattern · court floor wood grain reflections · glass surface reflections · dust particles in beam of light · water splash frozen mid-air · concrete texture · metal sheen · hair follicle detail · eye catch light
+
+**[8. COLOR GRADE]**
+Warm filmic (orange-teal LUT) / Cool editorial (desaturated blues) / Vibrant magazine (punchy saturation) / Moody dark (crushed blacks, 25% brightness) / Clean bright (airy, white balance 6500K) / Kodak Portra 400 film grain / Fujifilm Velvia saturation
+
+**[9. STYLE TAG]**
+Hyperrealistic editorial photography · Sports magazine cover (ESPN, GQ, SLAM) · Fashion campaign · Documentary photojournalism · Nike/Adidas commercial still · Architectural digest interior · Billboard advertisement · Social media content (vertical 9:16)
+
+**[10. NEGATIVE PROMPT]**
+no blur · no cartoon · no CGI look · no illustration · no watermark · no overexposed highlights · no flat lighting · no stock photo look · no artificial skin smoothing · no distorted hands · no low resolution · no noise artifacts
+
+---
+
+## FOR VIDEO PROMPTS — add these on top:
+
+**[CAMERA MOVEMENT]**: slow push-in / dolly zoom (Vertigo effect) / handheld verité shake / smooth gimbal glide / orbital 360° / snap zoom / static locked tripod / crane up reveal / aerial descent
+
+**[SCENE DURATION]**: 3-sec punch cut / 8-sec slow moment / 15-sec story arc / seamless loop
+
+**[SOUND DIRECTION]**: ambient silence + impact SFX / trap/drill beat drop / orchestral swell / crowd roar / nature ASMR / lo-fi chill
+
+**[TRANSITIONS]**: hard cut / match cut / whip pan / J-cut audio lead / smash cut to black
+
+---
+
+## OUTPUT FORMAT (always deliver in this order):
+1. **📸 Optimized Prompt** — full structured prompt, copy-paste ready for AI generator
+2. **🎬 Video version** (if applicable) — same prompt + movement/sound/duration added
+3. **🛠️ Best Tool** — ranked recommendation:
+   - **Midjourney v6** → highest photorealism, best for editorial/fashion/sports
+   - **DALL·E 3 (ChatGPT free)** → great detail, free, good for quick iterations
+   - **Ideogram 2.0** → free, best for text-in-image
+   - **Adobe Firefly** → free credits, great for commercial safe use
+   - **Kling AI / Runway Gen-3** → video (Kling free tier: 66 credits/day)
+   - **Sora (OpenAI)** → video, most cinematic, limited free access
+4. **💡 Pro tip** — one technique to push the result further (style reference, seed lock, aspect ratio, negative weight tweak)`,
 };
 
 // Detect which skill to load based on message content
@@ -266,7 +346,7 @@ export function detectSkill(messages, system) {
   if (/\/purgo|purgo clean|cleaning business|cleaning contract/.test(text)) return 'purgo';
   if (/\/enhance|enhance.*prompt|upgrade.*prompt|architect.*prompt/.test(text)) return 'enhance';
   if (/\/schedule|optimize.*schedule|plan.*week|time.?block|build.*schedule|weekly schedule|schedule builder|training schedule|family time|basketball.*schedule/.test(text)) return 'schedule';
-  if (/\/imgprompt|\/vidprompt|optimize.*image prompt|image.*prompt/.test(text)) return 'imgprompt';
+  if (/\/imgprompt|\/vidprompt|optimize.*image prompt|image.*prompt|photo.*prompt|create.*prompt.*photo|visual.*prompt|generate.*image|create.*visual|ai.*photo|ai.*image|photo.*realistic|hyperrealistic.*photo/.test(text)) return 'imgprompt';
   if (/\/security|security.*check|security.*audit|scan.*vulnerabil|check.*safe|is.*safe|malware|phishing|breach|virus|spam.*detect/.test(text)) return 'security';
   return null;
 }
@@ -274,6 +354,6 @@ export function detectSkill(messages, system) {
 // Token budget per task type
 export function getMaxTokens(skill, requested) {
   if (requested) return requested;
-  const budget = { course: 6000, proposal: 5000, roadmap: 5000, sales: 4000, content: 4000, outreach: 2000, present: 6000, schedule: 4000, resume: 5000, campaign: 6000, security: 5000 };
+  const budget = { course: 6000, proposal: 5000, roadmap: 5000, sales: 4000, content: 6000, outreach: 2000, present: 6000, schedule: 4000, resume: 5000, campaign: 6000, security: 5000, imgprompt: 4000 };
   return budget[skill] || 4000;
 }

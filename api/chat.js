@@ -13,14 +13,12 @@ export default async function handler(req, res) {
 
   const groqKey       = process.env.GROQ_KEY;
   const cerebrasKey   = process.env.CEREBRAS_KEY;
-  const geminiKey1    = process.env.GEMINI_KEY;
-  const geminiKey2    = process.env.GEMINI_KEY_2;
   const openrouterKey = process.env.OPENROUTER_KEY;
 
-  const providersLoaded = [groqKey?'groq':'', cerebrasKey?'cerebras':'', geminiKey1?'gemini1':'', geminiKey2?'gemini2':'', openrouterKey?'openrouter':''].filter(Boolean).join(',');
+  const providersLoaded = [groqKey?'groq':'', cerebrasKey?'cerebras':'', openrouterKey?'openrouter':''].filter(Boolean).join(',');
   res.setHeader('x-providers', providersLoaded);
 
-  if (!groqKey && !cerebrasKey && !geminiKey1 && !openrouterKey) {
+  if (!groqKey && !cerebrasKey && !openrouterKey) {
     return res.status(500).json({
       error: 'No AI key configured.',
       hint: 'Add GROQ_KEY free at groq.com (14k req/day) or CEREBRAS_KEY at cloud.cerebras.ai (1M tokens/day)',
@@ -113,40 +111,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── 3. GEMINI — JSON fallback, 1,500 req/day per key ────────────────────
-    const geminiAttempts = [];
-    if (geminiKey1) {
-      geminiAttempts.push({ key: geminiKey1, model: 'gemini-2.5-flash' });
-      geminiAttempts.push({ key: geminiKey1, model: 'gemini-2.0-flash' });
-    }
-    if (geminiKey2) {
-      geminiAttempts.push({ key: geminiKey2, model: 'gemini-2.5-flash' });
-      geminiAttempts.push({ key: geminiKey2, model: 'gemini-2.0-flash' });
-    }
-    const geminiBody = {
-      contents: (messages || []).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-      systemInstruction: { parts: [{ text: fullSystem }] },
-      generationConfig: { maxOutputTokens: maxTok, temperature: temp },
-    };
-    for (const { key, model } of geminiAttempts) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 9000);
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-        const upstream = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
-        clearTimeout(tid);
-        const data = await upstream.json();
-        if (!upstream.ok) {
-          lastError = data.error?.message || `Gemini ${model} error (${upstream.status})`;
-          if (upstream.status === 401 || upstream.status === 403) break;
-          continue;
-        }
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        return res.status(200).json({ id: 'gemini', content: [{ type: 'text', text }], model, role: 'assistant', skill: skill || 'general' });
-      } catch (e) { lastError = `Gemini: ${e.message}`; continue; }
-    }
-
-    // ── 4. OPENROUTER — streaming, 50 free req/day (openrouter.ai) ──────────
+    // ── 3. OPENROUTER — streaming, 50 free req/day (openrouter.ai) ──────────
     if (openrouterKey) {
       const orModels = [
         'google/gemini-2.0-flash-exp:free',           // Google – fast & capable
