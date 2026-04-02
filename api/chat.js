@@ -1,7 +1,6 @@
 import { setCors, isRateLimited, validateMessages } from './_cors.js';
 import { CORE, SKILLS, detectSkill, getMaxTokens } from './lib/prompts.js';
 
-// Vercel Fluid Compute — extends timeout to 60s on free Hobby plan
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
@@ -43,12 +42,15 @@ export default async function handler(req, res) {
       ...(messages || []).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
     ];
 
-    // Pipe OpenAI SSE stream directly to client
-    async function pipeStream(upstream, modelName) {
+    // Pipe OpenAI SSE stream to client.
+    // FIX: timeoutId is passed in and cleared INSIDE finally — keeps abort active during entire stream.
+    // FIX: modelName is sanitized to ASCII-only to prevent ERR_INVALID_CHAR in HTTP headers.
+    async function pipeStream(upstream, modelName, timeoutId) {
+      const safeModel = modelName.replace(/[^\x20-\x7E]/g, '-');
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
-      res.setHeader('x-model', modelName);
+      res.setHeader('x-model', safeModel);
       try {
         const reader = upstream.body.getReader();
         while (true) {
@@ -56,75 +58,78 @@ export default async function handler(req, res) {
           if (done) break;
           res.write(value);
         }
-      } finally { res.end(); }
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+        res.end();
+      }
     }
 
     let lastError = null;
 
-    // ── 1. GROQ — streaming, 14,400 req/day free (groq.com) ─────────────────
+    // ── 1. GROQ — streaming, 14,400 req/day free ────────────────────────────
     if (groqKey) {
       const groqModels = [
-        { id: 'llama-3.3-70b-versatile',  label: 'Groq · Llama 3.3 70B' },
-        { id: 'llama-3.1-70b-versatile',  label: 'Groq · Llama 3.1 70B' },
-        { id: 'mixtral-8x7b-32768',       label: 'Groq · Mixtral 8x7B'  },
+        { id: 'llama-3.3-70b-versatile', label: 'Groq - Llama 3.3 70B' },
+        { id: 'llama-3.1-70b-versatile', label: 'Groq - Llama 3.1 70B' },
+        { id: 'mixtral-8x7b-32768',      label: 'Groq - Mixtral 8x7B'  },
       ];
       for (const { id, label } of groqModels) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 55000);
         try {
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 55000);
           const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
             body: JSON.stringify({ model: id, messages: oaiMessages, max_tokens: Math.min(maxTok, 8000), temperature: temp, stream: true }),
             signal: ctrl.signal,
           });
+          if (r.ok) { await pipeStream(r, label, tid); return; }
           clearTimeout(tid);
-          if (r.ok) { await pipeStream(r, label); return; }
           lastError = `Groq ${id} error (${r.status})`;
-          if (r.status === 401 || r.status === 403) { lastError = 'Groq: invalid key — add GROQ_KEY at groq.com (free)'; break; }
-        } catch (e) { lastError = `Groq: ${e.message}`; }
+          if (r.status === 401 || r.status === 403) { lastError = 'Groq: invalid key'; break; }
+        } catch (e) { clearTimeout(tid); lastError = `Groq: ${e.message}`; }
       }
     }
 
-    // ── 2. CEREBRAS — streaming, 1M tokens/day free (cloud.cerebras.ai) ─────
+    // ── 2. CEREBRAS — streaming, 1M tokens/day free ─────────────────────────
     if (cerebrasKey) {
       const cerebrasModels = [
-        { id: 'llama-3.3-70b',  label: 'Cerebras · Llama 3.3 70B' },
-        { id: 'llama3.1-70b',   label: 'Cerebras · Llama 3.1 70B' },
-        { id: 'llama3.1-8b',    label: 'Cerebras · Llama 3.1 8B'  },
+        { id: 'llama-3.3-70b', label: 'Cerebras - Llama 3.3 70B' },
+        { id: 'llama3.1-70b',  label: 'Cerebras - Llama 3.1 70B' },
+        { id: 'llama3.1-8b',   label: 'Cerebras - Llama 3.1 8B'  },
       ];
       for (const { id, label } of cerebrasModels) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 55000);
         try {
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 55000);
           const r = await fetch('https://api.cerebras.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cerebrasKey}` },
             body: JSON.stringify({ model: id, messages: oaiMessages, max_tokens: Math.min(maxTok, 8192), temperature: temp, stream: true }),
             signal: ctrl.signal,
           });
+          if (r.ok) { await pipeStream(r, label, tid); return; }
           clearTimeout(tid);
-          if (r.ok) { await pipeStream(r, label); return; }
           lastError = `Cerebras ${id} error (${r.status})`;
           if (r.status === 401 || r.status === 403) break;
-        } catch (e) { lastError = `Cerebras: ${e.message}`; }
+        } catch (e) { clearTimeout(tid); lastError = `Cerebras: ${e.message}`; }
       }
     }
 
-    // ── 3. OPENROUTER — streaming, 50 free req/day (openrouter.ai) ──────────
+    // ── 3. OPENROUTER — streaming, free models available ────────────────────
     if (openrouterKey) {
       const orModels = [
-        'google/gemini-2.0-flash-exp:free',           // Google – fast & capable
-        'deepseek/deepseek-r1:free',                  // DeepSeek R1 – top reasoning
-        'deepseek/deepseek-chat-v3-0324:free',        // DeepSeek V3 – fast general
-        'meta-llama/llama-3.3-70b-instruct:free',     // Llama 3.3 70B
-        'mistralai/mistral-small-3.1-24b-instruct:free', // Mistral small but fast
-        'qwen/qwen3-235b-a22b:free',                  // Qwen3 – very capable
+        'google/gemini-2.0-flash-exp:free',
+        'deepseek/deepseek-r1:free',
+        'deepseek/deepseek-chat-v3-0324:free',
+        'meta-llama/llama-3.3-70b-instruct:free',
+        'mistralai/mistral-small-3.1-24b-instruct:free',
+        'qwen/qwen3-235b-a22b:free',
       ];
       for (const orModel of orModels) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 55000);
         try {
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 55000);
           const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -136,23 +141,23 @@ export default async function handler(req, res) {
             body: JSON.stringify({ model: orModel, messages: oaiMessages, max_tokens: Math.min(maxTok, 4096), temperature: temp, stream: true }),
             signal: ctrl.signal,
           });
-          clearTimeout(tid);
           if (r.ok) {
-            const short = orModel.split('/').pop().replace(':free', '');
-            await pipeStream(r, short);
+            const short = 'OR - ' + orModel.split('/').pop().replace(':free', '');
+            await pipeStream(r, short, tid);
             return;
           }
-          lastError = `OpenRouter ${orModel} error (${r.status})`;
-        } catch (e) { lastError = `OpenRouter: ${e.message}`; }
+          clearTimeout(tid);
+          lastError = `OpenRouter ${orModel} (${r.status})`;
+        } catch (e) { clearTimeout(tid); lastError = `OpenRouter: ${e.message}`; }
       }
     }
 
     return res.status(500).json({
       error: lastError || 'All AI providers failed.',
-      hint: 'Free keys: GROQ_KEY → groq.com | CEREBRAS_KEY → cloud.cerebras.ai | OPENROUTER_KEY → openrouter.ai',
+      hint: 'Free keys: GROQ_KEY -> groq.com | CEREBRAS_KEY -> cloud.cerebras.ai | OPENROUTER_KEY -> openrouter.ai',
     });
   } catch (err) {
     console.error('Proxy error:', err);
-    res.status(500).json({ error: 'Proxy error', detail: err.message });
+    if (!res.headersSent) res.status(500).json({ error: 'Proxy error', detail: err.message });
   }
 }

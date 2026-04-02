@@ -13,13 +13,13 @@ export default async function handler(req, res) {
 
     // Jina AI Reader — free, no key needed, converts any URL to clean markdown
     const jinaUrl = `https://r.jina.ai/${url}`;
+    const jinaCtrl = new AbortController();
+    const jinaTid = setTimeout(() => jinaCtrl.abort(), 15000);
     const response = await fetch(jinaUrl, {
-      headers: {
-        'Accept': 'text/plain',
-        'X-Return-Format': 'markdown',
-        'X-Timeout': '15',
-      }
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown', 'X-Timeout': '15' },
+      signal: jinaCtrl.signal,
     });
+    clearTimeout(jinaTid);
 
     if (!response.ok) throw new Error(`Jina returned ${response.status}`);
     const text = await response.text();

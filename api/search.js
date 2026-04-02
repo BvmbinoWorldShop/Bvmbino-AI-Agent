@@ -16,10 +16,17 @@ export default async function handler(req, res) {
 
     // Step 1: Fetch raw results via Jina + DuckDuckGo (no key, no quota)
     const ddgUrl = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`;
-    const jinaRes = await fetch(`https://r.jina.ai/${ddgUrl}`, {
-      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown', 'X-Timeout': '12' }
-    });
-    const rawText = jinaRes.ok ? await jinaRes.text() : '';
+    const jinaCtrl = new AbortController();
+    const jinaTid = setTimeout(() => jinaCtrl.abort(), 12000);
+    let jinaRes;
+    try {
+      jinaRes = await fetch(`https://r.jina.ai/${ddgUrl}`, {
+        headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown', 'X-Timeout': '12' },
+        signal: jinaCtrl.signal,
+      });
+    } catch (e) { jinaRes = null; }
+    clearTimeout(jinaTid);
+    const rawText = jinaRes?.ok ? await jinaRes.text() : '';
 
     // Step 2: Parse clickable results (DDG lite has links as plain URLs in the text)
     const results = [];
@@ -36,19 +43,25 @@ export default async function handler(req, res) {
     let answer = '';
     if (apiKey && rawText) {
       const cleanText = rawText.replace(/[#*`]/g, '').slice(0, 3000);
-      const gRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `Based on these search results for "${query}", give a direct useful summary in 3-5 bullet points:\n\n${cleanText}` }] }],
-            generationConfig: { maxOutputTokens: 400 },
-          }),
-        }
-      );
-      const gData = await gRes.json();
-      answer = gData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const gCtrl = new AbortController();
+      const gTid = setTimeout(() => gCtrl.abort(), 8000);
+      try {
+        const gRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `Based on these search results for "${query}", give a direct useful summary in 3-5 bullet points:\n\n${cleanText}` }] }],
+              generationConfig: { maxOutputTokens: 400 },
+            }),
+            signal: gCtrl.signal,
+          }
+        );
+        clearTimeout(gTid);
+        const gData = await gRes.json();
+        answer = gData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } catch (e) { clearTimeout(gTid); answer = ''; }
     }
 
     return res.status(200).json({ results, answer, query });

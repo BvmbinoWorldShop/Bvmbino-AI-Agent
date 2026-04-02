@@ -482,26 +482,31 @@ async function send(forcedText){
   document.getElementById('tbtitle').textContent=short;
   updTok(text.length/3.5);
   saveSession(short,msgs);
-  // Route by intent
+  // Route by intent — FIX: wrap in try/finally so busy never stays stuck if a tool throws
   const intent=detectIntent(text);
-  // Web search pill auto-route (only when pill ON and no /command intent)
-  if(pills.has('p-web')&&!forcedText&&!intent){
-    busy=true;document.getElementById('sbtn').disabled=true;
-    await doSearch(text);return;
+  try{
+    if(pills.has('p-web')&&!forcedText&&!intent){
+      busy=true;document.getElementById('sbtn').disabled=true;
+      await doSearch(text);return;
+    }
+    if(intent){
+      busy=true;document.getElementById('sbtn').disabled=true;
+      if(intent.type==='scrape') await doScrape(intent.url,text);
+      else if(intent.type==='search') await doSearch(intent.query);
+      else if(intent.type==='resume') await doSmartResume(intent.input);
+      else if(intent.type==='campaign') await callAI();
+      else if(intent.type==='pdf') await doPdf();
+      else if(intent.type==='schedule'){await callAI();const lastMsg=msgs.filter(m=>m.role==='assistant').pop()?.content||'';await doScheduleExport(lastMsg,intent.view||'weekly');}
+      else if(intent.type==='course') await callAI();
+      else if(intent.type==='present') await callAI();
+      return;
+    }
+    await callAI();
+  }catch(e){
+    console.error('send error',e);
+    appendAiText(`**Unexpected error:** ${e.message}`,null);
+    unlock();
   }
-  if(intent){
-    busy=true;document.getElementById('sbtn').disabled=true;
-    if(intent.type==='scrape') await doScrape(intent.url,text);
-    else if(intent.type==='search') await doSearch(intent.query);
-    else if(intent.type==='resume') await doSmartResume(intent.input);
-    else if(intent.type==='campaign') await callAI();
-    else if(intent.type==='pdf') await doPdf();
-    else if(intent.type==='schedule'){await callAI();const lastMsg=msgs.filter(m=>m.role==='assistant').pop()?.content||'';await doScheduleExport(lastMsg,intent.view||'weekly');}
-    else if(intent.type==='course') await callAI();
-    else if(intent.type==='present') await callAI();
-    return;
-  }
-  await callAI();
 }
 
 function addUserMsg(text){
@@ -587,7 +592,11 @@ async function doSmartResume(jobInput){
   }else{
     updateToolRow(rowId,'📄','scrape','Job description received ✓');
   }
-  msgs.push({role:'user',content:`Build me a perfectly tailored, ATS-optimized resume for this specific job. Extract every requirement, map it to my real background, use exact keywords from the posting:\n\n${jobContext}\n\nMake it impossible to ignore. [EXPORT:resume]`});
+  // FIX: replace the last user message (the /resume command) instead of pushing a 2nd user message
+  // — consecutive user messages break some model APIs
+  const lastUserIdx=msgs.map(m=>m.role).lastIndexOf('user');
+  const resumeMsg={role:'user',content:`Build me a perfectly tailored, ATS-optimized resume for this specific job. Extract every requirement, map it to my real background, use exact keywords from the posting:\n\n${jobContext}\n\nMake it impossible to ignore. [EXPORT:resume]`};
+  if(lastUserIdx>=0)msgs[lastUserIdx]=resumeMsg;else msgs.push(resumeMsg);
   await callAI();
 }
 
@@ -899,6 +908,8 @@ async function doPdf(){
 // ── CLAUDE AI CALL ──
 function showTyping(){
   busy=true;document.getElementById('sbtn').disabled=true;
+  // FIX: prevent duplicate #typing elements — hideTyping first to clear any stale indicator
+  hideTyping();
   const ci=document.getElementById('ci');
   const d=document.createElement('div');d.className='mrow ai';d.id='typing';
   d.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="tbub"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
@@ -963,9 +974,17 @@ async function streamResponse(res){
   ci.appendChild(row);
   streamEl=document.getElementById(stId);
   scrollBot();
-  // Update model badges live
   const mb=document.getElementById('mbadge');if(mb)mb.textContent=streamModel;
   const ab=document.getElementById('ai-engine-badge');if(ab)ab.innerHTML=`<span class="pulse"></span>${streamModel}`;
+  // FIX: throttle DOM updates — only repaint every 80ms, not on every 2-char chunk.
+  // Without this, a 500-word reply = 250 innerHTML rewrites = browser tab freeze.
+  let lastRender=0;
+  function flushRender(){
+    if(!streamEl)return;
+    let disp=full;const mx=disp.match(/\[EXPORT:\w+\]/);if(mx)disp=disp.replace(/\[EXPORT:\w+\]/,'').trim();
+    streamEl.innerHTML=mdHtml(disp)+'<span class="sc"></span>';
+    scrollBot();
+  }
   try{
     while(true){
       const{done,value}=await reader.read();if(done)break;
@@ -976,15 +995,12 @@ async function streamResponse(res){
         const d=line.slice(6).trim();if(d==='[DONE]')continue;
         try{
           const p=JSON.parse(d);
-          // OpenAI format (Groq/Cerebras/OpenRouter)
           const delta=p.choices?.[0]?.delta?.content;
           if(delta){full+=delta;}
-          // Anthropic format fallback
           else if(p.type==='content_block_delta'&&p.delta?.text){full+=p.delta.text;}
           else continue;
-          let disp=full;const mx=disp.match(/\[EXPORT:\w+\]/);if(mx)disp=disp.replace(/\[EXPORT:\w+\]/,'').trim();
-          if(streamEl)streamEl.innerHTML=mdHtml(disp)+'<span class="sc"></span>';
-          scrollBot();
+          const now=Date.now();
+          if(now-lastRender>80){flushRender();lastRender=now;}
         }catch{}
       }
     }
@@ -993,6 +1009,7 @@ async function streamResponse(res){
     let xtype=null;const m3=full.match(/\[EXPORT:(\w+)\]/);
     if(m3){full=full.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m3[1];}
     msgs.push({role:'assistant',content:full});
+    // Final render of complete response (no cursor)
     if(streamEl)streamEl.innerHTML=mdHtml(full)+(xtype?xcard(xtype):'');
     const mw=row.querySelector('.mwrap');
     const mid='m'+Date.now();msgStore[mid]={text:full,xtype};
@@ -1239,7 +1256,8 @@ try{
   }
 }catch(e){}
 
-setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs,tokens}));}catch{}},4000);
+// FIX: limit stored messages to last 40 to prevent localStorage quota overflow
+setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs:msgs.slice(-40),tokens}));}catch{}},4000);
 
 // ── VOICE INPUT ──
 let recognition=null;
@@ -1255,6 +1273,7 @@ function toggleVoice(){
     };
     recognition.onend=()=>{
       btn.textContent='🎙️';btn.classList.remove('recording');
+      recognition=null; // FIX: reset so next click creates a fresh instance, no stale state
       const v=document.getElementById('inp').value.trim();
       if(v)setTimeout(send,100);
     };
