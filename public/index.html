@@ -185,7 +185,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
-    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(124,92,252,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse"></span>Groq · Llama 3.3</div>
+    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(124,92,252,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse"></span>Groq · Llama 3.3 70B</div>
   </div>
   <div class="ssect">
     <div class="sbl">Tools</div>
@@ -214,7 +214,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
     </div>
     <div class="badge b-gn"><span class="pulse"></span>Memory</div>
     <div class="badge b-am" id="toolbadge" style="display:none">⚡ tool active</div>
-    <div class="badge b-pu" id="mbadge">Gemini Flash</div>
+    <div class="badge b-pu" id="mbadge">Groq · Llama 3.3</div>
     <button class="icobtn" onclick="newChat()" title="New chat (Ctrl+K)">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
@@ -225,7 +225,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <div class="welcome" id="welcome">
         <div class="worb">🤖</div>
         <div class="wt">Bvmbino AI Agent</div>
-        <div class="ws">Your personal expert AI — communication, sales, business scaling, content creation & script writing. Powered by Gemini 2.5 Flash.</div>
+        <div class="ws">Your personal expert AI — communication, sales, business scaling, content creation & script writing. Powered by Groq · Llama 3.3.</div>
         <div class="wgrid">
           <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Scale My Business</div><div class="wcd">Growth systems, B2B acquisition, revenue funnels</div></div>
           <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Content & Scripts</div><div class="wcd">Social posts, sales scripts, VSL, video narration</div></div>
@@ -261,7 +261,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   <div class="mph"><span class="pulse"></span>Agent Memory</div>
   <div class="mpe" id="mems">
     <div class="me"><div class="mek">user</div><div class="mev">Boss / Bvmbino · Pro Basketball Player/Coach · Purgo Clean (owner) · Mindset Formateur · AI Consultant · Marketing &amp; Communication</div></div>
-    <div class="me"><div class="mek">active model</div><div class="mev" id="mem-model">Gemini Flash</div></div>
+    <div class="me"><div class="mek">active model</div><div class="mev" id="mem-model">Groq · Llama 3.3</div></div>
     <div class="me"><div class="mek">ventures</div><div class="mev">Purgo Clean (Île-de-France) · Keo Jus (Côte d'Ivoire / Accor Hotels) · FormationPro · Marketing Consultancy</div></div>
     <div class="me"><div class="mek">project</div><div class="mev">Bvmbino AI Agent — cross-platform app</div></div>
     <div class="me"><div class="mek">tools</div><div class="mev" id="mem-tools">memory</div></div>
@@ -276,7 +276,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <div class="twrap" id="toasts"></div>
 
 <script>
-const MODELS={claude:'Gemini Flash',gpt4:'GPT-4o',gemini:'Gemini Flash',grok:'Grok 2'};
+const MODELS={claude:'Groq · Llama 3.3',gpt4:'Groq · Llama 3.3',gemini:'Groq · Llama 3.3',grok:'Groq · Llama 3.3'};
 const CMDS=[
   {cmd:'/resume',   desc:'Tailored resume: /resume [url or job]', icon:'📄'},
   {cmd:'/campaign', desc:'Full ad campaign + deployment guide',  icon:'📣'},
@@ -318,7 +318,7 @@ function setModel(el,m){
   document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');model=m;
   document.getElementById('mbadge').textContent=MODELS[m];
-  document.getElementById('mem-model').textContent=MODELS[m]+' 4';
+  document.getElementById('mem-model').textContent=MODELS[m];
   addMem('model','Now using '+MODELS[m]);
   toast('Switched to '+MODELS[m]);
 }
@@ -563,7 +563,7 @@ async function doSearch(query){
     }
   }catch(err){
     updateToolRow(rowId,'🔍','search','Search failed: '+err.message,true);
-    appendAiText(`**Search failed:** ${err.message}\n\nMake sure GEMINI_KEY is set in your Vercel environment variables.`,null);
+    appendAiText(`**Search failed:** ${err.message}\n\nMake sure \`GEMINI_KEY_2\` is set in your Vercel environment variables (used for web search grounding).`,null);
     unlock();
   }
 }
@@ -929,7 +929,11 @@ async function callAI(skipLock){
       const providers=res.headers.get('x-providers');
       if(providers)addMem('providers loaded',providers);
       // Show error hint if all providers failed
-      if(data.hint&&!data.content){appendAiText(`**All AI providers failed**\n\n${data.hint}`,null);unlock();return;}
+      if(data.hint&&!data.content){
+        const loaded=res.headers.get('x-providers')||'none';
+        appendAiText(`**AI quota exhausted or no keys set**\n\nKeys loaded in production: \`${loaded}\`\n\n**Fix in 2 min:**\n1. Go to [vercel.com](https://vercel.com) → your project → **Settings → Environment Variables**\n2. Add \`GROQ_KEY\` (free forever at groq.com — 14,400 req/day) → tick ✅ **Production**\n3. Add \`CEREBRAS_KEY\` (free at cloud.cerebras.ai — 1M tokens/day) → tick ✅ **Production**\n4. Add \`OPENROUTER_KEY\` (free at openrouter.ai — backup) → tick ✅ **Production**\n5. Keys auto-load on next request — no redeploy needed`,null);
+        unlock();return;
+      }
       let reply=data.content?.[0]?.text||data.error||'No response from AI';
       let xtype=null;const m=reply.match(/\[EXPORT:(\w+)\]/);
       if(m){reply=reply.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m[1];}
@@ -939,7 +943,7 @@ async function callAI(skipLock){
     }
   }catch(err){
     hideTyping();
-    const errTxt=`**Connection failed** — \`${err.message}\`\n\n**Free API keys to add in Vercel env vars:**\n- \`GROQ_KEY\` → groq.com *(14,400 req/day — fastest)*\n- \`CEREBRAS_KEY\` → cloud.cerebras.ai *(1M tokens/day)*\n- \`OPENROUTER_KEY\` → openrouter.ai *(50 free req/day, 28+ models)*\n- \`GEMINI_KEY\` → aistudio.google.com *(1,500 req/day)*\n\nRun locally: \`vercel dev\` · Deploy: \`vercel --prod\``;
+    const errTxt=`**Connection failed** — \`${err.message}\`\n\n**Free API keys to add in Vercel env vars:**\n- \`GROQ_KEY\` → groq.com *(14,400 req/day — fastest)*\n- \`CEREBRAS_KEY\` → cloud.cerebras.ai *(1M tokens/day)*\n- \`OPENROUTER_KEY\` → openrouter.ai *(50 free req/day, 28+ models)*\n\nRun locally: \`vercel dev\` · Deploy: \`vercel --prod\``;
     msgs.push({role:'assistant',content:errTxt});
     appendAiText(errTxt,null);
   }finally{
