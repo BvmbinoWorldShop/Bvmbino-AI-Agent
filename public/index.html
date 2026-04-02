@@ -134,6 +134,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .infoot{display:flex;align-items:center;padding:0 10px 8px;gap:5px;flex-wrap:wrap}
 .pill{padding:2px 8px;border-radius:20px;background:var(--s3);border:1px solid var(--bd);color:var(--t3);font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .1s;display:flex;align-items:center;gap:3px;letter-spacing:.3px}
 .pill:hover{color:var(--t2);border-color:var(--bd2)}.pill.on{background:var(--pu3);border-color:rgba(124,92,252,.35);color:var(--pu2)}
+.pill.web-on{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:#4ade80}
+.micbtn{width:34px;height:34px;background:none;border:1px solid var(--bd);border-radius:7px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-size:15px;margin:0 4px 7px 0}.micbtn:hover{background:var(--s3);color:var(--t2)}
+.micbtn.recording{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171;animation:pulse-rec 1.5s infinite}
+@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
 .pdot{width:4px;height:4px;border-radius:50%;background:currentColor}
 .kbhint{margin-left:auto;font-size:9px;color:var(--t4);font-family:var(--mono)}
 /* SLASH MENU */
@@ -181,7 +185,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
-    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(124,92,252,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px"><span class="pulse"></span>Gemini 2.5 Flash</div>
+    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(124,92,252,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse"></span>Groq · Llama 3.3</div>
   </div>
   <div class="ssect">
     <div class="sbl">Tools</div>
@@ -199,12 +203,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
     </div>
   </div>
   <div class="ssect" style="padding-bottom:4px"><div class="sbl">Recent</div></div>
-  <div class="sb-hist" id="hist">
-    <div class="hi"><span class="hdot"></span>Keo Jus brand strategy Q2</div>
-    <div class="hi"><span class="hdot"></span>Purgo Clean B2B acquisition</div>
-    <div class="hi"><span class="hdot"></span>LinkedIn content calendar</div>
-    <div class="hi"><span class="hdot"></span>Investor pitch outline</div>
-  </div>
+  <div class="sb-hist" id="hist"></div>
 </aside>
 
 <main class="main">
@@ -244,13 +243,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <div class="smenu" id="smenu"></div>
       <div class="intop">
         <textarea id="inp" placeholder="Ask anything… or type / for commands" rows="1" oninput="onInp()" onkeydown="onKey(event)"></textarea>
+        <button class="micbtn" id="micbtn" onclick="toggleVoice()" title="Voice input">🎙️</button>
         <button class="sbtn" id="sbtn" onclick="send()">↑</button>
       </div>
       <div class="infoot">
         <div class="pill on" id="p-mem" onclick="togglePill(this)"><span class="pdot"></span>memory</div>
         <div class="pill" id="p-web" onclick="togglePill(this)"><span class="pdot"></span>web search</div>
         <div class="pill" id="p-pdf" onclick="togglePill(this)"><span class="pdot"></span>PDF export</div>
-        <span class="kbhint">↵ send · ⇧↵ newline · Ctrl+K new</span>
+        <span id="char-counter" style="font-size:9px;font-family:var(--mono);color:var(--t3);margin-left:2px"></span>
+        <span class="kbhint" style="margin-left:auto">↵ send · ⇧↵ newline · Ctrl+K new</span>
       </div>
     </div>
   </div>
@@ -324,6 +325,7 @@ function setModel(el,m){
 
 function togglePill(el){
   el.classList.toggle('on');
+  if(el.id==='p-web')el.classList.toggle('web-on',el.classList.contains('on'));
   if(pills.has(el.id))pills.delete(el.id);else pills.add(el.id);
   document.getElementById('mem-tools').textContent=[...pills].map(p=>p.replace('p-','')).join(', ')||'none';
 }
@@ -332,6 +334,9 @@ function togglePill(el){
 function onInp(){
   const el=document.getElementById('inp');
   el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';
+  // Character counter
+  const chars=el.value.length;const cc=document.getElementById('char-counter');
+  if(cc){cc.textContent=chars>0?`${chars.toLocaleString()} chars`:'';cc.style.color=chars>3500?'var(--rd)':chars>2000?'var(--am)':'var(--t3)';}
   const v=el.value,menu=document.getElementById('smenu');
   // Show slash menu on /command (before space)
   const slashMatch=v.match(/^(\/\S*)$/);
@@ -399,6 +404,7 @@ function rmWelcome(){const w=document.getElementById('welcome');if(w)w.remove();
 
 function newChat(){
   saveSessionMemory();
+  if(msgs.length)saveSession(document.getElementById('tbtitle').textContent,msgs,true);
   msgs=[];tokens=1840;updTok(0);
   document.getElementById('tbtitle').textContent='New conversation';
   document.getElementById('ci').innerHTML=`
@@ -475,11 +481,14 @@ async function send(forcedText){
   const short=text.slice(0,42)+(text.length>42?'…':'');
   document.getElementById('tbtitle').textContent=short;
   updTok(text.length/3.5);
-  const hi=document.createElement('div');
-  hi.className='hi';hi.innerHTML=`<span class="hdot"></span>${esc(short)}`;
-  document.getElementById('hist').insertBefore(hi,document.getElementById('hist').firstChild);
+  saveSession(short,msgs);
   // Route by intent
   const intent=detectIntent(text);
+  // Web search pill auto-route (only when pill ON and no /command intent)
+  if(pills.has('p-web')&&!forcedText&&!intent){
+    busy=true;document.getElementById('sbtn').disabled=true;
+    await doSearch(text);return;
+  }
   if(intent){
     busy=true;document.getElementById('sbtn').disabled=true;
     if(intent.type==='scrape') await doScrape(intent.url,text);
@@ -916,7 +925,7 @@ async function callAI(skipLock){
       const data=await res.json();
       hideTyping();
       // Show which provider fired + which keys are loaded
-      if(data.model){const mb=document.getElementById('mbadge');if(mb)mb.textContent=data.model;}
+      if(data.model){const mb=document.getElementById('mbadge');if(mb)mb.textContent=data.model;const ab=document.getElementById('ai-engine-badge');if(ab)ab.innerHTML=`<span class="pulse"></span>${data.model}`;}
       const providers=res.headers.get('x-providers');
       if(providers)addMem('providers loaded',providers);
       // Show error hint if all providers failed
@@ -939,31 +948,39 @@ async function callAI(skipLock){
 }
 
 async function streamResponse(res){
+  const streamModel=res.headers.get('x-model')||MODELS[model]||'AI';
   const reader=res.body.getReader(),dec=new TextDecoder();
-  let full='',streamEl=null;
+  let full='',streamEl=null,buf='';
   hideTyping();
   const ci=document.getElementById('ci');
   const stId='st-'+Date.now();
   const row=document.createElement('div');row.className='mrow ai';
-  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai" id="${stId}"></div></div>`;
+  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${streamModel}</span></div><div class="bubble b-ai" id="${stId}"></div></div>`;
   ci.appendChild(row);
   streamEl=document.getElementById(stId);
   scrollBot();
+  // Update model badges live
+  const mb=document.getElementById('mbadge');if(mb)mb.textContent=streamModel;
+  const ab=document.getElementById('ai-engine-badge');if(ab)ab.innerHTML=`<span class="pulse"></span>${streamModel}`;
   try{
     while(true){
       const{done,value}=await reader.read();if(done)break;
-      const chunk=dec.decode(value);
-      for(const line of chunk.split('\n')){
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop()||'';
+      for(const line of lines){
         if(!line.startsWith('data: '))continue;
-        const d=line.slice(6);if(d==='[DONE]')continue;
+        const d=line.slice(6).trim();if(d==='[DONE]')continue;
         try{
           const p=JSON.parse(d);
-          if(p.type==='content_block_delta'&&p.delta?.text){
-            full+=p.delta.text;
-            let disp=full;const mx=disp.match(/\[EXPORT:\w+\]/);if(mx)disp=disp.replace(/\[EXPORT:\w+\]/,'').trim();
-            if(streamEl)streamEl.innerHTML=mdHtml(disp)+'<span class="sc"></span>';
-            scrollBot();
-          }
+          // OpenAI format (Groq/Cerebras/OpenRouter)
+          const delta=p.choices?.[0]?.delta?.content;
+          if(delta){full+=delta;}
+          // Anthropic format fallback
+          else if(p.type==='content_block_delta'&&p.delta?.text){full+=p.delta.text;}
+          else continue;
+          let disp=full;const mx=disp.match(/\[EXPORT:\w+\]/);if(mx)disp=disp.replace(/\[EXPORT:\w+\]/,'').trim();
+          if(streamEl)streamEl.innerHTML=mdHtml(disp)+'<span class="sc"></span>';
+          scrollBot();
         }catch{}
       }
     }
@@ -1219,6 +1236,106 @@ try{
 }catch(e){}
 
 setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs,tokens}));}catch{}},4000);
+
+// ── VOICE INPUT ──
+let recognition=null;
+function toggleVoice(){
+  const btn=document.getElementById('micbtn');
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){toast('Voice not supported in this browser');return;}
+  if(!recognition){
+    recognition=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+    recognition.lang='fr-FR';recognition.interimResults=true;recognition.continuous=false;
+    recognition.onresult=e=>{
+      const t=[...e.results].map(r=>r[0].transcript).join('');
+      document.getElementById('inp').value=t;onInp();
+    };
+    recognition.onend=()=>{
+      btn.textContent='🎙️';btn.classList.remove('recording');
+      const v=document.getElementById('inp').value.trim();
+      if(v)setTimeout(send,100);
+    };
+    recognition.onerror=e=>{btn.textContent='🎙️';btn.classList.remove('recording');toast('Voice error: '+e.error);};
+  }
+  if(btn.classList.contains('recording')){recognition.stop();return;}
+  btn.textContent='⏹️';btn.classList.add('recording');
+  recognition.start();toast('🎙️ Listening…');
+}
+
+// ── HISTORY PERSISTENCE ──
+const SESSIONS_KEY='bvmbino_sessions';const SESSIONS_MAX=20;
+
+function saveSession(title,messages,forceNew){
+  if(!title||!messages||!messages.length)return;
+  try{
+    const sessions=JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]');
+    const clean=title.replace(/New conversation/i,'').trim()||title;
+    // Update existing entry for this conversation if same title+today (avoid duplicates)
+    const today=new Date().toLocaleDateString('en-GB');
+    const existIdx=!forceNew?sessions.findIndex(s=>s.title===clean&&s.date===today):-1;
+    const entry={id:existIdx>=0?sessions[existIdx].id:Date.now(),title:clean.slice(0,60),msgs:[...messages],date:today};
+    if(existIdx>=0)sessions[existIdx]=entry;
+    else{sessions.unshift(entry);if(sessions.length>SESSIONS_MAX)sessions.pop();}
+    localStorage.setItem(SESSIONS_KEY,JSON.stringify(sessions));
+    renderHistory();
+  }catch{}
+}
+
+function loadSessions(){
+  try{return JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]');}catch{return[];}
+}
+
+function deleteSession(id,e){
+  e.stopPropagation();
+  try{
+    const s=loadSessions().filter(x=>x.id!==id);
+    localStorage.setItem(SESSIONS_KEY,JSON.stringify(s));
+    renderHistory();toast('Deleted ✓');
+  }catch{}
+}
+
+function resumeSession(id){
+  const session=loadSessions().find(s=>s.id===id);
+  if(!session)return;
+  msgs=[...session.msgs];tokens=1840;
+  document.getElementById('tbtitle').textContent=session.title;
+  document.getElementById('ci').innerHTML='';
+  msgs.forEach(m=>{
+    if(m.role==='user')addUserMsg(m.content);
+    else{let x=null,t=m.content;const mx=t.match(/\[EXPORT:(\w+)\]/);if(mx){t=t.replace(/\[EXPORT:\w+\]/,'').trim();x=mx[1];}appendAiText(t,x);}
+  });
+  updTok(msgs.reduce((s,m)=>s+(m.content.length/3.5),0));
+  closeSb();toast('Conversation restored ✓');
+}
+
+function renderHistory(){
+  const hist=document.getElementById('hist');
+  const sessions=loadSessions();
+  if(!sessions.length){
+    hist.innerHTML='<div style="padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--t4)">No saved conversations yet</div>';
+    return;
+  }
+  hist.innerHTML=sessions.map(s=>
+    `<div class="hi" onclick="resumeSession(${s.id})" style="display:flex;align-items:center;gap:6px">
+      <span class="hdot"></span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</span>
+      <button onclick="deleteSession(${s.id},event)" style="opacity:0;font-size:10px;background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 5px;flex-shrink:0;transition:opacity .1s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">✕</button>
+    </div>`
+  ).join('');
+}
+
+// ── SWIPE GESTURES (mobile) ──
+let touchStartX=0,touchStartY=0;
+document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchStartX;
+  const dy=e.changedTouches[0].clientY-touchStartY;
+  if(Math.abs(dx)<Math.abs(dy)*2||Math.abs(dx)<50)return;
+  if(dx>0&&touchStartX<40)openSb();
+  else if(dx<0)closeSb();
+},{passive:true});
+
+// Init history on load
+renderHistory();
 </script>
 </body>
 </html>
