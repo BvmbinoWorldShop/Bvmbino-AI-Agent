@@ -947,7 +947,7 @@ async function callAI(skipLock){
     const res=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({system:sys,messages:msgs})
+      body:JSON.stringify({system:sys,messages:msgs.slice(-4)})
     });
     if(res.ok&&res.headers.get('content-type')?.includes('text/event-stream')){
       await streamResponse(res);
@@ -1287,8 +1287,8 @@ try{
   }
 }catch(e){}
 
-// FIX: limit stored messages to last 40 to prevent localStorage quota overflow
-setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs:msgs.slice(-40),tokens}));}catch{}},4000);
+// Save only last 2 conversations (4 messages) — frees tokens + speeds up responses
+setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs:msgs.slice(-4),tokens}));}catch{}},4000);
 
 // ── VOICE INPUT ──
 let recognition=null;
