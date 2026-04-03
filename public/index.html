@@ -292,8 +292,10 @@ const CMDS=[
   {cmd:'/automate', desc:'Automation workflow design',             icon:'⚡'},
   {cmd:'/pitch',    desc:'Investor pitch content',                icon:'💼'},
   {cmd:'/email',    desc:'Write professional email',              icon:'✉️'},
-  {cmd:'/pdf',      desc:'Export last answer as PDF',             icon:'📋'},
-  {cmd:'/security', desc:'Security audit — scan code & deps',     icon:'🔐'},
+  {cmd:'/budget',   desc:'Budget analysis: /budget [info]',        icon:'💳'},
+  {cmd:'/writer',   desc:'Deep writing: /writer [topic]',          icon:'✍️'},
+  {cmd:'/pdf',      desc:'Export last answer as PDF',              icon:'📋'},
+  {cmd:'/security', desc:'Security audit — scan code & deps',      icon:'🔐'},
 ];
 
 const PROMPTS={
@@ -314,6 +316,8 @@ course:`Build me a complete, professional training course curriculum. Ask me the
   imgprompt:`/imgprompt — Act as a professional AI media director. Transform my visual idea into a production-grade, hyperrealistic prompt. Include: subject + action + expression, environment + lighting (golden hour / studio / neon / cinematic), camera system (Sony A7R V / Canon EOS R5), lens (85mm f/1.4 / 35mm f/2.8), shot type (close-up / Dutch angle / low angle / aerial), texture details (skin pores / fabric / sweat / surface reflections), color grade (warm filmic / cool editorial), style (hyperrealistic editorial / sports magazine / Nike campaign). Add negative prompt. Recommend best free AI tool. Describe your visual idea after /imgprompt.`,
   outreach:`/outreach — Write personalized cold outreach for a potential client or partner. Structure: Line 1: specific compliment/observation, Line 2: who I am in one sentence, Line 3: specific value I can add to THEM, Line 4: low-friction CTA. Deliver both email version + DM version. Tone: human, direct, confident — never salesy. Who are you reaching out to?`,
   proposal:`/proposal — Write a high-ticket client proposal. Include: Executive Summary (their problem + my solution), About Me (credibility + relevant experience), Offer Details (deliverables, timeline, format), Investment tiers (Basic / Premium / VIP), Next Steps (CTA + booking link placeholder). Tone: confident, empathetic, results-focused. Which client type is this for? [EXPORT:proposal]`,
+  budget:`/budget — Act as my Personal CFO. Analyze my financial situation and deliver a hard, comprehensive read. I'll provide my income streams and expenses. You deliver: Income Snapshot table, Expense Audit (flag waste), Financial Health Score (1-10), Cash Flow Plan with allocation %, Priority Order (emergency fund → debt → invest → grow), Budget Optimization Table (current vs optimized), 90-Day Financial Milestones, minimum 5 actionable insights for my multi-business situation in France, and one thing to do THIS WEEK. Be direct like a financial coach — tell the truth about my money. [EXPORT:budget]`,
+  writer:`/writer — Act as an elite human writer with 20+ years editorial experience. Write deep, logical, soulful long-form content. Vary sentence rhythm, use first person, include self-doubt moments, specific sensory details, and real emotions. NO AI patterns ("In today's fast-paced world", "Let's dive in", "game-changer"). Structure: hook that creates an open loop → argument built like a lawyer → 1-2-3 punch (anecdote + data + universal truth) → ending that lingers. Deliver: full polished text + word count + reading time + SEO keywords. What should I write about? [EXPORT:article]`,
 };
 
 let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[],msgStore={};
@@ -368,7 +372,7 @@ function applySlash(cmd){
   document.getElementById('smenu').classList.remove('show');
   const key=cmd.slice(1);
   // Commands that need an argument typed after them
-  if(['scrape','search','course','present','resume','content','imgprompt','outreach','proposal'].includes(key)){
+  if(['scrape','search','course','present','resume','content','imgprompt','outreach','proposal','budget','writer'].includes(key)){
     const el=document.getElementById('inp');
     el.value=cmd+' ';el.focus();onInp();
     return;
@@ -470,7 +474,7 @@ function detectIntent(text){
     const idea=text.slice(11).trim();
     return{type:'imgprompt',idea};
   }
-  if(t.startsWith('/outreach ')||t.startsWith('/proposal ')){
+  if(t.startsWith('/outreach ')||t.startsWith('/proposal ')||t.startsWith('/budget ')||t.startsWith('/writer ')){
     return{type:'ai'};// route straight to callAI with message intact
   }
   if(t.startsWith('/pdf')){
