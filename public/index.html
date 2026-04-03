@@ -6,7 +6,7 @@
 <title>Bvmbino AI Agent</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-:root{--bg:#080809;--s1:#0f0f11;--s2:#161619;--s3:#1e1e22;--s4:#26262b;--bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);--bd3:rgba(255,255,255,.18);--t1:#ededf0;--t2:#8888a0;--t3:#4a4a60;--t4:#2e2e3a;--pu:#7C5CFC;--pu2:#9b7dff;--pu3:rgba(124,92,252,.15);--gn:#22c55e;--am:#f59e0b;--rd:#ef4444;--r:10px;--rsm:6px;--font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace}
+:root{--bg:#06080a;--s1:#0b0e12;--s2:#111419;--s3:#181c22;--s4:#1f242b;--bd:rgba(255,200,60,.06);--bd2:rgba(255,200,60,.12);--bd3:rgba(255,200,60,.22);--t1:#f0ece4;--t2:#9a9484;--t3:#5a5548;--t4:#342f28;--pu:#e8a912;--pu2:#ffc842;--pu3:rgba(232,169,18,.12);--gn:#22c55e;--am:#f59e0b;--rd:#ef4444;--r:12px;--rsm:8px;--font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;font-size:14px;line-height:1.5}
@@ -14,17 +14,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .sb{width:256px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:10}
 .sb-top{padding:18px 14px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.lmark{width:34px;height:34px;background:var(--pu);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
-.lmark::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%)}
+.lmark{width:34px;height:34px;background:linear-gradient(135deg,#e8a912,#d4940a);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#0a0800;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(232,169,18,.25)}
+.lmark::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(135deg,rgba(255,255,255,.25) 0%,transparent 60%)}
 .lname{font-size:20px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;line-height:1;color:var(--t1)}
 .ltag{font-size:9px;color:var(--t3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1.2px}
-.nbtn{width:100%;padding:8px 12px;background:var(--pu);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity .15s,transform .1s}
+.nbtn{width:100%;padding:9px 12px;background:linear-gradient(135deg,#e8a912,#d4940a);color:#0a0800;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity .15s,transform .1s;box-shadow:0 2px 10px rgba(232,169,18,.2)}
 .nbtn:hover{opacity:.88}.nbtn:active{transform:scale(.97)}
 .sbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.4px;font-family:var(--mono);margin-bottom:7px}
 .ssect{padding:10px 14px 6px;flex-shrink:0}
 .mtabs{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .mtab{padding:7px 8px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);color:var(--t3);font-size:10px;font-family:var(--mono);cursor:pointer;text-align:center;transition:all .15s;position:relative;overflow:hidden}
-.mtab:hover{color:var(--t2);border-color:var(--bd2)}.mtab.on{background:var(--pu3);border-color:rgba(124,92,252,.4);color:var(--pu2)}
+.mtab:hover{color:var(--t2);border-color:var(--bd2)}.mtab.on{background:var(--pu3);border-color:rgba(232,169,18,.4);color:var(--pu2)}
 .mtab.on::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--pu2);opacity:.5}
 .qacts{display:flex;flex-direction:column;gap:2px}
 .qbtn{padding:8px 10px;background:transparent;border:1px solid transparent;border-radius:var(--rsm);color:var(--t2);font-size:12px;font-family:var(--font);cursor:pointer;text-align:left;display:flex;align-items:center;gap:9px;transition:all .12s;width:100%}
@@ -40,7 +40,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .tb-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .tb-title{font-size:13px;font-weight:500;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px}
-.b-pu{background:var(--pu3);color:var(--pu2);border:1px solid rgba(124,92,252,.25)}
+.b-pu{background:var(--pu3);color:var(--pu2);border:1px solid rgba(232,169,18,.25)}
 .b-gn{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
 .b-am{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
 .pulse{width:5px;height:5px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite}
@@ -52,7 +52,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .ci{max-width:720px;margin:0 auto;padding:28px 20px 20px;display:flex;flex-direction:column;min-height:100%}
 /* WELCOME */
 .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0}
-.worb{width:64px;height:64px;background:var(--pu);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px}
+.worb{width:64px;height:64px;background:linear-gradient(135deg,#e8a912,#d4940a);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px;box-shadow:0 4px 20px rgba(232,169,18,.3)}
 .wt{font-size:34px;font-family:'Bebas Neue',sans-serif;letter-spacing:3px;margin-bottom:10px}
 .ws{font-size:13px;color:var(--t2);max-width:360px;line-height:1.6;margin-bottom:28px}
 .wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:460px}
@@ -64,10 +64,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 /* MESSAGES */
 .mrow{display:flex;gap:11px;padding:6px 0}.mrow.user{flex-direction:row-reverse}
 .av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:3px}
-.av-ai{background:var(--pu);color:#fff;font-family:var(--mono);font-size:8px}.av-us{background:var(--s4);color:var(--t2)}
+.av-ai{background:linear-gradient(135deg,#e8a912,#d4940a);color:#0a0800;font-family:var(--mono);font-size:8px;font-weight:700}.av-us{background:var(--s4);color:var(--t2)}
 .mwrap{flex:1;min-width:0;max-width:85%}.mrow.user .mwrap{display:flex;flex-direction:column;align-items:flex-end}
 .mmeta{font-size:10px;color:var(--t3);font-family:var(--mono);margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.mmtag{font-size:8px;padding:1px 5px;background:var(--pu3);color:var(--pu2);border-radius:10px;border:1px solid rgba(124,92,252,.2)}
+.mmtag{font-size:8px;padding:1px 5px;background:var(--pu3);color:var(--pu2);border-radius:10px;border:1px solid rgba(232,169,18,.2)}
 .tool-tag{font-size:8px;padding:1px 5px;border-radius:10px;border:1px solid}
 .tool-tag.search{background:rgba(34,197,94,.08);color:#4ade80;border-color:rgba(34,197,94,.2)}
 .tool-tag.scrape{background:rgba(245,158,11,.1);color:#fbbf24;border-color:rgba(245,158,11,.2)}
@@ -75,15 +75,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .tool-tag.pdf{background:rgba(99,179,237,.1);color:#60a5fa;border-color:rgba(99,179,237,.2)}
 .bubble{padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.68}
 .b-ai{background:var(--s2);border:1px solid var(--bd);border-top-left-radius:3px}
-.b-us{background:var(--pu);color:#fff;border-top-right-radius:3px}
-.bubble strong{font-weight:600;color:var(--pu2)}.b-us strong{color:rgba(255,255,255,.9)}
+.b-us{background:linear-gradient(135deg,#e8a912,#c89008);color:#0a0800;border-top-right-radius:3px;font-weight:500}
+.bubble strong{font-weight:600;color:var(--pu2)}.b-us strong{color:#0a0800}
 .bubble em{color:var(--t2);font-style:italic}
 .bubble .bh{font-size:14px;font-weight:700;color:var(--t1);display:block;margin:12px 0 5px;letter-spacing:-.2px}
 .bubble .bh:first-child{margin-top:0}
 .bubble .bl{display:flex;gap:7px;margin:3px 0}.bubble .bld{color:var(--pu2);flex-shrink:0;line-height:1.68}
 .bubble .bn{display:flex;gap:8px;margin:3px 0}.bubble .bnn{color:var(--pu2);flex-shrink:0;font-size:11px;font-family:var(--mono);line-height:1.68;min-width:18px}
 .bubble code{font-family:var(--mono);font-size:11px;background:var(--s4);padding:1px 6px;border-radius:4px;color:var(--pu2);border:1px solid var(--bd)}
-.b-us code{background:rgba(0,0,0,.2);color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.15)}
+.b-us code{background:rgba(0,0,0,.15);color:#0a0800;border-color:rgba(0,0,0,.15)}
 .bubble pre{background:var(--s4);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;font-family:var(--mono);font-size:11px;line-height:1.6;color:#c9d1d9}
 .bubble pre code{background:none;padding:0;border:none;color:inherit}
 .bubble table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
@@ -125,15 +125,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 /* INPUT */
 .inzone{padding:14px 18px 18px;border-top:1px solid var(--bd);flex-shrink:0}
 .inwrap{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);transition:border-color .15s,box-shadow .15s;position:relative}
-.inwrap:focus-within{border-color:rgba(124,92,252,.5);box-shadow:0 0 0 3px rgba(124,92,252,.07)}
+.inwrap:focus-within{border-color:rgba(232,169,18,.45);box-shadow:0 0 0 3px rgba(232,169,18,.08)}
 .intop{display:flex;align-items:flex-end}
 #inp{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:var(--font);font-size:13px;padding:13px 14px 10px;resize:none;max-height:160px;min-height:46px;line-height:1.55;width:100%}
 #inp::placeholder{color:var(--t3)}
-.sbtn{width:36px;height:36px;background:var(--pu);border:none;border-radius:7px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;flex-shrink:0;margin:0 8px 7px 0;font-size:14px}
+.sbtn{width:36px;height:36px;background:linear-gradient(135deg,#e8a912,#d4940a);border:none;border-radius:7px;color:#0a0800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;flex-shrink:0;margin:0 8px 7px 0;font-size:14px;font-weight:700;box-shadow:0 2px 10px rgba(232,169,18,.2)}
 .sbtn:hover{opacity:.85}.sbtn:active{transform:scale(.93)}.sbtn:disabled{opacity:.3;cursor:default}
 .infoot{display:flex;align-items:center;padding:0 10px 8px;gap:5px;flex-wrap:wrap}
 .pill{padding:2px 8px;border-radius:20px;background:var(--s3);border:1px solid var(--bd);color:var(--t3);font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .1s;display:flex;align-items:center;gap:3px;letter-spacing:.3px}
-.pill:hover{color:var(--t2);border-color:var(--bd2)}.pill.on{background:var(--pu3);border-color:rgba(124,92,252,.35);color:var(--pu2)}
+.pill:hover{color:var(--t2);border-color:var(--bd2)}.pill.on{background:var(--pu3);border-color:rgba(232,169,18,.35);color:var(--pu2)}
 .pill.web-on{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:#4ade80}
 .micbtn{width:34px;height:34px;background:none;border:1px solid var(--bd);border-radius:7px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-size:15px;margin:0 4px 7px 0}.micbtn:hover{background:var(--s3);color:var(--t2)}
 .micbtn.recording{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171;animation:pulse-rec 1.5s infinite}
@@ -162,7 +162,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .toast{padding:8px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:20px;font-size:11px;font-family:var(--mono);color:var(--t1);white-space:nowrap;animation:tin .2s ease,tout .3s ease 1.7s forwards}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes tout{from{opacity:1}to{opacity:0;transform:translateY(-4px)}}
-.sc{display:inline-block;width:2px;height:14px;background:var(--pu);margin-left:2px;animation:tdance .8s infinite;vertical-align:middle}
+.sc{display:inline-block;width:2px;height:14px;background:var(--pu2);margin-left:2px;animation:tdance .8s infinite;vertical-align:middle}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}::-webkit-scrollbar-track{background:transparent}
 .mb-menu{display:none;background:none;border:1px solid var(--bd);color:var(--t3);cursor:pointer;border-radius:var(--rsm);width:30px;height:30px;align-items:center;justify-content:center;font-size:15px}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9}
@@ -176,10 +176,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   <div class="sb-top">
     <div class="logo">
       <div class="lmark">BV</div>
-      <div><div class="lname">Bvmbino</div><div class="ltag">AI Agent · v2.1</div></div>
+      <div><div class="lname">Bvmbino</div><div class="ltag">AI Agent · v3.0</div></div>
     </div>
     <button class="nbtn" onclick="newChat()">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.5" stroke-linecap="round"/></svg>
       New conversation
     </button>
   </div>
@@ -190,14 +190,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   <div class="ssect">
     <div class="sbl">Tools</div>
     <div class="qacts">
-      <button class="qbtn" onclick="slash('resume')"><span class="qi" style="background:rgba(124,92,252,.12)">📄</span><span>Resume Builder</span><span class="qsub">/resume</span></button>
+      <button class="qbtn" onclick="slash('sales')"><span class="qi" style="background:rgba(232,169,18,.12)">💰</span><span>Sales Script</span><span class="qsub">/sales</span></button>
+      <button class="qbtn" onclick="slash('content')"><span class="qi" style="background:rgba(232,169,18,.12)">🎬</span><span>Content Creator</span><span class="qsub">/content</span></button>
+      <button class="qbtn" onclick="slash('writer')"><span class="qi" style="background:rgba(232,169,18,.12)">✍️</span><span>Deep Writer</span><span class="qsub">/writer</span></button>
+      <button class="qbtn" onclick="slash('budget')"><span class="qi" style="background:rgba(34,197,94,.08)">💳</span><span>Budget & Finance</span><span class="qsub">/budget</span></button>
+      <button class="qbtn" onclick="slash('imgprompt')"><span class="qi" style="background:rgba(232,169,18,.12)">🎨</span><span>Image Prompt</span><span class="qsub">/imgprompt</span></button>
       <button class="qbtn" onclick="slash('campaign')"><span class="qi" style="background:rgba(245,158,11,.1)">📣</span><span>Marketing</span><span class="qsub">/campaign</span></button>
+      <button class="qbtn" onclick="slash('outreach')"><span class="qi" style="background:rgba(232,169,18,.12)">📨</span><span>Cold Outreach</span><span class="qsub">/outreach</span></button>
+      <button class="qbtn" onclick="slash('proposal')"><span class="qi" style="background:rgba(232,169,18,.12)">💼</span><span>Client Proposal</span><span class="qsub">/proposal</span></button>
       <button class="qbtn" onclick="slash('strategy')"><span class="qi" style="background:rgba(34,197,94,.08)">📈</span><span>Strategy</span><span class="qsub">/strategy</span></button>
+      <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(232,169,18,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
+      <button class="qbtn" onclick="slash('schedule')"><span class="qi" style="background:rgba(34,197,94,.1)">📅</span><span>Schedule</span><span class="qsub">/schedule</span></button>
+      <button class="qbtn" onclick="slash('resume')"><span class="qi" style="background:rgba(232,169,18,.12)">📄</span><span>Resume Builder</span><span class="qsub">/resume</span></button>
+      <button class="qbtn" onclick="slash('present')"><span class="qi" style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span class="qsub">/present</span></button>
       <button class="qbtn" onclick="slash('scrape')"><span class="qi" style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span class="qsub">/scrape</span></button>
       <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
-      <button class="qbtn" onclick="slash('schedule')"><span class="qi" style="background:rgba(34,197,94,.1)">📅</span><span>Schedule Builder</span><span class="qsub">/schedule</span></button>
-      <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(124,92,252,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
-      <button class="qbtn" onclick="slash('present')"><span class="qi" style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span class="qsub">/present</span></button>
       <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
       <button class="qbtn" onclick="slash('security')"><span class="qi" style="background:rgba(239,68,68,.1)">🔐</span><span>Security Audit</span><span class="qsub">/security</span></button>
     </div>
@@ -223,17 +230,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   <div class="chat" id="chat">
     <div class="ci" id="ci">
       <div class="welcome" id="welcome">
-        <div class="worb">🤖</div>
+        <div class="worb">🏀</div>
         <div class="wt">Bvmbino AI Agent</div>
-        <div class="ws">Your personal expert AI — communication, sales, business scaling, content creation & script writing. Powered by Groq · Llama 3.3.</div>
+        <div class="ws">Your personal AI powerhouse — sales, content, finance, writing, strategy & more. 17 skills ready. Type <strong style="color:var(--pu2)">/</strong> to see them all.</div>
         <div class="wgrid">
-          <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Scale My Business</div><div class="wcd">Growth systems, B2B acquisition, revenue funnels</div></div>
-          <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Content & Scripts</div><div class="wcd">Social posts, sales scripts, VSL, video narration</div></div>
-          <div class="wcard" onclick="slash('schedule')"><div class="wci">📅</div><div class="wct">Schedule Builder</div><div class="wcd">Weekly plan — training, coaching, family, business</div></div>
-          <div class="wcard" onclick="slash('course')"><div class="wci">🎓</div><div class="wct">Course Builder</div><div class="wcd">Full curriculum with modules, activities & pricing</div></div>
-          <div class="wcard" onclick="slash('sales')"><div class="wci">💰</div><div class="wct">Sales Script</div><div class="wcd">Close more clients — scripts, objections, follow-up</div></div>
+          <div class="wcard" onclick="slash('sales')"><div class="wci">💰</div><div class="wct">Close Deals</div><div class="wcd">Sales scripts, objection handlers, follow-up DMs</div></div>
+          <div class="wcard" onclick="slash('content')"><div class="wci">🎬</div><div class="wct">Create Content</div><div class="wcd">Instagram, LinkedIn, X, Reels + AI image prompts</div></div>
+          <div class="wcard" onclick="slash('budget')"><div class="wci">💳</div><div class="wct">Budget & Finance</div><div class="wcd">Expense audit, cash flow plan, money optimization</div></div>
+          <div class="wcard" onclick="slash('writer')"><div class="wci">✍️</div><div class="wct">Deep Writer</div><div class="wcd">Books, articles, blogs — human voice, zero AI feel</div></div>
+          <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">90-day growth plans, B2B acquisition, funnels</div></div>
+          <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Ad Campaign</div><div class="wcd">Full campaign + ad copy for every platform</div></div>
         </div>
-        <div class="shint">Type <code>/schedule</code> · <code>/sales</code> · <code>/course topic</code> · <code>/search query</code> · <code>/resume</code></div>
+        <div class="shint">Type <code>/</code> to see all 17 skills · <code>/budget</code> · <code>/writer</code> · <code>/sales</code> · <code>/content</code> · <code>/imgprompt</code></div>
       </div>
     </div>
   </div>
