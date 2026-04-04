@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#06080a">
+<meta name="apple-mobile-web-app-title" content="Bvmbino AI">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='15' y='30' width='70' height='55' rx='12' fill='%23e8a912'/><rect x='25' y='45' width='16' height='14' rx='4' fill='%230a0800'/><rect x='59' y='45' width='16' height='14' rx='4' fill='%230a0800'/><circle cx='31' cy='50' r='3' fill='%2322c55e'/><circle cx='65' cy='50' r='3' fill='%2322c55e'/><rect x='38' y='68' width='24' height='5' rx='2' fill='%230a0800'/><rect x='42' y='15' width='16' height='18' rx='3' fill='%23ffc842'/><circle cx='50' cy='10' r='4' fill='%23ffc842'/><rect x='5' y='50' width='10' height='6' rx='3' fill='%23d4940a'/><rect x='85' y='50' width='10' height='6' rx='3' fill='%23d4940a'/></svg>">
 <title>Bvmbino AI Agent</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -22,6 +28,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .nbtn:hover{opacity:.88}.nbtn:active{transform:scale(.97)}
 .sbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.4px;font-family:var(--mono);margin-bottom:7px}
 .ssect{padding:10px 14px 6px;flex-shrink:0}
+.sb-scroll{flex:1;overflow-y:auto;min-height:0}
+.sb-scroll .ssect{flex-shrink:unset}
 .mtabs{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .mtab{padding:7px 8px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);color:var(--t3);font-size:10px;font-family:var(--mono);cursor:pointer;text-align:center;transition:all .15s;position:relative;overflow:hidden}
 .mtab:hover{color:var(--t2);border-color:var(--bd2)}.mtab.on{background:var(--pu3);border-color:rgba(232,169,18,.4);color:var(--pu2)}
@@ -51,14 +59,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .chat{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
 .ci{max-width:720px;margin:0 auto;padding:28px 20px 20px;display:flex;flex-direction:column;min-height:100%}
 /* WELCOME */
-.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0}
-.worb{width:64px;height:64px;background:linear-gradient(135deg,#e8a912,#d4940a);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px;box-shadow:0 4px 20px rgba(232,169,18,.3)}
-.wt{font-size:34px;font-family:'Bebas Neue',sans-serif;letter-spacing:3px;margin-bottom:10px}
-.ws{font-size:13px;color:var(--t2);max-width:360px;line-height:1.6;margin-bottom:28px}
-.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:460px}
-.wcard{padding:14px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);text-align:left;cursor:pointer;transition:all .15s}
-.wcard:hover{background:var(--s3);border-color:var(--bd2);transform:translateY(-1px)}.wcard:active{transform:scale(.98)}
-.wci{font-size:16px;margin-bottom:7px}.wct{font-size:12px;font-weight:600;margin-bottom:3px}.wcd{font-size:10px;color:var(--t3);line-height:1.4}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0;position:relative;overflow:hidden}
+/* 3D floating objects */
+.w3d-scene{position:relative;width:240px;height:120px;margin-bottom:20px;perspective:600px}
+.w3d-obj{position:absolute;font-size:42px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));animation-timing-function:ease-in-out;animation-iteration-count:infinite;will-change:transform}
+.w3d-money{left:10px;top:10px;animation:float3d-money 4s infinite;font-size:48px}
+.w3d-ball{left:95px;top:0;animation:float3d-ball 3.5s infinite;font-size:52px}
+.w3d-book{left:175px;top:15px;animation:float3d-book 4.5s infinite;font-size:44px}
+.w3d-trophy{left:45px;top:55px;animation:float3d-trophy 5s infinite;font-size:36px}
+.w3d-brain{left:150px;top:60px;animation:float3d-brain 4.2s infinite;font-size:34px}
+@keyframes float3d-money{0%,100%{transform:translateY(0) rotateY(0deg) scale(1)}25%{transform:translateY(-14px) rotateY(15deg) scale(1.05)}50%{transform:translateY(-6px) rotateY(0deg) scale(1)}75%{transform:translateY(-18px) rotateY(-10deg) scale(1.03)}}
+@keyframes float3d-ball{0%,100%{transform:translateY(0) rotateX(0deg) scale(1)}30%{transform:translateY(-20px) rotateX(15deg) scale(1.08)}60%{transform:translateY(-8px) rotateX(-5deg) scale(1.02)}80%{transform:translateY(-16px) rotateX(8deg) scale(1.05)}}
+@keyframes float3d-book{0%,100%{transform:translateY(0) rotateZ(0deg) scale(1)}20%{transform:translateY(-12px) rotateZ(5deg) scale(1.04)}50%{transform:translateY(-18px) rotateZ(-3deg) scale(1.06)}80%{transform:translateY(-5px) rotateZ(2deg) scale(1)}}
+@keyframes float3d-trophy{0%,100%{transform:translateY(0) rotateY(0deg)}35%{transform:translateY(-10px) rotateY(-12deg)}65%{transform:translateY(-16px) rotateY(8deg)}}
+@keyframes float3d-brain{0%,100%{transform:translateY(0) rotateZ(0deg)}40%{transform:translateY(-14px) rotateZ(6deg)}70%{transform:translateY(-8px) rotateZ(-4deg)}}
+.w3d-glow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:180px;height:30px;background:radial-gradient(ellipse,rgba(232,169,18,.15) 0%,transparent 70%);border-radius:50%;filter:blur(8px)}
+.wt{font-size:36px;font-family:'Bebas Neue',sans-serif;letter-spacing:4px;margin-bottom:8px;background:linear-gradient(135deg,#ffc842,#e8a912,#ffc842);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ws{font-size:13px;color:var(--t2);max-width:380px;line-height:1.6;margin-bottom:28px}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:480px}
+.wcard{padding:14px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);text-align:left;cursor:pointer;transition:all .2s}
+.wcard:hover{background:var(--s3);border-color:rgba(232,169,18,.25);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}.wcard:active{transform:scale(.97)}
+.wci{font-size:18px;margin-bottom:7px}.wct{font-size:12px;font-weight:600;margin-bottom:3px;color:var(--pu2)}.wcd{font-size:10px;color:var(--t3);line-height:1.4}
 .shint{margin-top:20px;font-size:10px;color:var(--t3);font-family:var(--mono)}
 .shint code{background:var(--s3);padding:1px 5px;border-radius:3px;color:var(--pu2);border:1px solid var(--bd)}
 /* MESSAGES */
@@ -167,7 +188,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .mb-menu{display:none;background:none;border:1px solid var(--bd);color:var(--t3);cursor:pointer;border-radius:var(--rsm);width:30px;height:30px;align-items:center;justify-content:center;font-size:15px}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9}
 @media(max-width:960px){.mpanel{display:none}}
-@media(max-width:640px){.sb{position:fixed;top:0;bottom:0;left:0;z-index:10;transform:translateX(-100%)}.sb.open{transform:none}.ov.open{display:block}.mb-menu{display:flex}.wgrid{grid-template-columns:1fr}.ci{padding:18px 14px 14px}}
+@media(max-width:640px){
+.sb{position:fixed;top:0;bottom:0;left:0;z-index:10;transform:translateX(-100%)}.sb.open{transform:none}.ov.open{display:block}.mb-menu{display:flex}
+.wgrid{grid-template-columns:1fr}.ci{padding:18px 14px 14px}
+.w3d-scene{width:200px;height:100px;transform:scale(.85)}
+.qbtn{padding:10px 12px;font-size:13px}
+.bubble{font-size:14px;padding:12px 14px}
+#inp{font-size:16px;min-height:48px}
+.sbtn{width:40px;height:40px}
+.micbtn{width:38px;height:38px}
+.infoot{padding:0 8px 10px}
+.topbar{padding:0 12px}
+}
 </style>
 </head>
 <body>
@@ -175,7 +207,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <aside class="sb" id="sb">
   <div class="sb-top">
     <div class="logo">
-      <div class="lmark">BV</div>
+      <div class="lmark"><svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="15" y="30" width="70" height="52" rx="12" fill="#0a0800"/><rect x="25" y="42" width="16" height="13" rx="4" fill="#e8a912"/><rect x="59" y="42" width="16" height="13" rx="4" fill="#e8a912"/><circle cx="33" cy="48" r="3" fill="#22c55e"/><circle cx="67" cy="48" r="3" fill="#22c55e"/><rect x="36" y="66" width="28" height="5" rx="2.5" fill="#e8a912"/><rect x="40" y="14" width="20" height="18" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="3"/><circle cx="50" cy="8" r="4" fill="#e8a912"/><line x1="50" y1="8" x2="50" y2="14" stroke="#e8a912" stroke-width="2.5"/><rect x="3" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/><rect x="85" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/></svg></div>
       <div><div class="lname">Bvmbino</div><div class="ltag">AI Agent · v3.0</div></div>
     </div>
     <button class="nbtn" onclick="newChat()">
@@ -185,32 +217,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
-    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(124,92,252,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse"></span>Groq · Llama 3.3 70B</div>
+    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(232,169,18,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse"></span>Groq · Llama 3.3 70B</div>
   </div>
-  <div class="ssect">
-    <div class="sbl">Tools</div>
-    <div class="qacts">
-      <button class="qbtn" onclick="slash('sales')"><span class="qi" style="background:rgba(232,169,18,.12)">💰</span><span>Sales Script</span><span class="qsub">/sales</span></button>
-      <button class="qbtn" onclick="slash('content')"><span class="qi" style="background:rgba(232,169,18,.12)">🎬</span><span>Content Creator</span><span class="qsub">/content</span></button>
-      <button class="qbtn" onclick="slash('writer')"><span class="qi" style="background:rgba(232,169,18,.12)">✍️</span><span>Deep Writer</span><span class="qsub">/writer</span></button>
-      <button class="qbtn" onclick="slash('budget')"><span class="qi" style="background:rgba(34,197,94,.08)">💳</span><span>Budget & Finance</span><span class="qsub">/budget</span></button>
-      <button class="qbtn" onclick="slash('imgprompt')"><span class="qi" style="background:rgba(232,169,18,.12)">🎨</span><span>Image Prompt</span><span class="qsub">/imgprompt</span></button>
-      <button class="qbtn" onclick="slash('campaign')"><span class="qi" style="background:rgba(245,158,11,.1)">📣</span><span>Marketing</span><span class="qsub">/campaign</span></button>
-      <button class="qbtn" onclick="slash('outreach')"><span class="qi" style="background:rgba(232,169,18,.12)">📨</span><span>Cold Outreach</span><span class="qsub">/outreach</span></button>
-      <button class="qbtn" onclick="slash('proposal')"><span class="qi" style="background:rgba(232,169,18,.12)">💼</span><span>Client Proposal</span><span class="qsub">/proposal</span></button>
-      <button class="qbtn" onclick="slash('strategy')"><span class="qi" style="background:rgba(34,197,94,.08)">📈</span><span>Strategy</span><span class="qsub">/strategy</span></button>
-      <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(232,169,18,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
-      <button class="qbtn" onclick="slash('schedule')"><span class="qi" style="background:rgba(34,197,94,.1)">📅</span><span>Schedule</span><span class="qsub">/schedule</span></button>
-      <button class="qbtn" onclick="slash('resume')"><span class="qi" style="background:rgba(232,169,18,.12)">📄</span><span>Resume Builder</span><span class="qsub">/resume</span></button>
-      <button class="qbtn" onclick="slash('present')"><span class="qi" style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span class="qsub">/present</span></button>
-      <button class="qbtn" onclick="slash('scrape')"><span class="qi" style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span class="qsub">/scrape</span></button>
-      <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
-      <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
-      <button class="qbtn" onclick="slash('security')"><span class="qi" style="background:rgba(239,68,68,.1)">🔐</span><span>Security Audit</span><span class="qsub">/security</span></button>
+  <div class="sb-scroll">
+    <div class="ssect">
+      <div class="sbl">Tools</div>
+      <div class="qacts">
+        <button class="qbtn" onclick="slash('sales')"><span class="qi" style="background:rgba(232,169,18,.12)">💰</span><span>Sales Script</span><span class="qsub">/sales</span></button>
+        <button class="qbtn" onclick="slash('content')"><span class="qi" style="background:rgba(232,169,18,.12)">🎬</span><span>Content Creator</span><span class="qsub">/content</span></button>
+        <button class="qbtn" onclick="slash('writer')"><span class="qi" style="background:rgba(232,169,18,.12)">✍️</span><span>Deep Writer</span><span class="qsub">/writer</span></button>
+        <button class="qbtn" onclick="slash('budget')"><span class="qi" style="background:rgba(34,197,94,.08)">💳</span><span>Budget & Finance</span><span class="qsub">/budget</span></button>
+        <button class="qbtn" onclick="slash('imgprompt')"><span class="qi" style="background:rgba(232,169,18,.12)">🎨</span><span>Image Prompt</span><span class="qsub">/imgprompt</span></button>
+        <button class="qbtn" onclick="slash('campaign')"><span class="qi" style="background:rgba(245,158,11,.1)">📣</span><span>Marketing</span><span class="qsub">/campaign</span></button>
+        <button class="qbtn" onclick="slash('outreach')"><span class="qi" style="background:rgba(232,169,18,.12)">📨</span><span>Cold Outreach</span><span class="qsub">/outreach</span></button>
+        <button class="qbtn" onclick="slash('proposal')"><span class="qi" style="background:rgba(232,169,18,.12)">💼</span><span>Client Proposal</span><span class="qsub">/proposal</span></button>
+        <button class="qbtn" onclick="slash('strategy')"><span class="qi" style="background:rgba(34,197,94,.08)">📈</span><span>Strategy</span><span class="qsub">/strategy</span></button>
+        <button class="qbtn" onclick="slash('course')"><span class="qi" style="background:rgba(232,169,18,.12)">🎓</span><span>Course Builder</span><span class="qsub">/course</span></button>
+        <button class="qbtn" onclick="slash('schedule')"><span class="qi" style="background:rgba(34,197,94,.1)">📅</span><span>Schedule</span><span class="qsub">/schedule</span></button>
+        <button class="qbtn" onclick="slash('resume')"><span class="qi" style="background:rgba(232,169,18,.12)">📄</span><span>Resume Builder</span><span class="qsub">/resume</span></button>
+        <button class="qbtn" onclick="slash('present')"><span class="qi" style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span class="qsub">/present</span></button>
+        <button class="qbtn" onclick="slash('scrape')"><span class="qi" style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span class="qsub">/scrape</span></button>
+        <button class="qbtn" onclick="slash('search')"><span class="qi" style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span class="qsub">/search</span></button>
+        <button class="qbtn" onclick="slash('automate')"><span class="qi" style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span class="qsub">/automate</span></button>
+        <button class="qbtn" onclick="slash('security')"><span class="qi" style="background:rgba(239,68,68,.1)">🔐</span><span>Security Audit</span><span class="qsub">/security</span></button>
+      </div>
     </div>
+    <div class="ssect" style="padding-bottom:4px"><div class="sbl">Recent</div></div>
+    <div class="sb-hist" id="hist"></div>
   </div>
-  <div class="ssect" style="padding-bottom:4px"><div class="sbl">Recent</div></div>
-  <div class="sb-hist" id="hist"></div>
 </aside>
 
 <main class="main">
@@ -230,7 +264,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   <div class="chat" id="chat">
     <div class="ci" id="ci">
       <div class="welcome" id="welcome">
-        <div class="worb">🏀</div>
+        <div class="w3d-scene">
+          <div class="w3d-obj w3d-money">💰</div>
+          <div class="w3d-obj w3d-ball">🏀</div>
+          <div class="w3d-obj w3d-book">📖</div>
+          <div class="w3d-obj w3d-trophy">🏆</div>
+          <div class="w3d-obj w3d-brain">🧠</div>
+          <div class="w3d-glow"></div>
+        </div>
         <div class="wt">Bvmbino AI Agent</div>
         <div class="ws">Your personal AI powerhouse — sales, content, finance, writing, strategy & more. 17 skills ready. Type <strong style="color:var(--pu2)">/</strong> to see them all.</div>
         <div class="wgrid">
