@@ -148,7 +148,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .inwrap{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);transition:border-color .15s,box-shadow .15s;position:relative}
 .inwrap:focus-within{border-color:rgba(232,169,18,.45);box-shadow:0 0 0 3px rgba(232,169,18,.08)}
 .intop{display:flex;align-items:flex-end}
-#inp{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:var(--font);font-size:13px;padding:13px 14px 10px;resize:none;max-height:160px;min-height:46px;line-height:1.55;width:100%}
+#inp{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:var(--font);font-size:13px;padding:10px 14px 8px;resize:none;max-height:120px;min-height:38px;line-height:1.5;width:100%}
 #inp::placeholder{color:var(--t3)}
 .sbtn{width:36px;height:36px;background:linear-gradient(135deg,#e8a912,#d4940a);border:none;border-radius:7px;color:#0a0800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;flex-shrink:0;margin:0 8px 7px 0;font-size:14px;font-weight:700;box-shadow:0 2px 10px rgba(232,169,18,.2)}
 .sbtn:hover{opacity:.85}.sbtn:active{transform:scale(.93)}.sbtn:disabled{opacity:.3;cursor:default}
@@ -206,7 +206,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <div class="ov" id="ov" onclick="closeSb()"></div>
 <aside class="sb" id="sb">
   <div class="sb-top">
-    <div class="logo">
+    <div class="logo" onclick="newChat()" style="cursor:pointer" title="Back to home">
       <div class="lmark"><svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="15" y="30" width="70" height="52" rx="12" fill="#0a0800"/><rect x="25" y="42" width="16" height="13" rx="4" fill="#e8a912"/><rect x="59" y="42" width="16" height="13" rx="4" fill="#e8a912"/><circle cx="33" cy="48" r="3" fill="#22c55e"/><circle cx="67" cy="48" r="3" fill="#22c55e"/><rect x="36" y="66" width="28" height="5" rx="2.5" fill="#e8a912"/><rect x="40" y="14" width="20" height="18" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="3"/><circle cx="50" cy="8" r="4" fill="#e8a912"/><line x1="50" y1="8" x2="50" y2="14" stroke="#e8a912" stroke-width="2.5"/><rect x="3" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/><rect x="85" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/></svg></div>
       <div><div class="lname">Bvmbino</div><div class="ltag">AI Agent · v3.0</div></div>
     </div>
@@ -291,7 +291,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
     <div class="inwrap" id="inwrap">
       <div class="smenu" id="smenu"></div>
       <div class="intop">
-        <textarea id="inp" placeholder="Ask anything… or type / for commands" rows="1" oninput="onInp()" onkeydown="onKey(event)"></textarea>
+        <textarea id="inp" placeholder="Type anything Boss… or /" rows="1" oninput="onInp()" onkeydown="onKey(event)"></textarea>
         <button class="micbtn" id="micbtn" onclick="toggleVoice()" title="Voice input">🎙️</button>
         <button class="sbtn" id="sbtn" onclick="send()">↑</button>
       </div>
@@ -472,16 +472,25 @@ function newChat(){
   document.getElementById('tbtitle').textContent='New conversation';
   document.getElementById('ci').innerHTML=`
     <div class="welcome" id="welcome">
-      <div class="worb">🤖</div>
-      <div class="wt">Bvmbino AI Agent</div>
-      <div class="ws">Personal expert AI — web search, PDF export, marketing campaigns, resume builder & business automation.</div>
-      <div class="wgrid">
-        <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">Growth plans, market analysis, investor docs</div></div>
-        <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Marketing Campaign</div><div class="wcd">Full ad runbook — Facebook, Google, TikTok</div></div>
-        <div class="wcard" onclick="slash('course')"><div class="wci">🎓</div><div class="wct">Course Builder</div><div class="wcd">Full curriculum with modules, activities & pricing</div></div>
-        <div class="wcard" onclick="slash('security')"><div class="wci">🔐</div><div class="wct">Security Audit</div><div class="wcd">Scan code, deps & environment for threats</div></div>
+      <div class="w3d-scene">
+        <div class="w3d-obj w3d-money">💰</div>
+        <div class="w3d-obj w3d-ball">🏀</div>
+        <div class="w3d-obj w3d-book">📖</div>
+        <div class="w3d-obj w3d-trophy">🏆</div>
+        <div class="w3d-obj w3d-brain">🧠</div>
+        <div class="w3d-glow"></div>
       </div>
-      <div class="shint">Type <code>/course topic</code> · <code>/security</code> · <code>/search query</code> · <code>/resume</code></div>
+      <div class="wt">Bvmbino AI Agent</div>
+      <div class="ws">Your personal AI powerhouse — sales, content, finance, writing, strategy & more. 17 skills ready. Type <strong style="color:var(--pu2)">/</strong> to see them all.</div>
+      <div class="wgrid">
+        <div class="wcard" onclick="slash('sales')"><div class="wci">💰</div><div class="wct">Close Deals</div><div class="wcd">Sales scripts, objection handlers, follow-up DMs</div></div>
+        <div class="wcard" onclick="slash('content')"><div class="wci">🎬</div><div class="wct">Create Content</div><div class="wcd">Instagram, LinkedIn, X, Reels + AI image prompts</div></div>
+        <div class="wcard" onclick="slash('budget')"><div class="wci">💳</div><div class="wct">Budget & Finance</div><div class="wcd">Expense audit, cash flow plan, money optimization</div></div>
+        <div class="wcard" onclick="slash('writer')"><div class="wci">✍️</div><div class="wct">Deep Writer</div><div class="wcd">Books, articles, blogs — human voice, zero AI feel</div></div>
+        <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">90-day growth plans, B2B acquisition, funnels</div></div>
+        <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Ad Campaign</div><div class="wcd">Full campaign + ad copy for every platform</div></div>
+      </div>
+      <div class="shint">Type <code>/</code> to see all 17 skills · <code>/budget</code> · <code>/writer</code> · <code>/sales</code> · <code>/content</code> · <code>/imgprompt</code></div>
     </div>`;
   closeSb();toast('New conversation · Ctrl+K');
 }
@@ -584,7 +593,7 @@ async function send(forcedText){
 function addUserMsg(text){
   const ci=document.getElementById('ci');
   const row=document.createElement('div');row.className='mrow user';
-  row.innerHTML=`<div class="av av-us">N</div><div class="mwrap"><div class="bubble b-us">${esc(text).replace(/\n/g,'<br>')}</div><div class="macts"><div class="mact" onclick="copyT(this,'${escA(text)}')">⎘ copy</div></div></div>`;
+  row.innerHTML=`<div class="av av-us">N</div><div class="mwrap"><div class="bubble b-us">${esc(text).replace(/\n/g,'<br>')}</div><div class="macts"><div class="mact" onclick="copyT(this,'${escA(text)}')">⎘ copy</div><div class="mact" onclick="deleteMsg(this)">✕ delete</div></div></div>`;
   ci.appendChild(row);scrollBot();
 }
 
@@ -1098,7 +1107,7 @@ async function streamResponse(res){
     const mw=row.querySelector('.mwrap');
     const mid='m'+Date.now();msgStore[mid]={text:full,xtype};
     const acts=document.createElement('div');acts.className='macts';
-    acts.innerHTML=`<div class="mact" onclick="likeMsg(this)">♡ like</div><div class="mact" onclick="copyLast()">⎘ copy</div><div class="mact" onclick="regenLast()">↻ regen</div><div class="mact" onclick="expMsgPdf('${mid}')">📋 PDF</div><div class="mact" onclick="expMsgHtml('${mid}')">🌐 HTML</div>`;
+    acts.innerHTML=`<div class="mact" onclick="likeMsg(this)">♡ like</div><div class="mact" onclick="copyLast()">⎘ copy</div><div class="mact" onclick="regenLast()">↻ regen</div><div class="mact" onclick="deleteMsg(this)">✕ delete</div><div class="mact" onclick="expMsgPdf('${mid}')">📋 PDF</div><div class="mact" onclick="expMsgHtml('${mid}')">🌐 HTML</div>`;
     mw.appendChild(acts);
     unlock();
     updTok(full.length/3.5);addMem('response',full.slice(0,90));scrollBot();
@@ -1267,6 +1276,21 @@ function escA(s){return String(s).replace(/'/g,"\\'").replace(/\n/g,'\\n').repla
 // ── ACTIONS ──
 function likeMsg(el){el.classList.toggle('liked');el.textContent=el.classList.contains('liked')?'♥ liked':'♡ like';if(el.classList.contains('liked'))toast('Saved ✓');}
 
+function deleteMsg(el){
+  const row=el.closest('.mrow');
+  if(!row)return;
+  // Find index: count all .mrow elements before this one
+  const allRows=[...document.querySelectorAll('#ci .mrow')];
+  const idx=allRows.indexOf(row);
+  // Remove from msgs array (user+assistant pairs share same index pattern)
+  if(idx>=0&&idx<msgs.length)msgs.splice(idx,1);
+  // Animate out then remove
+  row.style.transition='opacity .2s,transform .2s';
+  row.style.opacity='0';row.style.transform='translateX(20px)';
+  setTimeout(()=>row.remove(),200);
+  toast('Deleted');
+}
+
 function copyLast(){
   const last=msgs.filter(m=>m.role==='assistant').pop();
   if(last){navigator.clipboard.writeText(last.content).catch(()=>{});toast('Copied ✓');}
@@ -1325,20 +1349,7 @@ function scrollBot(){
 }
 
 // ── PERSIST ──
-try{
-  const saved=localStorage.getItem('bvmbino_v3');
-  if(saved){
-    const s=JSON.parse(saved);
-    if(s.msgs&&s.msgs.length){
-      msgs=s.msgs;tokens=s.tokens||1840;rmWelcome();
-      msgs.forEach(m=>{
-        if(m.role==='user')addUserMsg(m.content);
-        else{let x=null,t=m.content;const mx=t.match(/\[EXPORT:(\w+)\]/);if(mx){t=t.replace(/\[EXPORT:\w+\]/,'').trim();x=mx[1];}appendAiText(t,x);}
-      });
-      updTok(0);
-    }
-  }
-}catch(e){}
+// Always start on home screen — old conversation is saved to sessions, not restored here
 
 // Save only last 2 conversations (4 messages) — frees tokens + speeds up responses
 setInterval(()=>{try{localStorage.setItem('bvmbino_v3',JSON.stringify({msgs:msgs.slice(-4),tokens}));}catch{}},4000);
