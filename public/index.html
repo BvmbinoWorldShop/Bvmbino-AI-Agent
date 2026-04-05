@@ -133,10 +133,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .spin-ring{width:28px;height:28px;border:2px solid var(--bd2);border-top-color:var(--pu);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin-label{font-size:10px;font-family:var(--mono);color:var(--t3)}
-/* MSG ACTIONS */
-.macts{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity .15s}
-.mrow:hover .macts{opacity:1}
-.mact{padding:3px 7px;background:var(--s3);border:1px solid var(--bd);border-radius:5px;color:var(--t3);font-size:10px;cursor:pointer;font-family:var(--mono);transition:all .1s;display:flex;align-items:center;gap:4px}
+/* MSG ACTIONS — always visible so mobile users can see them without hovering */
+.macts{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.mact{padding:4px 9px;background:var(--s3);border:1px solid var(--bd);border-radius:5px;color:var(--t3);font-size:10px;cursor:pointer;font-family:var(--mono);transition:all .1s;display:flex;align-items:center;gap:4px}
 .mact:hover{background:var(--s4);color:var(--t2);border-color:var(--bd2)}.mact.liked{color:var(--gn);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.07)}
 /* TYPING */
 .tbub{padding:11px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;border-top-left-radius:3px;display:flex;align-items:center;gap:5px}
@@ -196,11 +195,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .pdf-body{flex:1;overflow-y:auto;padding:20px;display:flex;justify-content:center}
 .pdf-doc-wrap{width:100%;max-width:820px;background:#06080a;border:1px solid var(--bd);box-shadow:0 10px 40px rgba(0,0,0,0.5);transform:scale(0.98);transition:transform .3s;border-radius:12px;overflow:hidden}
 .pdf-modal.show .pdf-doc-wrap{transform:scale(1)}
-.pdf-foot{height:80px;border-top:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;gap:15px;padding:0 20px;flex-shrink:0;background:var(--s1)}
-.btn-back{padding:12px 20px;background:var(--s3);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:var(--font);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
-.btn-back:hover{background:var(--s4);color:white}
-.btn-save{padding:12px 24px;background:linear-gradient(135deg,#e8a912,#d4940a);border:none;border-radius:8px;color:#0a0800;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(232,169,18,0.25);transition:opacity .15s}
-.btn-save:hover{opacity:0.9}
+.pdf-foot{min-height:90px;border-top:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;gap:12px;padding:16px 20px;flex-shrink:0;background:var(--s1);flex-wrap:wrap}
+.btn-back{padding:11px 18px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--t2);font-family:var(--font);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s}
+.btn-back:hover{background:var(--s3);color:var(--t1);border-color:var(--bd2)}
+.btn-open{padding:11px 18px;background:var(--s2);border:1px solid var(--bd2);border-radius:10px;color:var(--pu2);font-family:var(--font);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s}
+.btn-open:hover{background:var(--pu3);border-color:rgba(232,169,18,.4)}
+.btn-save{padding:13px 28px;background:linear-gradient(135deg,#e8a912,#d4940a);border:none;border-radius:10px;color:#0a0800;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(232,169,18,0.35);transition:all .15s;letter-spacing:.3px}
+.btn-save:hover{opacity:0.88;transform:translateY(-1px);box-shadow:0 6px 24px rgba(232,169,18,0.45)}
+.btn-save:active{transform:scale(.97)}
 
 @media(max-width:960px){.mpanel{display:none}}
 @media(max-width:640px){
@@ -346,9 +348,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
     <div class="pdf-doc-wrap" id="pdfDocWrap"></div>
   </div>
   <div class="pdf-foot">
-    <button class="btn-back" onclick="closePdfModal()">Back</button>
-    <button class="btn-back" onclick="openPdfInTab()">🌐 Open in Browser</button>
-    <button class="btn-save" onclick="triggerPdfDownload()">Save to Device</button>
+    <button class="btn-back" onclick="closePdfModal()">← Back</button>
+    <button class="btn-open" onclick="openPdfInTab()">🌐 Open in Browser</button>
+    <button class="btn-save" onclick="triggerPdfDownload()">⬇ Save to Device</button>
   </div>
 </div>
 
@@ -968,14 +970,9 @@ code{background:#111419;color:#e8a912;padding:1px 5px;border-radius:4px;font-siz
 function expMsgPdf(mid){
   const {text,xtype}=msgStore[mid]||{};if(!text){toast('No content to export');return;}
   const html=buildExportHtml(text,xtype);
-  // Open styled document in new tab → browser Print → Save as PDF (free, no API needed)
-  const win=window.open('','_blank');
-  if(!win){toast('Allow popups to export PDF');return;}
-  win.document.write(html);
-  win.document.close();
-  // Auto-trigger print dialog after page renders
-  win.onload=()=>{setTimeout(()=>{win.print();},300);};
-  toast('Print dialog → Save as PDF ✓');
+  currentPdfFilename=`bvmbino-${xtype||'export'}-${Date.now()}.pdf`;
+  currentPdfOrientation='portrait';
+  showPdfModal(html);
 }
 
 function expMsgHtml(mid){
@@ -985,6 +982,19 @@ function expMsgHtml(mid){
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
   toast('HTML downloaded ✓');
+}
+
+function expMsgMd(mid){
+  const {text}=msgStore[mid]||{};if(!text)return;
+  const fname=`bvmbino-export-${Date.now()}.md`;
+  const blob=new Blob([text],{type:'text/markdown'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+  toast('Markdown downloaded ✓');
+}
+
+function copyMsg(mid){
+  const {text}=msgStore[mid]||{};if(!text)return;
+  navigator.clipboard.writeText(text).catch(()=>{});toast('Copied ✓');
 }
 
 // ── PDF EXPORT PREVIEW ──
@@ -1045,6 +1055,7 @@ function showPdfModal(htmlStr) {
 }
 
 function closePdfModal() {
+  // Re-show the conversation, not the home screen
   document.getElementById('pdfModal').classList.remove('show');
 }
 
@@ -1157,15 +1168,16 @@ async function streamResponse(res){
   scrollBot();
   const mb=document.getElementById('mbadge');if(mb)mb.textContent=streamModel;
   const ab=document.getElementById('ai-engine-badge');if(ab)ab.innerHTML=`<span class="pulse"></span>${streamModel}`;
-  // FIX: throttle DOM updates — only repaint every 80ms, not on every 2-char chunk.
-  // Without this, a 500-word reply = 250 innerHTML rewrites = browser tab freeze.
-  let lastRender=0;
-  function flushRender(){
-    if(!streamEl)return;
-    let disp=full;const mx=disp.match(/\[EXPORT:\w+\]/);if(mx)disp=disp.replace(/\[EXPORT:\w+\]/,'').trim();
-    streamEl.innerHTML=mdHtml(disp)+'<span class="sc"></span>';
-    scrollBot();
-  }
+
+  // ── INCREMENTAL DELTA RENDERING ──
+  // Append only new delta chunks as raw text — zero DOM destruction during stream.
+  // One single mdHtml() render happens at the very end for proper markdown formatting.
+  const rawNode=document.createElement('span');rawNode.style.cssText='white-space:pre-wrap;font-family:inherit;font-size:inherit;line-height:inherit;color:inherit';
+  const cursor=document.createElement('span');cursor.className='sc';
+  streamEl.appendChild(rawNode);
+  streamEl.appendChild(cursor);
+
+  let scrollTimer=0;
   try{
     while(true){
       const{done,value}=await reader.read();if(done)break;
@@ -1176,16 +1188,21 @@ async function streamResponse(res){
         const d=line.slice(6).trim();if(d==='[DONE]')continue;
         try{
           const p=JSON.parse(d);
-          const delta=p.choices?.[0]?.delta?.content;
-          if(delta){full+=delta;}
-          else if(p.type==='content_block_delta'&&p.delta?.text){full+=p.delta.text;}
+          let chunk='';
+          if(p.choices?.[0]?.delta?.content)chunk=p.choices[0].delta.content;
+          else if(p.type==='content_block_delta'&&p.delta?.text)chunk=p.delta.text;
           else continue;
+          full+=chunk;
+          // Append only the new chunk to the text node — no innerHTML rewrite, no DOM teardown
+          rawNode.textContent+=chunk;
+          // Throttle scroll updates to avoid layout thrash on mobile
           const now=Date.now();
-          if(now-lastRender>80){flushRender();lastRender=now;}
+          if(now-scrollTimer>150){scrollBot();scrollTimer=now;}
         }catch{}
       }
     }
   }catch(streamErr){console.error('stream error',streamErr);}
+
   finally{
     let xtype=null;const m3=full.match(/\[EXPORT:(\w+)\]/);
     if(m3){full=full.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m3[1];}
@@ -1199,9 +1216,7 @@ async function streamResponse(res){
     if(streamEl)streamEl.innerHTML=full.trim()?mdHtml(full)+(xtype?xcard(xtype):''):'<span style="color:var(--rd);font-size:12px">No response received — check API keys</span>';
     const mw=row.querySelector('.mwrap');
     const mid='m'+Date.now();msgStore[mid]={text:full,xtype};
-    const acts=document.createElement('div');acts.className='macts';
-    acts.innerHTML=`<div class="mact" onclick="likeMsg(this)">♡ like</div><div class="mact" onclick="copyLast()">⎘ copy</div><div class="mact" onclick="regenLast()">↻ regen</div><div class="mact" onclick="deleteMsg(this)">✕ delete</div><div class="mact" onclick="expMsgPdf('${mid}')">📋 PDF</div><div class="mact" onclick="expMsgHtml('${mid}')">🌐 HTML</div>`;
-    mw.appendChild(acts);
+    mw.appendChild(msgActions(mid));
     unlock();
     updTok(full.length/3.5);addMem('response',full.slice(0,90));scrollBot();
     // Auto-save session context after every AI response (silent, no toast)
@@ -1225,11 +1240,29 @@ async function streamResponse(res){
   }
 }
 
+// ── SINGLE SOURCE: msg actions bar ──
+function msgActions(mid){
+  const acts=document.createElement('div');acts.className='macts';
+  acts.innerHTML=`
+    <div class="mact" onclick="likeMsg(this)">♡ like</div>
+    <div class="mact" onclick="copyMsg('${mid}')">⎘ copy</div>
+    <div class="mact" onclick="regenLast()">↻ regen</div>
+    <div class="mact" onclick="deleteMsg(this)">✕ delete</div>
+    <div class="mact" onclick="expMsgPdf('${mid}')">📋 PDF</div>
+    <div class="mact" onclick="expMsgMd('${mid}')">📝 MD</div>
+    <div class="mact" onclick="expMsgHtml('${mid}')">🌐 HTML</div>`;
+  return acts;
+}
+
 function appendAiText(text,xtype){
   const ci=document.getElementById('ci');
   const mid='m'+Date.now();msgStore[mid]={text,xtype};
   const row=document.createElement('div');row.className='mrow ai';
-  row.innerHTML=`<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai">${mdHtml(text)}${xtype?xcard(xtype):''}</div><div class="macts"><div class="mact" onclick="likeMsg(this)">♡ like</div><div class="mact" onclick="copyLast()">⎘ copy</div><div class="mact" onclick="regenLast()">↻ regen</div><div class="mact" onclick="expMsgPdf('${mid}')">📋 PDF</div><div class="mact" onclick="expMsgHtml('${mid}')">🌐 HTML</div></div></div>`;
+  const wrap=document.createElement('div');wrap.className='mwrap';
+  wrap.innerHTML=`<div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai">${mdHtml(text)}${xtype?xcard(xtype):''}</div>`;
+  wrap.appendChild(msgActions(mid));
+  row.innerHTML='<div class="av av-ai">B</div>';
+  row.appendChild(wrap);
   ci.appendChild(row);scrollBot();
 }
 
