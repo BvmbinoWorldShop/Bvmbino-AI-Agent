@@ -1026,13 +1026,21 @@ ${baseHtml}
   }finally{unlock();}
 }
 
+// Store the raw HTML string globally so download + open-in-tab can access it without an iframe
+let currentPdfHtml = '';
+
 function showPdfModal(htmlStr) {
+  currentPdfHtml = htmlStr;
   const modal = document.getElementById('pdfModal');
   const wrap = document.getElementById('pdfDocWrap');
-  if(window.innerWidth > 960) { wrap.style.margin = '40px auto'; }
-  // Safe string injection to iframe
-  const safeHtml = htmlStr.replace(/"/g, '&quot;');
-  wrap.innerHTML = `<iframe id="pdfFrame" style="width:100%;height:100%;min-height:75vh;border:none;background:#06080a;" srcdoc="${safeHtml}"></iframe>`;
+  // Parse the HTML string and extract just the <body> content to render inline
+  // This avoids iframes entirely — iOS Safari PWA blocks/freezes on srcdoc iframes
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlStr, 'text/html');
+  const bodyContent = doc.body ? doc.body.innerHTML : htmlStr;
+  // Inject styles from the parsed doc so the preview looks correct
+  const styles = [...doc.querySelectorAll('style')].map(s => s.outerHTML).join('');
+  wrap.innerHTML = `<div id="pdfPreviewDiv" style="padding:24px;background:#06080a;min-height:70vh;font-family:'Segoe UI',Arial,sans-serif;color:#f0ece4">${styles}<div>${bodyContent}</div></div>`;
   modal.classList.add('show');
 }
 
@@ -1041,26 +1049,28 @@ function closePdfModal() {
 }
 
 async function triggerPdfDownload() {
-  const frame = document.getElementById('pdfFrame');
-  if(!frame) return;
-  toast('Saving to device... Please wait.');
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  const opt={margin:[10,10,10,10],filename:currentPdfFilename||'bvmbino-export.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,windowWidth:840},jsPDF:{unit:'mm',format:'a4',orientation:currentPdfOrientation||'portrait'}};
-  html2pdf().set(opt).from(doc.documentElement).save().then(()=>{
-    toast('Document saved to device ✓');
-  });
+  const el = document.getElementById('pdfPreviewDiv');
+  if(!el){toast('No content to save');return;}
+  toast('Saving to device… Please wait.');
+  const opt={margin:[10,10,10,10],filename:currentPdfFilename||'bvmbino-export.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#06080a'},jsPDF:{unit:'mm',format:'a4',orientation:currentPdfOrientation||'portrait'}};
+  html2pdf().set(opt).from(el).save().then(()=>toast('Saved to device ✓')).catch(()=>toast('Save failed — try Open in Browser'));
 }
 
 function openPdfInTab() {
-  const frame = document.getElementById('pdfFrame');
-  if(!frame) return;
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  const html = doc.documentElement.outerHTML;
-  const win = window.open('','_blank');
-  if(!win) { toast('Allow popups to open in external tab'); return; }
-  win.document.write(html);
-  win.document.close();
-  toast('Opened in external browser tab ✓');
+  if(!currentPdfHtml){toast('No content to open');return;}
+  // Use a Blob URL — this works in iOS Safari PWA standalone mode (window.open is blocked)
+  const blob = new Blob([currentPdfHtml], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  // On iOS PWA standalone, navigate the current page to the blob URL temporarily
+  // On desktop, open a real new tab
+  const isIosPwa = window.navigator.standalone === true;
+  if(isIosPwa){
+    // Open blob in same window — user can use Share > Print to save as PDF natively
+    window.location.href = url;
+  } else {
+    window.open(url,'_blank');
+  }
+  toast('Opened in browser ✓');
 }
 
 // ── CLAUDE AI CALL ──
