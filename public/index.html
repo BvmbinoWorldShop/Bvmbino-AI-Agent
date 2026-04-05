@@ -818,7 +818,7 @@ async function doScheduleExport(aiText,view){
     if(!r.ok){const err=await r.json();throw new Error(err.error||'PDF failed');}
     const blob=await r.blob();
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=`bvmbino-schedule-${view}.pdf`;a.click();
+    window.open(url, '_blank');
     const totalBlocks=Object.values(blocks).reduce((s,d)=>s+d.length,0);
     const bub=document.getElementById(rowId+'-b');
     if(bub)bub.innerHTML=`<div style="padding:14px">
@@ -977,8 +977,8 @@ async function doPdf(){
     }
     const blob=await r.blob();
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='bvmbino-export.pdf';a.click();
-    appendAiText('**PDF exported successfully.** Your download should start automatically.',null);
+    window.open(url, '_blank');
+    appendAiText('**PDF exported successfully.** It should open in a new tab automatically.',null);
     toast('PDF downloaded ✓');
   }catch(err){
     appendAiText(`**PDF export failed:** ${err.message}\n\nAdd \`PDFSHIFT_KEY\` to Vercel env vars. Free key at **pdfshift.io** (50 PDFs/month free).`,null);

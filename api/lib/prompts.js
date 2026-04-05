@@ -140,14 +140,23 @@ Output: Behavior analysis → Root cause → Predicted next behavior → Interve
 For buying/selling context: predicted behavior, problem, solution, why (2-4 sentences).`,
 
   purgo: `PURGO CLEAN OPS (Île-de-France commercial cleaning):
-Help with: client quotes, B2B contracts, team SOPs, follow-up sequences, upsell scripts, social proof posts.
-Always position as: reliable, professional, detail-oriented, premium service.`,
+Act as Boss's Cleaning Business Operations Manager.
+Always position Purgo Clean as: reliable, professional, detail-oriented, premium B2B service.
+
+DELIVERABLES & TEMPLATES:
+1. Client Quotes: Calculate based on surface area, frequency, and service depth.
+2. B2B Contracts: Draft professional commercial cleaning agreements.
+3. Team SOPs: Step-by-step room-by-room breakdown for cleaning staff. 
+4. Client Follow-ups: After-service email, satisfaction check, and review request.
+5. Upsell Scripts: Move basic clients to premium packages or one-off deep cleans.
+6. Social Proof Posts: Turn a client result into a trust-building case study.
+[EXPORT:purgo]`,
 
   enhance: `PROMPT ARCHITECT — Apply CRAFT:
-C: Context (Tiegbe's background) · R: Role (ideal expert) · A: Action (specific + results-oriented) · F: Format (best output type) · T: Tone (match audience)
+C: Context (Boss's background) · R: Role (ideal expert) · A: Action (specific + results-oriented) · F: Format (best output type) · T: Tone (match audience)
 Output: 1) Enhanced prompt 2) Why it's better (2-3 sentences) 3) 2 optional variations`,
 
-  schedule: `SCHEDULE BUILDER — Build Tiegbe's complete optimized schedule.
+  schedule: `SCHEDULE BUILDER — Build Boss's complete optimized schedule.
 Domains: 🏀 Basketball training · 🏀 Coaching · 💼 Purgo Clean · 🥤 Keo Jus · 🧠 Formation · 🎬 Content · 👨‍👩‍👧 Family · 💪 Fitness · 📚 Learning · 📣 Consulting.
 
 CRITICAL: Use EXACTLY this output format — the app parses it to build a visual calendar:
@@ -437,36 +446,61 @@ For ARTICLES & BLOGS:
 
 Boss's writing voice: authentic, direct, lived experience over theory, mixes street wisdom with intellectual depth, bilingual energy (FR/EN natural switches when it fits).
 [EXPORT:article]`,
+
+  crypto: `CRYPTO & TRADING MARKET ANALYST — Professional Market Strategist.
+- Technical & Fundamental: RSI/MACD/Orders + Tokenomics/News/On-chain.
+- Opportunity Detection: Identify high-prob setups with Entry/Stop-Loss/Take-Profit.
+- Sentiment: Fear/Greed index and Whale behavior detection.`,
+
+  brand: `BRAND VOICE GUARDIAN — Analyze or rewrite content to match Boss's personal brand.
+Voice: Authentic, direct, inspiring — like a coach talking to his team. High-performance, no-excuses, compassionate toughness.
+Language: Mix of English and French-friendly expressions when needed.
+Avoid: Corporate jargon, fake hype, empty motivational clichés.
+Output: Rewritten version + 3 brand voice notes explaining changes.`,
+
+  review: `WEEKLY BUSINESS REVIEW — Structured weekly check-in.
+Assess: Revenue, leads/conversations, content performance, missed goals, biggest win/blocker.
+Output:
+📈 Progress vs. 90-day goal
+🔥 Top 3 priorities for next week
+🛠️ One thing to automate or delegate using AI`,
 };
 
 // Detect which skill to load based on message content
 export function detectSkill(messages, system) {
-  const last = (messages || []).filter(m => m.role === 'user').pop()?.content?.toLowerCase() || '';
-  const sys = (system || '').toLowerCase();
-  const text = last + ' ' + sys;
+  const userMessages = (messages || []).filter(m => m.role === 'user');
+  const recent = userMessages.slice(-3).map(m => m.content).join(' ').toLowerCase();
+  const text = recent; // DO NOT include system prompt to avoid self-triggering
 
-  if (/\/content|write a post|make a caption|create content|instagram|linkedin post|reel script|social media post/.test(text)) return 'content';
-  if (/\/resume|tailored resume|job application|ats resume|job posting|apply.*job/.test(text)) return 'resume';
-  if (/\/campaign|marketing campaign|run.*ads?|facebook ads|instagram ads|google ads|social media ads|ad creative|ad copy|launch.*campaign|advertising/.test(text)) return 'campaign';
-  if (/\/proposal|write a proposal|create an offer/.test(text)) return 'proposal';
-  if (/\/sales|sales script|help me close/.test(text)) return 'sales';
-  if (/\/outreach|cold email|write a dm|write outreach/.test(text)) return 'outreach';
-  if (/\/course|build a course|curriculum|training program/.test(text)) return 'course';
-  if (/\/roadmap|revenue roadmap|plan my revenue|build my roadmap/.test(text)) return 'roadmap';
-  if (/\/psych|analyze.*behavior|why did they|predict what/.test(text)) return 'psych';
-  if (/\/purgo|purgo clean|cleaning business|cleaning contract/.test(text)) return 'purgo';
-  if (/\/enhance|enhance.*prompt|upgrade.*prompt|architect.*prompt/.test(text)) return 'enhance';
-  if (/\/schedule|optimize.*schedule|plan.*week|time.?block|build.*schedule|weekly schedule|schedule builder|training schedule|family time|basketball.*schedule/.test(text)) return 'schedule';
-  if (/\/imgprompt|\/vidprompt|optimize.*image prompt|image.*prompt|photo.*prompt|create.*prompt.*photo|visual.*prompt|generate.*image|create.*visual|ai.*photo|ai.*image|photo.*realistic|hyperrealistic.*photo/.test(text)) return 'imgprompt';
-  if (/\/security|security.*check|security.*audit|scan.*vulnerabil|check.*safe|is.*safe|malware|phishing|breach|virus|spam.*detect/.test(text)) return 'security';
-  if (/\/budget|budget|my expenses|my income|financial situation|expense.*income|money.*manage|cash.*flow|optimize.*budget|finance.*advice|spending/.test(text)) return 'budget';
-  if (/\/writer|write.*book|write.*article|write.*blog|write.*chapter|write.*essay|ghostwrit|long.?form|book.*chapter|blog.*post|article.*about/.test(text)) return 'writer';
-  return null;
+  if (/!raw|--no-skill/.test(text) || /don't use a template|just answer naturally/i.test(text)) return null;
+
+  let matched = null;
+  if (/\/content|write a post|make a caption|create content|instagram|linkedin post|reel script|social media post/.test(text)) matched = 'content';
+  else if (/\/resume|tailored resume|job application|ats resume|job posting|apply.*job/.test(text)) matched = 'resume';
+  else if (/\/campaign|marketing campaign|run.*ads?|facebook ads|instagram ads|google ads|social media ads|ad creative|ad copy|launch.*campaign|advertising/.test(text)) matched = 'campaign';
+  else if (/\/proposal|write a proposal|create an offer|pitch a client|put together an offer for|send a quote to/.test(text)) matched = 'proposal';
+  else if (/\/sales|sales script|help me close/.test(text)) matched = 'sales';
+  else if (/\/outreach|cold email|write a dm|write outreach/.test(text)) matched = 'outreach';
+  else if (/\/course|build a course|curriculum|training program/.test(text)) matched = 'course';
+  else if (/\/roadmap|revenue roadmap|plan my revenue|build my roadmap/.test(text)) matched = 'roadmap';
+  else if (/\/psych|analyze.*behavior|why did they|predict what/.test(text)) matched = 'psych';
+  else if (/\/purgo|purgo clean|cleaning business|cleaning contract/.test(text)) matched = 'purgo';
+  else if (/\/enhance|enhance.*prompt|upgrade.*prompt|architect.*prompt/.test(text)) matched = 'enhance';
+  else if (/\/schedule|optimize.*schedule|plan.*week|time.?block|build.*schedule|weekly schedule|schedule builder|training schedule|family time|basketball.*schedule/.test(text)) matched = 'schedule';
+  else if (/\/imgprompt|\/vidprompt|optimize.*image prompt|image.*prompt|photo.*prompt|create.*prompt.*photo|visual.*prompt|generate.*image|create.*visual|ai.*photo|ai.*image|photo.*realistic|hyperrealistic.*photo/.test(text)) matched = 'imgprompt';
+  else if (/\/security|security.*check|security.*audit|scan.*vulnerabil|check.*safe|is.*safe|malware|phishing|breach|virus|spam.*detect/.test(text)) matched = 'security';
+  else if (/\/budget|budget|my expenses|my income|financial situation|expense.*income|money.*manage|cash.*flow|optimize.*budget|finance.*advice|spending/.test(text)) matched = 'budget';
+  else if (/\/writer|write.*book|write.*article|write.*blog|write.*chapter|write.*essay|ghostwrit|long.?form|book.*chapter|blog.*post|article.*about/.test(text)) matched = 'writer';
+  else if (/\/crypto|\/trade|market analysis|crypto.*market/.test(text)) matched = 'crypto';
+  else if (/\/brand|brand voice|on brand/.test(text)) matched = 'brand';
+  else if (/\/review|weekly review|how did i do this week/.test(text)) matched = 'review';
+
+  return (matched && SKILLS[matched]) ? matched : null;
 }
 
 // Token budget per task type
 export function getMaxTokens(skill, requested) {
   if (requested) return requested;
-  const budget = { course: 6000, proposal: 5000, roadmap: 5000, sales: 4000, content: 6000, outreach: 2000, present: 6000, schedule: 4000, resume: 5000, campaign: 6000, security: 5000, imgprompt: 4000, budget: 5000, writer: 8000 };
+  const budget = { course: 6000, proposal: 5000, roadmap: 5000, sales: 4000, content: 6000, outreach: 2000, present: 6000, schedule: 4000, resume: 5000, campaign: 6000, security: 5000, imgprompt: 4000, budget: 5000, writer: 8000, psych: 4000, purgo: 4000, enhance: 3000, crypto: 5000, brand: 3000, review: 4000 };
   return budget[skill] || 4000;
 }
