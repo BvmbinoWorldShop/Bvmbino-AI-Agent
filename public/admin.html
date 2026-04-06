@@ -232,18 +232,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 <div class="ov" id="ov" onclick="closeSb()"></div>
 <aside class="sb" id="sb">
   <div class="sb-top">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="logo" onclick="newChat()" style="cursor:pointer;margin-bottom:0" title="Back to home">
-        <div class="lmark"><svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="15" y="30" width="70" height="52" rx="12" fill="#0a0800"/><rect x="25" y="42" width="16" height="13" rx="4" fill="#e8a912"/><rect x="59" y="42" width="16" height="13" rx="4" fill="#e8a912"/><circle cx="33" cy="48" r="3" fill="#22c55e"/><circle cx="67" cy="48" r="3" fill="#22c55e"/><rect x="36" y="66" width="28" height="5" rx="2.5" fill="#e8a912"/><rect x="40" y="14" width="20" height="18" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="3"/><circle cx="50" cy="8" r="4" fill="#e8a912"/><line x1="50" y1="8" x2="50" y2="14" stroke="#e8a912" stroke-width="2.5"/><rect x="3" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/><rect x="85" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/></svg></div>
-        <div style="display:flex;flex-direction:column"><div class="lname" style="display:flex;align-items:center;gap:6px">Bvmbino <span style="font-size:9px;background:var(--pu2);color:#0a0800;padding:1px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-family:var(--font);font-weight:700">Pro</span></div><div class="ltag">Private Admin · v3.0</div></div>
-      </div>
-      <button class="icobtn" onclick="toggleTranslation()" id="sb-trans" title="Toggle translation" style="width:28px;height:28px;font-size:12px">🌐</button>
+    <div class="logo" onclick="newChat()" style="cursor:pointer" title="Back to home">
+      <div class="lmark"><svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="15" y="30" width="70" height="52" rx="12" fill="#0a0800"/><rect x="25" y="42" width="16" height="13" rx="4" fill="#e8a912"/><rect x="59" y="42" width="16" height="13" rx="4" fill="#e8a912"/><circle cx="33" cy="48" r="3" fill="#22c55e"/><circle cx="67" cy="48" r="3" fill="#22c55e"/><rect x="36" y="66" width="28" height="5" rx="2.5" fill="#e8a912"/><rect x="40" y="14" width="20" height="18" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="3"/><circle cx="50" cy="8" r="4" fill="#e8a912"/><line x1="50" y1="8" x2="50" y2="14" stroke="#e8a912" stroke-width="2.5"/><rect x="3" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/><rect x="85" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/></svg></div>
+      <div style="display:flex;flex-direction:column"><div class="lname" style="display:flex;align-items:center;gap:6px">Bvmbino <span style="font-size:9px;background:var(--pu2);color:#0a0800;padding:1px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-family:var(--font);font-weight:700">Pro</span></div><div class="ltag">Private Admin · v3.0</div></div>
     </div>
     <button class="nbtn" onclick="newChat()">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.5" stroke-linecap="round"/></svg>
       New conversation
     </button>
-    <a href="https://tbamba-portfoliopro.vercel.app/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
+    <a href="/portfolio.html" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">📂 <span>Internal Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">LOCAL</span></a>
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
@@ -295,9 +292,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
     <div class="badge b-gn"><span class="pulse"></span>Memory</div>
     <div class="badge b-am" id="toolbadge" style="display:none">⚡ tool active</div>
     <div class="badge b-pu" id="mbadge">Groq · Llama 3.3</div>
-    <button class="icobtn" onclick="newChat()" title="New chat (Ctrl+K)">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    </button>
+    <button class="icobtn" onclick="toggleTranslation()" id="top-trans" title="Toggle translation" style="width:32px;height:32px;font-size:14px;background:var(--s2)">🌐</button>
   </div>
 
   <div class="chat" id="chat">
@@ -427,11 +422,12 @@ let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slash
 
 function toggleTranslation(){
   translationOn=!translationOn;
-  const b=document.getElementById('sb-trans');
+  const b=document.getElementById('top-trans');
   if(b){
-    b.style.background=translationOn?'var(--pu3)':'none';
+    b.style.background=translationOn?'var(--pu3)':'var(--s2)';
     b.style.borderColor=translationOn?'var(--pu2)':'var(--bd)';
     b.style.color=translationOn?'var(--pu2)':'var(--t3)';
+    b.style.boxShadow=translationOn?'0 0 10px rgba(232,169,18,0.2)':'none';
   }
   localStorage.setItem('translation_on',translationOn?'1':'0');
   toast(translationOn?'Instant Translation: ON (French)':'Instant Translation: OFF');

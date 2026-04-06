@@ -11,6 +11,7 @@ export default function middleware(request) {
   const isPublic =
     pathname === '/auth.html' ||
     pathname.startsWith('/auth') ||
+    pathname.startsWith('/portfolio') ||
     pathname.startsWith('/api/') ||
     /\.(js|css|png|jpg|jpeg|svg|ico|webp|woff|woff2|ttf|json|txt|xml|map)$/.test(pathname);
 
