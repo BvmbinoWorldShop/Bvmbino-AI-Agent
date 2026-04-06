@@ -240,7 +240,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.5" stroke-linecap="round"/></svg>
       New conversation
     </button>
-    <a href="https://bamba-portfolio.vercel.app/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
+    <a href="https://tbamba-portfoliopro.vercel.app/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
@@ -335,6 +335,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
         <div class="pill on" id="p-mem" onclick="togglePill(this)"><span class="pdot"></span>memory</div>
         <div class="pill" id="p-web" onclick="togglePill(this)"><span class="pdot"></span>web search</div>
         <div class="pill" id="p-pdf" onclick="togglePill(this)"><span class="pdot"></span>PDF export</div>
+        <div class="pill" id="p-trans" onclick="toggleTranslation()"><span class="pdot"></span>🌐 translation</div>
         <span id="char-counter" style="font-size:9px;font-family:var(--mono);color:var(--t3);margin-left:2px"></span>
         <span class="kbhint" style="margin-left:auto">↵ send · ⇧↵ newline · Ctrl+K new</span>
       </div>
@@ -420,7 +421,18 @@ course:`Build me a complete, professional training course curriculum. Ask me the
   writer:`/writer — Act as an elite human writer with 20+ years editorial experience. Write deep, logical, soulful long-form content. Vary sentence rhythm, use first person, include self-doubt moments, specific sensory details, and real emotions. NO AI patterns ("In today's fast-paced world", "Let's dive in", "game-changer"). Structure: hook that creates an open loop → argument built like a lawyer → 1-2-3 punch (anecdote + data + universal truth) → ending that lingers. Deliver: full polished text + word count + reading time + SEO keywords. What should I write about? [EXPORT:article]`,
 };
 
-let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[],msgStore={};
+let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[],msgStore={},translationOn=false;
+
+function toggleTranslation(){
+  translationOn=!translationOn;
+  const p=document.getElementById('p-trans');
+  p.classList.toggle('on',translationOn);
+  localStorage.setItem('translation_on',translationOn?'1':'0');
+  toast(translationOn?'Instant Translation: ON (French)':'Instant Translation: OFF');
+}
+(function(){
+  if(localStorage.getItem('translation_on')==='1') setTimeout(toggleTranslation,500);
+})();
 
 // ── SIDEBAR ──
 function openSb(){document.getElementById('sb').classList.add('open');document.getElementById('ov').classList.add('open')}
@@ -1277,7 +1289,7 @@ async function callAI(skipLock){
     // For tool-augmented calls, show typing after tool row
     showTyping();
   }
-  const sys=buildSys();
+  const sys=buildSys() + (translationOn ? "\n\nCRITICAL: Instant Translation is ACTIVE. Provide your response in the language detected from the user message, or French if not specified. Keep all unique skill names (Purgo Clean, Keo Jus, Business Strategy, etc.) and [EXPORT:category] tags in English." : "");
   try{
     const res=await fetch('/api/chat',{
       method:'POST',
