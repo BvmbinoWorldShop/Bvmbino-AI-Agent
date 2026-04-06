@@ -240,7 +240,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.5" stroke-linecap="round"/></svg>
       New conversation
     </button>
-    <a href="https://tb-profileportfolio.vercel.app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
+    <a href="portfolio.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
@@ -272,8 +272,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
         <button class="qbtn" onclick="slash('security')"><span class="qi" style="background:rgba(239,68,68,.1)">🔐</span><span>Security Audit</span><span class="qsub">/security</span></button>
       </div>
     </div>
-    <div class="ssect" style="padding-bottom:4px"><div class="sbl">Recent</div></div>
-    <div class="sb-hist" id="hist"></div>
+    <div class="ssect" style="padding-bottom:4px">
+      <button onclick="toggleHistory()" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer">
+        <span class="sbl" style="margin-bottom:0">📂 Recent</span>
+        <span id="hist-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
+      </button>
+    </div>
+    <div id="hist" style="overflow:hidden;transition:max-height .35s ease;max-height:2000px"></div>
   </div>
 </aside>
 
@@ -660,7 +665,8 @@ async function send(forcedText){
   el.value='';el.style.height='auto';
   addUserMsg(text);
   msgs.push({role:'user',content:text});
-  const short=text.slice(0,42)+(text.length>42?'…':'');
+  const words=text.trim().split(/\s+/).filter(Boolean);
+  const short=forcedText?text.slice(0,42)+(text.length>42?'…':''):(words.slice(0,4).join(' '))+(words.length>4?'…':'');
   document.getElementById('tbtitle').textContent=short;
   updTok(text.length/3.5);
   saveSession(short,msgs);
@@ -1643,31 +1649,85 @@ async function resumeSession(id){
   const session=sessions.find(s=>s.id===id);
   if(!session)return;
   msgs=[...session.msgs];tokens=1840;
+  // Inject a hidden context note as a system-level assistant message so the agent knows where we left off
+  if(msgs.length&&msgs[msgs.length-1].role==='assistant'){
+    const topicNote=`[CONTEXT: This is a resumed conversation titled "${session.title}". The full history above is loaded. Continue naturally as if no interruption occurred.]`;
+    msgs.push({role:'user',content:topicNote});
+    msgs.push({role:'assistant',content:`✓ Context reloaded — **"${session.title}"**. I have the full conversation above. Where would you like to continue?`});
+  }
   document.getElementById('tbtitle').textContent=session.title;
   document.getElementById('ci').innerHTML='';
-  msgs.forEach(m=>{
+  // Render all real messages (exclude the context injection ones at the end)
+  session.msgs.forEach(m=>{
     if(m.role==='user')addUserMsg(m.content);
     else{let x=null,t=m.content;const mx=t.match(/\[EXPORT:(\w+)\]/);if(mx){t=t.replace(/\[EXPORT:\w+\]/,'').trim();x=mx[1];}appendAiText(t,x);}
   });
+  // Show the resume confirmation
+  if(msgs.length>2){
+    const lastAI=session.msgs.filter(m=>m.role==='assistant').pop();
+    if(lastAI)appendAiText(`✓ Context reloaded — **"${session.title}"**. I have the full conversation. Continue below 👇`,null);
+  }
   updTok(msgs.reduce((s,m)=>s+(m.content.length/3.5),0));
-  closeSb();toast('Memory loaded from device ✓');
+  closeSb();toast(`📂 "${session.title}" resumed`);
 }
 
 async function renderHistory(){
   const hist=document.getElementById('hist');
   const sessions=await loadSessions();
   if(!sessions.length){
-    hist.innerHTML='<div style="padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--t4)">No saved conversations yet</div>';
+    hist.innerHTML='<div style="padding:8px 10px 4px;font-size:10px;font-family:var(--mono);color:var(--t4)">No saved conversations</div>';
     return;
   }
   hist.innerHTML=sessions.map(s=>
-    `<div class="hi" onclick="resumeSession(${s.id})" style="display:flex;align-items:center;gap:6px">
+    `<div class="hi" style="display:flex;align-items:center;gap:6px;position:relative" id="hi-${s.id}">
       <span class="hdot"></span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</span>
-      <button onclick="deleteSession(${s.id},event)" style="opacity:0;font-size:10px;background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 5px;flex-shrink:0;transition:opacity .1s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">✕</button>
+      <span class="hi-title" onclick="resumeSession(${s.id})" title="Click to resume" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer">${esc(s.title)}</span>
+      <button onclick="startEditTitle(${s.id},event)" title="Rename" style="opacity:0;font-size:11px;background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 4px;flex-shrink:0;transition:opacity .1s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">✏</button>
+      <button onclick="deleteSession(${s.id},event)" title="Delete" style="opacity:0;font-size:10px;background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 5px;flex-shrink:0;transition:opacity .1s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">✕</button>
     </div>`
   ).join('');
 }
+
+function startEditTitle(id,e){
+  e.stopPropagation();
+  const row=document.getElementById('hi-'+id);
+  if(!row)return;
+  const titleEl=row.querySelector('.hi-title');
+  const current=titleEl.textContent;
+  titleEl.innerHTML=`<input id="edit-${id}" value="${esc(current)}" style="width:100%;background:#1a1e24;border:1px solid var(--pu);border-radius:4px;color:var(--t1);font-size:12px;font-family:var(--font);padding:2px 6px;outline:none" onblur="saveEditTitle(${id})" onkeydown="if(event.key==='Enter')this.blur()">` ;
+  const input=document.getElementById('edit-'+id);
+  input.focus();input.select();
+}
+
+async function saveEditTitle(id){
+  const input=document.getElementById('edit-'+id);
+  if(!input)return;
+  const newTitle=input.value.trim()||'Untitled';
+  try{
+    const db=await getDB();
+    const sessions=await loadSessions();
+    const s=sessions.find(x=>x.id===id);
+    if(!s)return;
+    s.title=newTitle.slice(0,60);
+    s.updatedAt=Date.now();
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(s);
+    tx.oncomplete=()=>renderHistory();
+  }catch{renderHistory();}
+}
+
+function toggleHistory(){
+  const h=document.getElementById('hist');
+  const a=document.getElementById('hist-arrow');
+  const isOpen=h.style.maxHeight!=='0px';
+  h.style.maxHeight=isOpen?'0px':'2000px';
+  a.style.transform=isOpen?'rotate(-90deg)':'rotate(0deg)';
+  localStorage.setItem('hist_open',isOpen?'0':'1');
+}
+(function(){
+  const s=localStorage.getItem('hist_open');
+  if(s==='0'){const h=document.getElementById('hist');const a=document.getElementById('hist-arrow');if(h){h.style.maxHeight='0px';if(a)a.style.transform='rotate(-90deg)';}}
+})();
 
 // ── SWIPE GESTURES (mobile) ──
 let touchStartX=0,touchStartY=0;
