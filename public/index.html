@@ -691,7 +691,13 @@ async function send(forcedText){
     const routed=smartRouteMsg(text);
     if(routed){
       msgs[msgs.length-1]={role:'user',content:routed.enhanced};
-      showRouteBadge(routed.skill);
+      // Permanent chip visible in chat between user msg and AI response
+      const _ci=document.getElementById('ci');
+      const _chip=document.createElement('div');
+      _chip.style.cssText='padding:2px 12px 6px;text-align:center;';
+      _chip.innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 11px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:20px;font-size:10px;font-family:var(--mono);color:#4ade80;letter-spacing:.4px;animation:routeBadge .3s ease forwards">🧠 Auto → <strong>/${routed.skill}</strong></span>`;
+      _ci.appendChild(_chip);
+      scrollBot();
     }
     await callAI();
   }catch(e){
