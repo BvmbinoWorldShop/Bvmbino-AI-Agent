@@ -1,34 +1,24 @@
 export default function middleware(request) {
   const { pathname } = new URL(request.url);
 
-  // Portfolio is PUBLIC — no auth needed
-  if (
+  // Public routes — no auth needed
+  const isPublic =
     pathname === '/portfolio.html' ||
-    pathname === '/portfolio' ||
-    pathname.startsWith('/portfolio')
-  ) {
-    return; // pass through
-  }
+    pathname.startsWith('/portfolio') ||
+    pathname === '/auth.html' ||
+    pathname.startsWith('/auth') ||
+    pathname === '/api/auth';
 
-  // Check Basic Auth header
-  const authHeader = request.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Basic ')) {
-    try {
-      const base64 = authHeader.slice(6);
-      const decoded = atob(base64);
-      const [username, password] = decoded.split(':');
-      if (username === 'LATAUPE95' && password === '021291') {
-        return; // correct password — allow through
-      }
-    } catch {}
-  }
+  if (isPublic) return; // pass through
 
-  // Block — return 401 with WWW-Authenticate to trigger browser dialog
+  // Check auth cookie (set by /api/auth after login)
+  const cookie = request.headers.get('cookie') || '';
+  if (cookie.includes('bvmbino_auth=ok')) return; // authenticated — pass through
+
+  // Not authenticated — redirect to login page
   return new Response(null, {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Bvmbino AI Agent"',
-    },
+    status: 302,
+    headers: { Location: '/auth.html' },
   });
 }
 
