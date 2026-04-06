@@ -16,8 +16,8 @@ export default function middleware(request) {
     try {
       const base64 = authHeader.slice(6);
       const decoded = atob(base64);
-      const password = decoded.split(':')[1];
-      if (password === '021291') {
+      const [username, password] = decoded.split(':');
+      if (username === 'LATAUPE95' && password === '021291') {
         return; // correct password — allow through
       }
     } catch {}
