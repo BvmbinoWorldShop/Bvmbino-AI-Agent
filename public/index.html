@@ -614,45 +614,135 @@ function detectIntent(text){
   return null;
 }
 
-// ── SMART INTENT ROUTER ──
+// ── SMART INTENT ROUTER v2 — all 17 skills, 200+ patterns ──
 const SKILL_ROUTER=[
-  {skill:'content',   kw:['post','caption','reel','instagram','linkedin','twitter','tiktok','hashtag','viral','social media','content for','write a caption','write a post']},
-  {skill:'sales',     kw:['close a deal','objection','sales script','follow-up','follow up','cold call','pipeline','sell my','pitch my','win the client']},
-  {skill:'budget',    kw:['my expenses','my budget','my finances','cash flow','spending','i owe','debt','monthly cost','save money','financial plan']},
-  {skill:'writer',    kw:['write an article','write a blog','write an essay','long form','book chapter','editorial','ghostwrite','write a story']},
-  {skill:'email',     kw:['write an email','draft an email','send an email','email to','professional email','follow-up email']},
-  {skill:'course',    kw:['build a course','create a course','make a course','course outline','curriculum','learning plan','lesson plan']},
-  {skill:'strategy',  kw:['business strategy','growth strategy','scale my','grow my business','acquisition','go to market','market strategy','business plan']},
-  {skill:'resume',    kw:['my resume','my cv','cover letter','job application','apply for a job','job offer']},
-  {skill:'campaign',  kw:['ad campaign','facebook ad','meta ad','google ad','paid ad','run ads','advertising campaign']},
-  {skill:'outreach',  kw:['cold dm','cold email','cold outreach','reach out to','prospect message','first contact']},
-  {skill:'proposal',  kw:['client proposal','write a proposal','service quote','business offer','pricing proposal','devis']},
-  {skill:'schedule',  kw:['my schedule','weekly schedule','daily routine','time block','plan my week','create a routine']},
-  {skill:'imgprompt', kw:['image prompt','midjourney prompt','dalle prompt','generate an image','ai image','photo prompt','visual prompt']},
-  {skill:'present',   kw:['presentation','slide deck','pitch deck','keynote','powerpoint','create slides']},
-  {skill:'automate',  kw:['automate','automation','workflow','zapier','make.com','n8n','no-code','repetitive task']},
-  {skill:'security',  kw:['security audit','check my code','find vulnerability','protect my','penetration test']},
+  {skill:'content', kw:[
+    'instagram','linkedin','twitter','tiktok','facebook post','x post','reel','story','stories',
+    'caption','hashtag','viral','social media post','content creator','create content','need content',
+    'write a post','write a caption','post for my','social strategy','hook line','cta','call to action',
+    'engagement','followers','brand content','carousel','short video','ugc','influencer',
+    'content calendar','content plan','post ideas','content for my business','post about',
+  ]},
+  {skill:'sales', kw:[
+    'close a deal','closing technique','sales script','sales pitch','objection handling','objection',
+    'follow-up message','follow up with','cold call script','warm call','pipeline',
+    'sell my service','pitch my offer','win the client','convert prospect','discovery call',
+    'sales strategy','dm script','commission','upsell','cross-sell','proposal call',
+    'client is hesitating','client said no','quote rejected','negotiate price',
+  ]},
+  {skill:'budget', kw:[
+    'my expenses','my budget','my finances','cash flow','monthly spending','i owe','debt problem',
+    'save money','financial plan','how much should i','revenue target','profit margin',
+    'money management','financial situation','salary allocation','income streams','break even',
+    'overhead cost','operating cost','business finance','personal finance','invest my money',
+    'charges','dépenses','budget mensuel','flux de trésorerie',
+  ]},
+  {skill:'writer', kw:[
+    'write an article','write a blog','long form article','write an essay','book chapter',
+    'ghostwrite','write a story','editorial piece','newsletter content','write me a','write about',
+    'blog post about','opinion piece','in-depth article','copywriting','human writing',
+    'write without ai feel','no ai feel','natural writing','deep dive on',
+  ]},
+  {skill:'email', kw:[
+    'write an email','draft an email','email to my client','professional email','follow-up email',
+    'email template','email sequence','email campaign','relance par email','mail professionnel',
+    're-engagement email','onboarding email','cold email template','email for new client',
+    'introduction email','confirmation email','thank you email','reminder email',
+  ]},
+  {skill:'course', kw:[
+    'build a course','create a course','online course','course outline','curriculum design',
+    'learning plan','lesson plan','e-learning','module breakdown','training program',
+    'teach people about','formation en ligne','créer une formation','educational content',
+    'workshop structure','course content','course for my clients','certification program',
+  ]},
+  {skill:'strategy', kw:[
+    'business strategy','growth strategy','scale my business','grow my company','market strategy',
+    'go to market','business plan','action plan','90 day plan','competitive advantage',
+    'market positioning','business model','revenue strategy','acquisition strategy',
+    'how to grow','how to scale','expand my business','swot analysis','business roadmap',
+    'stratégie business','plan de croissance','développement','prospection stratégie',
+  ]},
+  {skill:'resume', kw:[
+    'my resume','my cv','cover letter','job application','apply for','job offer','job search',
+    'career change','curriculum vitae','lettre de motivation','interview prep','linkedin profile',
+    'professional bio','update my cv','work experience','job description','hiring','recruitment',
+  ]},
+  {skill:'campaign', kw:[
+    'ad campaign','facebook ad','meta ad','google ad','paid advertising','run ads','advertising',
+    'ad creative','ad copy','targeting audience','retargeting','google ads','sponsored post',
+    'marketing campaign','campagne pub','publicité payante','boost post','ad budget',
+    'performance marketing','ppc','cpm','cpc','media buying','paid social',
+  ]},
+  {skill:'outreach', kw:[
+    'cold dm','cold outreach','reach out to','prospect message','first contact',
+    'intro message','connect with potential','find new clients','new client message',
+    'cold message','outreach strategy','prospection','message de prospection',
+    'approach a brand','contact influencer','partnership message','collab message',
+  ]},
+  {skill:'proposal', kw:[
+    'client proposal','write a proposal','service quote','business offer','pricing proposal',
+    'devis','offer for client','freelance contract','service agreement','deal structure',
+    'package offer','présentation offre','offre commerciale','scope of work','project offer',
+    'send a quote','prepare an offer','commercial proposal','investment proposal',
+  ]},
+  {skill:'schedule', kw:[
+    'my schedule','weekly schedule','daily routine','time blocking','plan my week','time management',
+    'create a routine','morning routine','work schedule','agenda','productivity plan',
+    'weekly plan','semaine type','organisation journée','daily calendar','deep work blocks',
+    'balancing work and','optimise my time','best daily routine',
+  ]},
+  {skill:'imgprompt', kw:[
+    'image prompt','midjourney','dall-e','dalle','stable diffusion','generate an image',
+    'ai image','photo prompt','visual prompt','create an image','image for my',
+    'photo for my','design prompt','ai art','image generation','realistic image prompt',
+    'professional photo ai','product photo ai','portrait prompt','background prompt',
+  ]},
+  {skill:'present', kw:[
+    'presentation','slide deck','pitch deck','keynote','powerpoint','create slides',
+    'slides for','present to investors','investor pitch','demo day','company presentation',
+    'product presentation','présentation','pitch slides','slides about','board presentation',
+    'client presentation','deck','stakeholder presentation',
+  ]},
+  {skill:'automate', kw:[
+    'automate','automation','workflow','zapier','make.com','n8n','no-code tool',
+    'repetitive task','save time with','automatic','integrate my apps','connect tools',
+    'trigger and action','automatiser','scénario automation','business automation',
+    'auto-send','crm automation','lead automation','airtable','notion automation',
+  ]},
+  {skill:'search', kw:[
+    'what is the latest','recent news about','current data on','find stats on','find statistics',
+    'research on','market research','competitor analysis','industry report','latest trend',
+    'live information','real time data','fact check','verify information','look up data',
+  ]},
+  {skill:'security', kw:[
+    'security audit','check my code for','find vulnerability','protect my app','penetration test',
+    'secure my api','code review security','xss','injection attack','cors issue',
+    'api security','data protection','environment variable leak','exposed key',
+    'audit sécurité','vérifier mon code','sécuriser',
+  ]},
 ];
+
+// Phrase-length weighted scoring: "instagram caption" (2 words) = 2pts, "write a post" (3 words) = 3pts
+// This means more specific phrases always win over generic single words
 function smartRouteMsg(text){
-  if(!text||text.trim().split(/\s+/).length<4) return null; // too short — skip
-  if(/^\s*\/\w+/.test(text)) return null; // explicit /cmd — skip
+  if(!text||text.trim().split(/\s+/).filter(Boolean).length<2) return null; // min 2 words
+  if(/^\s*\/\w+/.test(text)) return null; // explicit /cmd — let it through unchanged
   const lower=text.toLowerCase();
   let best=null,bestScore=0;
   for(const {skill,kw} of SKILL_ROUTER){
-    const score=kw.filter(k=>lower.includes(k)).length;
+    let score=0;
+    for(const k of kw){
+      if(lower.includes(k)) score+=k.split(' ').length; // multi-word phrases score higher
+    }
     if(score>bestScore){bestScore=score;best=skill;}
   }
   if(!best||bestScore<1) return null;
   const prompt=PROMPTS[best]||'';
-  return {skill:best, enhanced:prompt?`${prompt}\n\nUser message: ${text}`:text};
-}
-function showRouteBadge(skill){
-  const w=document.getElementById('toasts');
-  const d=document.createElement('div');
-  d.className='toast toast-route';
-  d.innerHTML=`🧠 Auto → <strong>/${skill}</strong> detected`;
-  w.appendChild(d);
-  setTimeout(()=>d.remove(),2500);
+  // Focused enhancement: activate skill context + keep user's exact intent
+  const enhanced=prompt
+    ? `${prompt}\n\n---\nUser's request: "${text}"\nApply the skill framework above directly to this specific request. Be immediate and concrete.`
+    : text;
+  return {skill:best, enhanced};
 }
 
 // ── SEND ──
