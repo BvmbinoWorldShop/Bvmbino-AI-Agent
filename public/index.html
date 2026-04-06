@@ -217,6 +217,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .infoot{padding:0 8px 10px}
 .topbar{padding:0 12px}
 }
+/* ── SMART ROUTER & SLASH ANIMATIONS ── */
+@keyframes siIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.si{animation:siIn .12s ease both}
+.si:nth-child(1){animation-delay:0s}.si:nth-child(2){animation-delay:.03s}.si:nth-child(3){animation-delay:.06s}
+.si:nth-child(4){animation-delay:.09s}.si:nth-child(5){animation-delay:.12s}.si:nth-child(n+6){animation-delay:.15s}
+.qbtn{transition:background .15s,transform .12s,box-shadow .15s!important}
+.qbtn:hover{transform:translateX(3px)!important;box-shadow:inset 3px 0 0 var(--pu)!important}
+@keyframes routeBadge{0%{opacity:0;transform:translateY(6px) scale(.95)}60%{transform:translateY(-2px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.toast-route{animation:routeBadge .3s ease forwards;background:rgba(34,197,94,.12)!important;border-color:rgba(34,197,94,.35)!important;color:#4ade80!important}
 </style>
 </head>
 <body>
@@ -231,7 +240,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.5" stroke-linecap="round"/></svg>
       New conversation
     </button>
-    <a href="portfolio.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
+    <a href="https://tb-profileportfolio.vercel.app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:8px;background:transparent;border:1px solid var(--bd2);border-radius:var(--rsm);color:var(--pu2);font-size:12px;font-family:var(--font);font-weight:600;text-decoration:none;transition:all .12s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">🌐 <span>My Portfolio</span><span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono)">CV</span></a>
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
@@ -600,6 +609,47 @@ function detectIntent(text){
   return null;
 }
 
+// ── SMART INTENT ROUTER ──
+const SKILL_ROUTER=[
+  {skill:'content',   kw:['post','caption','reel','instagram','linkedin','twitter','tiktok','hashtag','viral','social media','content for','write a caption','write a post']},
+  {skill:'sales',     kw:['close a deal','objection','sales script','follow-up','follow up','cold call','pipeline','sell my','pitch my','win the client']},
+  {skill:'budget',    kw:['my expenses','my budget','my finances','cash flow','spending','i owe','debt','monthly cost','save money','financial plan']},
+  {skill:'writer',    kw:['write an article','write a blog','write an essay','long form','book chapter','editorial','ghostwrite','write a story']},
+  {skill:'email',     kw:['write an email','draft an email','send an email','email to','professional email','follow-up email']},
+  {skill:'course',    kw:['build a course','create a course','make a course','course outline','curriculum','learning plan','lesson plan']},
+  {skill:'strategy',  kw:['business strategy','growth strategy','scale my','grow my business','acquisition','go to market','market strategy','business plan']},
+  {skill:'resume',    kw:['my resume','my cv','cover letter','job application','apply for a job','job offer']},
+  {skill:'campaign',  kw:['ad campaign','facebook ad','meta ad','google ad','paid ad','run ads','advertising campaign']},
+  {skill:'outreach',  kw:['cold dm','cold email','cold outreach','reach out to','prospect message','first contact']},
+  {skill:'proposal',  kw:['client proposal','write a proposal','service quote','business offer','pricing proposal','devis']},
+  {skill:'schedule',  kw:['my schedule','weekly schedule','daily routine','time block','plan my week','create a routine']},
+  {skill:'imgprompt', kw:['image prompt','midjourney prompt','dalle prompt','generate an image','ai image','photo prompt','visual prompt']},
+  {skill:'present',   kw:['presentation','slide deck','pitch deck','keynote','powerpoint','create slides']},
+  {skill:'automate',  kw:['automate','automation','workflow','zapier','make.com','n8n','no-code','repetitive task']},
+  {skill:'security',  kw:['security audit','check my code','find vulnerability','protect my','penetration test']},
+];
+function smartRouteMsg(text){
+  if(!text||text.trim().split(/\s+/).length<4) return null; // too short — skip
+  if(/^\s*\/\w+/.test(text)) return null; // explicit /cmd — skip
+  const lower=text.toLowerCase();
+  let best=null,bestScore=0;
+  for(const {skill,kw} of SKILL_ROUTER){
+    const score=kw.filter(k=>lower.includes(k)).length;
+    if(score>bestScore){bestScore=score;best=skill;}
+  }
+  if(!best||bestScore<1) return null;
+  const prompt=PROMPTS[best]||'';
+  return {skill:best, enhanced:prompt?`${prompt}\n\nUser message: ${text}`:text};
+}
+function showRouteBadge(skill){
+  const w=document.getElementById('toasts');
+  const d=document.createElement('div');
+  d.className='toast toast-route';
+  d.innerHTML=`🧠 Auto → <strong>/${skill}</strong> detected`;
+  w.appendChild(d);
+  setTimeout(()=>d.remove(),2500);
+}
+
 // ── SEND ──
 async function send(forcedText){
   const el=document.getElementById('inp');
@@ -630,6 +680,12 @@ async function send(forcedText){
       else if(intent.type==='schedule'){await callAI();const lastMsg=msgs.filter(m=>m.role==='assistant').pop()?.content||'';await doScheduleExport(lastMsg,intent.view||'weekly');}
       else await callAI(); // campaign, course, present, content, imgprompt, outreach, proposal, ai → all go to callAI
       return;
+    }
+    // ── SMART ROUTER: auto-detect skill from natural language ──
+    const routed=smartRouteMsg(text);
+    if(routed){
+      msgs[msgs.length-1]={role:'user',content:routed.enhanced};
+      showRouteBadge(routed.skill);
     }
     await callAI();
   }catch(e){
