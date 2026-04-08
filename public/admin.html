@@ -67,10 +67,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .set-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;color:var(--t2)}
 .set-foot{padding:18px 24px;background:rgba(0,0,0,0.2);border-top:1px solid var(--bd2)}
 
-.cli{position:relative;transition:all 0.2s}
-.cli.active{border-color:var(--pu2);background:rgba(232,169,18,0.05);box-shadow:0 0 15px rgba(232,169,18,0.1)}
-.cli.active::after{content:'🎯';margin-left:auto;font-size:10px}
-.cli-del{position:absolute;right:8px;top:8px;opacity:0;transition:opacity 0.2s;color:var(--rd);cursor:pointer}
+.cli{position:relative;transition:all 0.2s;overflow:hidden;min-width:0;width:100%}
+.cli.active{border-color:var(--pu2);background:rgba(232,169,18,.1);box-shadow:0 0 10px rgba(232,169,18,0.15)}
+.cli .qsub{max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.cli-del{opacity:0;margin-left:auto;color:var(--t4);transition:opacity .1s;font-size:10px;padding:4px}
 .cli:hover .cli-del{opacity:1}
 
 .icobtn{width:30px;height:30px;background:none;border:1px solid var(--bd);border-radius:var(--rsm);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
@@ -195,6 +195,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .micbtn{width:34px;height:34px;background:none;border:1px solid var(--bd);border-radius:7px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-size:15px;margin:0 4px 7px 0}.micbtn:hover{background:var(--s3);color:var(--t2)}
 .micbtn.recording{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171;animation:pulse-rec 1.5s infinite}
 @keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
+.langbtn{padding:2px 6px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;color:var(--t3);font-size:9px;font-family:var(--mono);cursor:pointer;transition:all .1s;margin:0 4px 7px 0;height:34px;display:flex;align-items:center;justify-content:center}.langbtn:hover{border-color:var(--pu2);color:var(--pu2)}
 .pdot{width:4px;height:4px;border-radius:50%;background:currentColor}
 .kbhint{margin-left:auto;font-size:9px;color:var(--t4);font-family:var(--mono)}
 /* SLASH MENU */
@@ -284,21 +285,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono);opacity:0.6">PRO</span>
     </a>
   </div>
-  <div class="ssect">
-    <div class="sbl">AI Engine</div>
-    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(232,169,18,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse" style="color:var(--gn)"></span>Groq · Llama 3.3 70B</div>
-  </div>
   <div class="sb-scroll">
+    <div class="ssect">
+      <div class="sbl">AI Engine</div>
+      <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(232,169,18,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse" style="color:var(--gn)"></span>Groq · Llama 3.3 70B</div>
+    </div>
     <div class="ssect">
       <button onclick="toggleTools()" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:7px;">
         <span class="sbl" style="margin-bottom:0">📁 Tools &amp; Skills</span>
         <span id="tools-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
       </button>
       <div id="toolsPanel" class="qacts" style="overflow:hidden;transition:max-height .3s ease;max-height:2000px">
+        <button class="qbtn" onclick="openTrain()" style="background:rgba(232,169,18,0.1);border-color:var(--pu2);margin-bottom:8px">
+          <span class="qi">🧠</span><span>Train Agent</span><span class="qsub">Save context</span>
+        </button>
         <button class="qbtn" onclick="slash('sales')"><span class="qi" style="background:rgba(232,169,18,.12)">💰</span><span>Sales Script</span><span class="qsub">/sales</span></button>
-        <button class="qbtn" onclick="slash('content')"><span class="qi" style="background:rgba(232,169,18,.12)">🎬</span><span>Content Creator</span><span class="qsub">/content</span></button>
-        <button class="qbtn" onclick="slash('writer')"><span class="qi" style="background:rgba(232,169,18,.12)">✍️</span><span>Deep Writer</span><span class="qsub">/writer</span></button>
         <button class="qbtn" onclick="slash('budget')"><span class="qi" style="background:rgba(34,197,94,.08)">💳</span><span>Budget &amp; Finance</span><span class="qsub">/budget</span></button>
+        <button class="qbtn" onclick="slash('psych')"><span class="qi" style="background:rgba(232,169,18,.12)">🧠</span><span>Psychology</span><span class="qsub">/psych</span></button>
         <button class="qbtn" onclick="slash('imgprompt')"><span class="qi" style="background:rgba(232,169,18,.12)">🎨</span><span>Image Prompt</span><span class="qsub">/imgprompt</span></button>
         <button class="qbtn" onclick="slash('campaign')"><span class="qi" style="background:rgba(245,158,11,.1)">📣</span><span>Marketing</span><span class="qsub">/campaign</span></button>
         <button class="qbtn" onclick="slash('outreach')"><span class="qi" style="background:rgba(232,169,18,.12)">📨</span><span>Cold Outreach</span><span class="qsub">/outreach</span></button>
@@ -383,6 +386,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
       <div class="smenu" id="smenu"></div>
       <div class="intop">
         <textarea id="inp" placeholder="Type anything Boss… or /" rows="1" oninput="onInp()" onkeydown="onKey(event)"></textarea>
+        <button class="langbtn" id="langbtn" onclick="toggleVoiceLang()" title="Switch Voice Language">EN</button>
         <button class="micbtn" id="micbtn" onclick="toggleVoice()" title="Voice input">🎙️</button>
         <button class="sbtn" id="sbtn" onclick="send()">↑</button>
       </div>
@@ -484,6 +488,7 @@ const CMDS=[
   {cmd:'/email',    desc:'Write professional email',              icon:'✉️'},
   {cmd:'/budget',   desc:'Budget analysis: /budget [info]',        icon:'💳'},
   {cmd:'/writer',   desc:'Deep writing: /writer [topic]',          icon:'✍️'},
+  {cmd:'/psych',    desc:'Human Psychology & Behavioral Expert', icon:'🧠'},
   {cmd:'/pdf',      desc:'Export last answer as PDF',              icon:'📋'},
   {cmd:'/security', desc:'Security audit — scan code & deps',      icon:'🔐'},
   {cmd:'/enhance',  desc:'Amplify & scale your idea',              icon:'🚀'},
@@ -511,6 +516,7 @@ course:`Build me a complete, professional training course curriculum. Ask me the
   proposal:`/proposal — Write a high-ticket client proposal. Include: Executive Summary (their problem + my solution), About Me (credibility + relevant experience), Offer Details (deliverables, timeline, format), Investment tiers (Basic / Premium / VIP), Next Steps (CTA + booking link placeholder). Tone: confident, empathetic, results-focused. Which client type is this for? [EXPORT:proposal]`,
   budget:`/budget — Act as my Personal CFO. Analyze my financial situation and deliver a hard, comprehensive read. I'll provide my income streams and expenses. You deliver: Income Snapshot table, Expense Audit (flag waste), Financial Health Score (1-10), Cash Flow Plan with allocation %, Priority Order (emergency fund → debt → invest → grow), Budget Optimization Table (current vs optimized), 90-Day Financial Milestones, minimum 5 actionable insights for my multi-business situation in France, and one thing to do THIS WEEK. Be direct like a financial coach — tell the truth about my money. [EXPORT:budget]`,
   writer:`/writer — Act as an elite human writer with 20+ years editorial experience. Write deep, logical, soulful long-form content. Vary sentence rhythm, use first person, include self-doubt moments, specific sensory details, and real emotions. NO AI patterns ("In today's fast-paced world", "Let's dive in", "game-changer"). Structure: hook that creates an open loop → argument built like a lawyer → 1-2-3 punch (anecdote + data + universal truth) → ending that lingers. Deliver: full polished text + word count + reading time + SEO keywords. What should I write about? [EXPORT:article]`,
+  psych:`/psych — Act as an elite Global Expert in Human Psychology & Behavioral Science. Analyze the current situation/context through the lens of psychological triggers, emotional intelligence, and behavioral patterns. Deliver: (1) **BEHAVIORAL ANALYSIS** (Identify motivations/profiles), (2) **PREDICTION** (Likely next moves), (3) **STRATEGIC INTERVENTION** (How to influence the outcome). [EXPORT:psych]`,
   enhance:`Act as an Idea Scaler. Amplify the following input into a professional, high-fidelity business specification. Add missing technical context, scale the market potential, and structure it for immediate action: `,
   builder:`Act as the Lead Architect of the Enterprise AI Forge. Help build this app/workflow using the most efficient, cost-effective tech stack (e.g. Vercel, Supabase, Groq, Vite). Deliver a step-by-step technical implementation roadmap.`,
   lex:`Act as the Bvmbino Compliance Office (LEX). Knowledge base: Business law and conformity for France (Île-de-France) and Côte d'Ivoire. Analyze following for legal risks, contract gaps, and conformity: `,
@@ -597,7 +603,7 @@ function applySlash(cmd){
   const key=cmd.slice(1);
   const el=document.getElementById('inp');
   // Commands that need an argument typed after them
-  if(['scrape','search','course','present','resume','content','imgprompt','outreach','proposal','budget','writer'].includes(key)){
+  if(['scrape','search','course','present','resume','content','imgprompt','outreach','proposal','budget','writer','psych'].includes(key)){
     el.value=cmd+' ';el.focus();onInp();
     return;
   }
@@ -606,24 +612,30 @@ function applySlash(cmd){
   if(PROMPTS[key]){
     rmWelcome();
     const val = el.value.slice(cmd.length).trim();
-    if(key==='enhance' && val){send(PROMPTS.enhance + val); el.value='';}
-    else { el.value=''; send(PROMPTS[key]); }
+    let finalPrompt = PROMPTS[key];
+    if(key==='enhance' && val) finalPrompt = PROMPTS.enhance + val;
+
+    // Inject Client Context if active
+    if(activeClientId){
+      const client = ALL_CLIENTS.find(c=>c.id===activeClientId);
+      if(client) finalPrompt = `[FOR CLIENT: ${client.name}] Context: ${client.desc}\n\nTask: ${finalPrompt}`;
+      el.value=''; send(finalPrompt);
+    } else {
+      // No client: show the full prompt in chat for transparency
+      el.value=''; send(`[SKILL: /${key}] Prompt:\n\n${finalPrompt}`);
+    }
   }
 }
 
 function slash(key){
   rmWelcome();
-  if(['scrape','search','course','present','resume'].includes(key)){
-    const el=document.getElementById('inp');
+  const el=document.getElementById('inp');
+  if(['scrape','search','course','present','resume','outreach','proposal','budget','writer','psych'].includes(key)){
     el.value='/'+key+' ';el.focus();
-    if(key==='scrape')toast('Paste a URL after /scrape');
-    if(key==='search')toast('Type your search query after /search');
-    if(key==='course')toast('Type your course topic after /course');
-    if(key==='present')toast('Type your presentation topic after /present');
-    if(key==='resume')toast('Paste job URL or description after /resume');
+    toast(`Using Skill: /${key}`);
     return;
   }
-  if(PROMPTS[key])send(PROMPTS[key]);
+  applySlash('/'+key);
 }
 
 function onKey(e){
@@ -1408,9 +1420,14 @@ async function callAI(skipLock){
     // For tool-augmented calls, show typing after tool row
     showTyping();
   }
-  const client = PRELOAD_CLIENTS.find(c => c.id === activeClientId);
+  const client = ALL_CLIENTS.find(c => c.id === activeClientId);
   const clientNote = client ? `\n\n🎯 ACTIVE CLIENT CONTEXT: You are working for "${client.name}". context: ${client.desc}. Apply this to all recommendations.` : "";
-  const sys=buildSys() + clientNote + (translationOn ? "\n\nCRITICAL: Instant Translation is ACTIVE. Provide your response in the language detected from the user message, or French if not specified. Keep all unique skill names (Purgo Clean, Keo Jus, Business Strategy, etc.) and [EXPORT:category] tags in English." : "");
+  
+  // Knowledge Context
+  const kList = await loadKnowledge();
+  const kNote = kList.length ? `\n\n🧠 TRAINED KNOWLEDGE (Learned about Bvmbino):\n${kList.map(k=>`- ${k.key}: ${k.val}`).join('\n')}` : "";
+
+  const sys=buildSys() + clientNote + kNote + (translationOn ? "\n\nCRITICAL: Instant Translation is ACTIVE. Provide your response in the language detected from the user message, or French if not specified. Keep all unique skill names (Purgo Clean, Keo Jus, Business Strategy, etc.) and [EXPORT:category] tags in English." : "");
   try{
     const res=await fetch('/api/chat',{
       method:'POST',
@@ -1594,11 +1611,15 @@ function extractMemory(text) {
   const memes = {
     'project': /project\s+called\s+([\w\s]+)/i,
     'goal': /goal\s+is\s+to\s+([\w\s]+)/i,
-    'business': /business\s+named\s+([\w\s]+)/i
+    'business': /business\s+named\s+([\w\s]+)/i,
+    'target': /target\s+audience\s+is\s+([\w\s]+)/i
   };
   for (const [k, v] of Object.entries(memes)) {
     const m = text.match(v);
-    if (m) addMem(k, m[1]);
+    if (m) {
+      addMem(k, m[1]);
+      saveToKnowledge(k, m[1]);
+    }
   }
 }
 
@@ -1667,31 +1688,13 @@ function getMemoryContext(){
   return`\n\n## MEMORY (previous sessions — read before answering, don't repeat this back):\n${recent}\n## END MEMORY`;
 }
 
-// ── BUILD SYSTEM PROMPT ──
+// ── BUILD DYNAMIC CONTEXT (Sent to backend) ──
 function buildSys(){
   const tools=[...pills].map(p=>p.replace('p-','')).join(', ');
   const mem=getMemoryContext();
-  return `You are Bvmbino AI Agent — personal expert AI for Boss (Bvmbino). Talk like a friend, real energy.
-
-User: Boss / Bvmbino (NEVER use full name)
-- Pro basketball player/coach · Ivory Coast National Team (AfroBasket 2017, FIBA WC China 2019) · 15+ years pro career: France PRO B/JEEP ELITE, Iceland, Romania, Greece A2, USA NCAA1 (Portland State), Snow College UT, Midland College TX
-- Master's in Communication & Marketing — Portland State University
-- Formateur: Strong Mindset (workplace, athletes, post-injury depression recovery), Introduction to AI
-- Strong Wave Service — consulting company (communication, marketing, business strategy, B2B/B2C)
-- Purgo Clean — commercial cleaning company, Île-de-France, France
-- Association Bonkeur — nonprofit helping people in need
-- Keo Jus — natural juice distribution to Accor Hotels, Côte d'Ivoire
-- Building: Bvmbino AI Agent — cross-platform AI business assistant
-- Languages: French & English (bilingual — respond in the language used)
-- Active tools: ${tools}
-
-Behavior:
-- Direct, strategic, action-oriented. Zero filler.
-- **Bvmbino Council Mode**: For complex tasks, simulate an internal debate between the 17 experts of Enterprise AI (Atlas, Nexus, Echo, Chronos, Sentinel, Forge, Prism, Momentum, Radar, Harmony, Swift, Architect, Logistics, Ledger, Connect, Compass, Bridge). Provide a concise \`[COUNCIL DELIBERATION]\` block before your master answer.
-- Auto-optimize every user input — infer missing context, expand vague requests.
-- Format with **bold headers**, numbered steps, tables.
-- For docs end with [EXPORT:type].
-- Max 800 words.${mem}`;
+  return `### DYNAMIC ENVIRONMENT:
+- Active Tools: ${tools}
+- ${mem}`;
 }
 
 // ── XCARD ──
@@ -1844,36 +1847,49 @@ function scrollBot(){
   if(c)c.scrollTo({top:c.scrollHeight,behavior:'smooth'});
 }
 
-// ── PERSIST ──
-// Always start on home screen — old conversation is saved to sessions, not restored here
-
 // ── VOICE INPUT ──
-let recognition=null;
+let recognition=null, voiceStartTime=0, manualStop=false, voiceLang='en-US';
+function toggleVoiceLang(){
+  voiceLang=voiceLang==='en-US'?'fr-FR':'en-US';
+  document.getElementById('langbtn').textContent=voiceLang==='en-US'?'EN':'FR';
+  toast('Voice Language: '+(voiceLang==='en-US'?'English':'French'));
+  if(recognition){manualStop=true;recognition.stop();setTimeout(toggleVoice,300);}
+}
 function toggleVoice(){
   const btn=document.getElementById('micbtn');
   if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){toast('Voice not supported in this browser');return;}
   if(!recognition){
     recognition=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-    const bl=navigator.language||'';recognition.lang=bl.startsWith('fr')?'fr-FR':'en-US';recognition.interimResults=true;recognition.continuous=false;
+    recognition.lang=voiceLang;
+    recognition.interimResults=true;recognition.continuous=false;
+    recognition.onstart=()=>{voiceStartTime=Date.now();manualStop=false;};
     recognition.onresult=e=>{
       const t=[...e.results].map(r=>r[0].transcript).join('');
       document.getElementById('inp').value=t;onInp();
     };
     recognition.onend=()=>{
+      if(!manualStop && (Date.now() - voiceStartTime) < 300000){
+        recognition.start(); // Auto-restart for up to 5 mins
+        return;
+      }
       btn.textContent='🎙️';btn.classList.remove('recording');
-      recognition=null; // FIX: reset so next click creates a fresh instance, no stale state
+      recognition=null;
       const v=document.getElementById('inp').value.trim();
       if(v)setTimeout(send,100);
     };
-    recognition.onerror=e=>{btn.textContent='🎙️';btn.classList.remove('recording');toast('Voice error: '+e.error);};
+    recognition.onerror=e=>{
+      if(e.error==='no-speech'){return;} // ignore silence timeout, let onend handle restart
+      btn.textContent='🎙️';btn.classList.remove('recording');toast('Voice error: '+e.error);
+    };
   }
-  if(btn.classList.contains('recording')){recognition.stop();return;}
+  if(btn.classList.contains('recording')){manualStop=true;recognition.stop();return;}
   btn.textContent='⏹️';btn.classList.add('recording');
-  recognition.start();toast('🎙️ Listening…');
+  recognition.lang=voiceLang; // Update lang before start
+  recognition.start();toast('🎙️ Listening ('+(voiceLang==='en-US'?'English':'French')+' - 5 min limit)…');
 }
 
 // ── INFINITE LOCAL MEMORY (IndexedDB) ──
-const DB_NAME='Bvmbino_Offline_Engine', DB_VER=3, STORE='sessions';
+const DB_NAME='Bvmbino_Offline_Engine', DB_VER=4, STORE='sessions';
 let dbInstance=null;
 
 function getDB(){
@@ -1886,17 +1902,46 @@ function getDB(){
       const db=e.target.result;
       if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE,{keyPath:'id'});
       if(!db.objectStoreNames.contains('clients')) db.createObjectStore('clients',{keyPath:'id'});
+      if(!db.objectStoreNames.contains('knowledge')) db.createObjectStore('knowledge',{keyPath:'key'});
     };
   });
 }
 
-function autoTitle(messages){
-  if(!messages || messages.length < 2) return;
-  const first = messages.find(m=>m.role==='user')?.content || '';
-  if(!first || first.startsWith('[')) return;
-  const clean = first.replace(/^\/\w+\s*/,'').slice(0,30).trim() || 'Chat';
-  document.getElementById('tbtitle').textContent = clean + '...';
-  saveSession(clean, messages);
+async function saveToKnowledge(key, val){
+  if(!key||!val)return;
+  try{
+    const db=await getDB();
+    const tx=db.transaction('knowledge','readwrite');
+    tx.objectStore('knowledge').put({key:key.toLowerCase(),val,updatedAt:Date.now()});
+    tx.oncomplete=()=>{toast(`🧠 Learned: ${key}`); renderKnowledge();};
+  }catch(e){}
+}
+
+async function loadKnowledge(){
+  try{
+    const db=await getDB();
+    return new Promise(res=>{
+      const tx=db.transaction('knowledge','readonly');
+      const req=tx.objectStore('knowledge').getAll();
+      req.onsuccess=()=>res(req.result||[]);
+      req.onerror=()=>res([]);
+    });
+  }catch(e){return [];}
+}
+
+function openTrain(){
+  const k=prompt('What should I remember? (e.g. "Target Audience", "Keo Jus Goal", "My Scaling Strategy")');
+  if(!k)return;
+  const v=prompt(`Enter the details for "${k}":`);
+  if(!v)return;
+  saveToKnowledge(k,v);
+}
+
+async function renderKnowledge(){
+  const kList=await loadKnowledge();
+  kList.slice(-3).forEach(k=>{
+    addMem(`🧠 ${k.key}`,k.val);
+  });
 }
 
 async function saveSession(title,messages,forceNew){
@@ -1917,8 +1962,23 @@ async function saveSession(title,messages,forceNew){
     curSessId = entry.id; // CRITICAL: Maintain session ID
     const tx=db.transaction(STORE,'readwrite');
     tx.objectStore(STORE).put(entry);
-    tx.oncomplete=()=>renderHistory();
+    tx.oncomplete=()=> {
+      renderHistory();
+      pruneSessions(); // Enforce 10-conversation limit
+    };
   }catch(err){console.error('DB Save error',err);}
+}
+
+async function pruneSessions(){
+  const sessions = await loadSessions();
+  if(sessions.length > 10){
+    const toDelete = sessions.slice(10);
+    const db = await getDB();
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    toDelete.forEach(s => store.delete(s.id));
+    tx.oncomplete = () => renderHistory();
+  }
 }
 
 async function loadSessions(){
@@ -2042,12 +2102,14 @@ document.addEventListener('touchend',e=>{
 // ── CLIENT CONTEXT ENGINE ──
 let activeClientId=null;
 const PRELOAD_CLIENTS=[
-  {id:'c1',name:'Purgo Clean',desc:'B2B Commercial Cleaning in Île-de-France. Focus: high-end offices, clinics. USP: reliability, eco-friendly, premium service.'},
-  {id:'c2',name:'Keo Jus',desc:'Natural Juice brand in Ivory Coast. Partnership: Accor Hotels. Target: luxury hospitality, retail, healthy lifestyle.'},
-  {id:'c3',name:'Strong Wave Service',desc:'Marketing & AI Consultancy. Focus: automation, performance marketing, business scaling.'},
-  {id:'c4',name:'Basketball Coaching',desc:'Professional basketball training & mindset development. Elite level athletes and beginners.'},
-  {id:'c5',name:'Formations',desc:'Business educational programs. Topics: AI, mindset, marketing, multi-business management.'}
+  {id:'c1',name:'FormationPro',desc:'Professional training organization (CPF, SST, Conflict Management, Mental Performance). Founder: Tiegbe Bamba. Elite 360° Sport & Corporate Consulting.'},
+  {id:'c2',name:'Strong Wave Service',desc:'B2B Marketing & Growth Consultancy. Experts in communication strategy, brand positioning, and performance acquisition.'},
+  {id:'c3',name:'Purgo Clean',desc:'Premium Commercial Cleaning services in Île-de-France. Focus on reliability, professional grade standards, and B2B contracts.'},
+  {id:'c4',name:'Keo Jus',desc:'Natural Juice brand distribution in Ivory Coast. Strategic partner of Accor Hotels group.'},
+  {id:'c5',name:'Association Bonkeur',desc:'Nonprofit organization dedicated to community support, social impact, and help for those in need.'},
+  {id:'c6',name:'Entreprise AI',desc:'Entreprise AI system with 17 specialized modules for strategic planning and automation. Focus on high-performance scaling, secure access, and PWA system architecture.'}
 ];
+let ALL_CLIENTS=[...PRELOAD_CLIENTS];
 
 async function initClients(){
   try{
@@ -2055,7 +2117,7 @@ async function initClients(){
     const tx=db.transaction('clients','readwrite');
     const store=tx.objectStore('clients');
     
-    // Efficient Sync
+    // Robust Sync
     const existing = await loadClients();
     for (const c of PRELOAD_CLIENTS) {
       if (!existing.find(e => e.id === c.id)) store.add(c);
@@ -2078,7 +2140,7 @@ async function loadClients(){
 function setActiveClient(id){
   activeClientId=id===activeClientId?null:id;
   document.querySelectorAll('.cli').forEach(el=>el.classList.toggle('active',el.id==='cli-'+id));
-  const cname=activeClientId?PRELOAD_CLIENTS.find(c=>c.id===id)?.name||'Client':'None';
+  const cname=activeClientId?ALL_CLIENTS.find(c=>c.id===id)?.name||'Client':'None';
   toast(activeClientId?`🎯 Active Context: ${cname}`:`Context Cleared`);
 }
 
@@ -2092,7 +2154,7 @@ async function addNewClient(){
     const tx=db.transaction('clients','readwrite');
     tx.objectStore('clients').add(c);
     tx.oncomplete=()=>{
-      PRELOAD_CLIENTS.push(c);
+      ALL_CLIENTS.push(c);
       renderClients();
       toast('Added ✓');
     };
@@ -2107,8 +2169,8 @@ async function deleteClient(id,e){
     const tx=db.transaction('clients','readwrite');
     tx.objectStore('clients').delete(id);
     tx.oncomplete=()=>{
-      const idx=PRELOAD_CLIENTS.findIndex(c=>c.id===id);
-      if(idx>=0)PRELOAD_CLIENTS.splice(idx,1);
+      const idx=ALL_CLIENTS.findIndex(c=>c.id===id);
+      if(idx>=0)ALL_CLIENTS.splice(idx,1);
       if(activeClientId===id)activeClientId=null;
       renderClients();
       toast('Deleted ✓');
@@ -2148,6 +2210,7 @@ function toggleClients(){
 initClients();
 renderHistory();
 renderClients();
+renderKnowledge();
 renderClients();
 </script>
 </body>
