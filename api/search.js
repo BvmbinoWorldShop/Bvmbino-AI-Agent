@@ -6,8 +6,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (isRateLimited(req)) return res.status(429).json({ error: 'Rate limit exceeded (30 req/min)' });
 
-  // Uses GEMINI_KEY_2 — separate from chat.js GEMINI_KEY to avoid quota sharing
-  const apiKey = process.env.GEMINI_KEY_2;
+  // Uses GEMINI_KEY_2 — separate from chat.js GEMINI_KEY to avoid quota sharing. 
+  // Falls back to GEMINI_KEY if _2 is missing.
+  const apiKey = process.env.GEMINI_KEY_2 || process.env.GEMINI_KEY;
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;

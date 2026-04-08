@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 export const config = {
   matcher: ['/((?!_next|_vercel|favicon).*)'],
 };
@@ -15,12 +13,12 @@ export default function middleware(request) {
     pathname.startsWith('/api/') ||
     /\.(js|css|png|jpg|jpeg|svg|ico|webp|woff|woff2|ttf|json|txt|xml|map)$/.test(pathname);
 
-  if (isPublic) return NextResponse.next(); // ← explicit pass-through → rewrites apply ✓
+  if (isPublic) return; // ← Allow pass-through (standard Vercel Edge Middleware)
 
   // Check for auth cookie
   const cookie = request.headers.get('cookie') || '';
-  if (cookie.includes('bvmbino_auth=ok')) return NextResponse.next(); // authenticated ✓
+  if (cookie.includes('bvmbino_auth=ok')) return; // authenticated ✓
 
   // Not authenticated → login page
-  return NextResponse.redirect(new URL('/auth.html', request.url));
+  return Response.redirect(new URL('/auth.html', request.url));
 }

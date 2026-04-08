@@ -244,6 +244,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 .qbtn:hover{transform:translateX(3px)!important;box-shadow:inset 3px 0 0 var(--pu)!important}
 @keyframes routeBadge{0%{opacity:0;transform:translateY(6px) scale(.95)}60%{transform:translateY(-2px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
 .toast-route{animation:routeBadge .3s ease forwards;background:rgba(34,197,94,.12)!important;border-color:rgba(34,197,94,.35)!important;color:#4ade80!important}
+.sugg-chip{display:inline-flex;margin-top:10px;padding:5px 10px;background:rgba(232,169,18,.08);border:1px solid rgba(232,169,18,.25);border-radius:20px;color:var(--pu2);font-size:10px;font-family:var(--mono);cursor:pointer;transition:all .15s;align-items:center;gap:6px;width:fit-content;animation:fi .4s ease}
+.sugg-chip:hover{background:rgba(232,169,18,.15);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.cli.active{border-color:var(--pu2);background:rgba(232,169,18,.1);box-shadow:0 0 10px rgba(232,169,18,0.15)}
+.cli-del{opacity:0;margin-left:auto;color:var(--t4);transition:opacity .1s;font-size:10px;padding:4px}
+.cli:hover .cli-del{opacity:1}.cli-del:hover{color:#f87171}
 </style>
 </head>
 <body>
@@ -266,14 +271,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
   </div>
   <div class="ssect">
     <div class="sbl">AI Engine</div>
-    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(232,169,18,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse"></span>Groq · Llama 3.3 70B</div>
+    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(232,169,18,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse" style="color:var(--gn)"></span>Groq · Llama 3.3 70B</div>
   </div>
   <div class="sb-scroll">
-    <div class="ssect">
-      <button onclick="toggleTools()" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:7px;">
-        <span class="sbl" style="margin-bottom:0">📁 Tools &amp; Skills</span>
-        <span id="tools-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
-      </button>
+  <div class="ssect">
+    <div class="sbl">AI Engine</div>
+    <div style="padding:6px 10px;background:var(--pu3);border:1px solid rgba(232,169,18,.3);border-radius:var(--rsm);font-size:11px;color:var(--pu2);font-family:var(--mono);display:flex;align-items:center;gap:7px" id="ai-engine-badge"><span class="pulse" style="color:var(--gn)"></span><span id="mbadge">Groq · Llama 3.3 70B</span></div>
+  </div>
       <div id="toolsPanel" class="qacts" style="overflow:hidden;transition:max-height .3s ease;max-height:2000px">
         <button class="qbtn" onclick="slash('sales')"><span class="qi" style="background:rgba(232,169,18,.12)">💰</span><span>Sales Script</span><span class="qsub">/sales</span></button>
         <button class="qbtn" onclick="slash('content')"><span class="qi" style="background:rgba(232,169,18,.12)">🎬</span><span>Content Creator</span><span class="qsub">/content</span></button>
@@ -299,16 +303,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
         <span class="sbl" style="margin-bottom:0">📂 Recent</span>
         <span id="hist-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
       </button>
-    <div id="hist" style="overflow:hidden;transition:max-height .35s ease;max-height:2000px"></div>
-
+      <div id="hist" style="overflow:hidden;transition:max-height .35s ease;max-height:2000px"></div>
+    </div>
     <div class="ssect">
-      <div class="sbl">💼 Client Context</div>
-      <div id="client-list" class="qacts">
-        <!-- Dynamic Client Cards -->
-      </div>
-      <button class="qbtn" onclick="addNewClient()" style="margin-top:8px;border:1px dashed var(--bd2);background:none;justify-content:center;opacity:0.7">
-        <span>+ Add New Client</span>
+      <button onclick="toggleClients()" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:7px;">
+        <span class="sbl" style="margin-bottom:0">💼 Client Context</span>
+        <span id="client-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
       </button>
+      <div id="client-panel" style="overflow:hidden;transition:max-height .35s ease;max-height:2000px">
+        <div id="client-list" class="qacts">
+          <!-- Dynamic Client Cards -->
+        </div>
+        <button class="qbtn" onclick="addNewClient()" style="margin-top:8px;border:1px dashed var(--bd2);background:none;justify-content:center;opacity:0.7">
+          <span>+ Add New Client</span>
+        </button>
+      </div>
     </div>
   </div>
 </aside>
@@ -390,62 +399,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;f
 
 </div>
 
-<!-- ⚙️ SETTINGS MODAL -->
-<div class="settings-modal" id="settings-modal" onclick="if(event.target===this)toggleSettings()">
-  <div class="set-card">
+<!-- 📃 PRO PREVIEW MODAL -->
+<div class="settings-modal" id="preview-modal" style="display:none;background:rgba(6,8,10,0.95)">
+  <div class="set-card" style="max-width:800px;height:90vh;display:flex;flex-direction:column">
     <div class="set-hdr">
-      <div class="set-t">System Settings</div>
-      <button class="icobtn" onclick="toggleSettings()">✕</button>
-    </div>
-    <div class="set-body">
-      <div class="set-sect">
-        <div class="set-st">🧠 AI Engine Status</div>
-        <div class="set-row"><span>Active Model</span><span class="badge b-pu" id="set-engine">Groq · Llama 3.3</span></div>
-        <div class="set-row"><span>Token Usage</span><span id="set-tok">1,840 / 100k</span></div>
-      </div>
-      <div class="set-sect">
-        <div class="set-st">📑 Export Preferences</div>
-        <div class="set-row"><span>PDF Style</span><span class="badge b-gn">High-Ticket Pro</span></div>
-        <div class="set-row"><span>Language Detection</span><span class="badge b-am">Automatic</span></div>
-      </div>
-      <div class="set-sect">
-        <div class="set-st">🔐 Security</div>
-        <div class="set-row"><span>Session Auth</span><span style="color:var(--gn)">Verified ✓</span></div>
+      <div class="set-t">📄 Pro Document Preview</div>
+      <div style="display:flex;gap:8px">
+        <button class="sbtn" style="margin:0;padding:0 15px;height:32px;font-size:11px" onclick="window.print()">Print PDF</button>
+        <button class="icobtn" onclick="closePreview()">✕</button>
       </div>
     </div>
-    <div class="set-foot">
-      <button class="btn-save" style="width:100%" onclick="toggleSettings()">Close Settings</button>
+    <div id="preview-content" style="flex:1;overflow-y:auto;padding:40px;background:white;color:black;font-family:serif;line-height:1.6">
+      <!-- High-Ticket Content Here -->
     </div>
-  </div>
-</div>
-
-</div>
-
-<!-- ⚙️ SETTINGS MODAL -->
-<div class="settings-modal" id="settings-modal" onclick="if(event.target===this)toggleSettings()">
-  <div class="set-card">
-    <div class="set-hdr">
-      <div class="set-t">System Settings</div>
-      <button class="icobtn" onclick="toggleSettings()">✕</button>
-    </div>
-    <div class="set-body">
-      <div class="set-sect">
-        <div class="set-st">🧠 AI Engine Status</div>
-        <div class="set-row"><span>Active Model</span><span class="badge b-pu" id="set-engine">Groq · Llama 3.3</span></div>
-        <div class="set-row"><span>Token Usage</span><span id="set-tok">1,840 / 100k</span></div>
-      </div>
-      <div class="set-sect">
-        <div class="set-st">📑 Export Preferences</div>
-        <div class="set-row"><span>PDF Style</span><span class="badge b-gn">High-Ticket Pro</span></div>
-        <div class="set-row"><span>Language Detection</span><span class="badge b-am">Automatic</span></div>
-      </div>
-      <div class="set-sect">
-        <div class="set-st">🔐 Security</div>
-        <div class="set-row"><span>Session Auth</span><span style="color:var(--gn)">Verified ✓</span></div>
-      </div>
-    </div>
-    <div class="set-foot">
-      <button class="btn-save" style="width:100%" onclick="toggleSettings()">Close Settings</button>
+    <div class="set-foot" style="display:flex;justify-content:center">
+      <span style="font-size:10px;color:var(--t4);font-family:var(--mono)">Bvmbino Pro · CSS Print Engine v2.0</span>
     </div>
   </div>
 </div>
@@ -473,6 +441,9 @@ const CMDS=[
   {cmd:'/writer',   desc:'Deep writing: /writer [topic]',          icon:'✍️'},
   {cmd:'/pdf',      desc:'Export last answer as PDF',              icon:'📋'},
   {cmd:'/security', desc:'Security audit — scan code & deps',      icon:'🔐'},
+  {cmd:'/enhance',  desc:'Amplify & scale your idea',              icon:'🚀'},
+  {cmd:'/builder',  desc:'App/Workflow builder stack',             icon:'🛠️'},
+  {cmd:'/lex',      desc:'Attorney & Legal Advisor',               icon:'⚖️'},
 ];
 
 const PROMPTS={
@@ -493,11 +464,14 @@ course:`Build me a complete, professional training course curriculum. Ask me the
   imgprompt:`/imgprompt — Act as a professional AI media director. Transform my visual idea into a production-grade, hyperrealistic prompt. Include: subject + action + expression, environment + lighting (golden hour / studio / neon / cinematic), camera system (Sony A7R V / Canon EOS R5), lens (85mm f/1.4 / 35mm f/2.8), shot type (close-up / Dutch angle / low angle / aerial), texture details (skin pores / fabric / sweat / surface reflections), color grade (warm filmic / cool editorial), style (hyperrealistic editorial / sports magazine / Nike campaign). Add negative prompt. Recommend best free AI tool. Describe your visual idea after /imgprompt.`,
   outreach:`/outreach — Write personalized cold outreach for a potential client or partner. Structure: Line 1: specific compliment/observation, Line 2: who I am in one sentence, Line 3: specific value I can add to THEM, Line 4: low-friction CTA. Deliver both email version + DM version. Tone: human, direct, confident — never salesy. Who are you reaching out to?`,
   proposal:`/proposal — Write a high-ticket client proposal. Include: Executive Summary (their problem + my solution), About Me (credibility + relevant experience), Offer Details (deliverables, timeline, format), Investment tiers (Basic / Premium / VIP), Next Steps (CTA + booking link placeholder). Tone: confident, empathetic, results-focused. Which client type is this for? [EXPORT:proposal]`,
-  budget:`/budget — Act as my Personal CFO. Analyze my financial situation and deliver a hard, comprehensive read. I'll provide my income streams and expenses. You deliver: Income Snapshot table, Expense Audit (flag waste), Financial Health Score (1-10), Cash Flow Plan with allocation %, Priority Order (emergency fund → debt → invest → grow), Budget Optimization Table (current vs optimized), 90-Day Financial Milestones, minimum 5 actionable insights for my multi-business situation in France, and one thing to do THIS WEEK. Be direct like a financial coach — tell the truth about my money. [EXPORT:budget]`,
+  budget:`/budget — Act as my Personal CFO. Analyze my financial situation and deliver a hard, comprehensive read. I'll provide my income streams and expenses. You deliver: Income Snapshot table, Expense Audit (flag waste), Financial Health Score (1-10), Cash Flow Plan with allocation %, Priority Order (emergency fund → debt → invest → grow), Budget Optimization Table (current vs optimized), 90-Day Financial Milestones, minimum 50 actionable insights for my multi-business situation in France, and one thing to do THIS WEEK. Be direct like a financial coach — tell the truth about my money. [EXPORT:budget]`,
   writer:`/writer — Act as an elite human writer with 20+ years editorial experience. Write deep, logical, soulful long-form content. Vary sentence rhythm, use first person, include self-doubt moments, specific sensory details, and real emotions. NO AI patterns ("In today's fast-paced world", "Let's dive in", "game-changer"). Structure: hook that creates an open loop → argument built like a lawyer → 1-2-3 punch (anecdote + data + universal truth) → ending that lingers. Deliver: full polished text + word count + reading time + SEO keywords. What should I write about? [EXPORT:article]`,
+  enhance:`Act as an Idea Scaler. Amplify the following input into a professional, high-fidelity business specification. Add missing technical context, scale the market potential, and structure it for immediate action: `,
+  builder:`Act as the Lead Architect of the Enterprise AI Forge. Help build this app/workflow using the most efficient, cost-effective tech stack (e.g. Vercel, Supabase, Groq, Vite). Deliver a step-by-step technical implementation roadmap.`,
+  lex:`Act as the Bvmbino Compliance Office (LEX). Knowledge base: Business law and conformity for France (Île-de-France) and Côte d'Ivoire. Analyze following for legal risks, contract gaps, and conformity: `,
 };
 
-let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[],msgStore={},translationOn=false;
+let model='claude',msgs=[],tokens=1840,busy=false,pills=new Set(['p-mem']),slashSel=-1,slashItems=[],msgStore={},translationOn=false,curSessId=null;
 
 function toggleTranslation(){
   translationOn=!translationOn;
@@ -576,15 +550,20 @@ function onInp(){
 function applySlash(cmd){
   document.getElementById('smenu').classList.remove('show');
   const key=cmd.slice(1);
+  const el=document.getElementById('inp');
   // Commands that need an argument typed after them
   if(['scrape','search','course','present','resume','content','imgprompt','outreach','proposal','budget','writer'].includes(key)){
-    const el=document.getElementById('inp');
     el.value=cmd+' ';el.focus();onInp();
     return;
   }
   // /pdf is handled separately (exports last message)
   if(key==='pdf'){rmWelcome();doPdf();return;}
-  if(PROMPTS[key]){rmWelcome();document.getElementById('inp').value='';send(PROMPTS[key]);}
+  if(PROMPTS[key]){
+    rmWelcome();
+    const val = el.value.slice(cmd.length).trim();
+    if(key==='enhance' && val){send(PROMPTS.enhance + val); el.value='';}
+    else { el.value=''; send(PROMPTS[key]); }
+  }
 }
 
 function slash(key){
@@ -624,7 +603,7 @@ function rmWelcome(){const w=document.getElementById('welcome');if(w)w.remove();
 function newChat(){
   saveSessionMemory();
   if(msgs.length)saveSession(document.getElementById('tbtitle').textContent,msgs,true);
-  msgs=[];tokens=1840;updTok(0);
+  msgs=[];tokens=1840;updTok(0);curSessId=null;
   document.getElementById('tbtitle').textContent='New conversation';
   document.getElementById('ci').innerHTML=`
     <div class="welcome" id="welcome">
@@ -1364,6 +1343,20 @@ function showTyping(){
 }
 function hideTyping(){const t=document.getElementById('typing');if(t)t.remove();}
 
+function esc(str){
+  if(!str)return '';
+  return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+}
+
+function autoTitle(msgs){
+  if(!msgs||!msgs.length)return;
+  const first=msgs.find(m=>m.role==='user');
+  if(!first)return;
+  const short=first.content.slice(0,40)+(first.content.length>40?'...':'');
+  document.getElementById('tbtitle').textContent=short;
+  saveSession(short,msgs);
+}
+
 async function callAI(skipLock){
   if(!skipLock)showTyping();
   else{
@@ -1410,8 +1403,9 @@ async function callAI(skipLock){
       let xtype=null;const m=reply.match(/\[EXPORT:(\w+)\]/);
       if(m){reply=reply.replace(/\[EXPORT:\w+\]/,'').trim();xtype=m[1];}
       msgs.push({role:'assistant',content:reply});
-      // CRITICAL FIX: Save the AI response immediately to device database
-      saveSession(document.getElementById('tbtitle').textContent, msgs);
+      // CRITICAL FIX: Save using curSessId and auto-title on first turn
+      if(!curSessId) autoTitle(msgs);
+      else saveSession(document.getElementById('tbtitle').textContent, msgs);
       appendAiText(reply,xtype);
       updTok(reply.length/3.5);addMem('response',reply.slice(0,90));
     }
@@ -1479,8 +1473,9 @@ async function streamResponse(res){
     // Only push to msgs if we actually got content — empty stream = error, don't corrupt history
     if(full.trim()) {
       msgs.push({role:'assistant',content:full});
-      // CRITICAL FIX: Save the stream response back to local device database immediately
-      saveSession(document.getElementById('tbtitle').textContent, msgs);
+      // CRITICAL FIX: Save using curSessId and auto-title on first turn
+      if(!curSessId) autoTitle(msgs);
+      else saveSession(document.getElementById('tbtitle').textContent, msgs);
     }
     // Final render of complete response (no cursor)
     if(streamEl)streamEl.innerHTML=full.trim()?mdHtml(full)+(xtype?xcard(xtype):''):'<span style="color:var(--rd);font-size:12px">No response received — check API keys</span>';
@@ -1529,11 +1524,38 @@ function appendAiText(text,xtype){
   const mid='m'+Date.now();msgStore[mid]={text,xtype};
   const row=document.createElement('div');row.className='mrow ai';
   const wrap=document.createElement('div');wrap.className='mwrap';
-  wrap.innerHTML=`<div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai">${mdHtml(text)}${xtype?xcard(xtype):''}</div>`;
+  
+  // Expert Suggestion Engine: Detect keywords and suggest skills
+  let suggestion = '';
+  const l = text.toLowerCase();
+  if (l.includes('sell')||l.includes('product')) suggestion = 'sales';
+  else if (l.includes('post')||l.includes('content')||l.includes('instagram')) suggestion = 'content';
+  else if (l.includes('legal')||l.includes('contract')) suggestion = 'lex';
+  else if (l.includes('money')||l.includes('expense')) suggestion = 'budget';
+  else if (l.includes('strategy')||l.includes('plan')) suggestion = 'strategy';
+  
+  const suggHtml = suggestion ? `<div class="sugg-chip" onclick="slash('${suggestion}')">✨ Suggestion: /${suggestion}</div>` : '';
+
+  wrap.innerHTML=`<div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai">${mdHtml(text)}${xtype?xcard(xtype):''} ${suggHtml}</div>`;
   wrap.appendChild(msgActions(mid));
   row.innerHTML='<div class="av av-ai">B</div>';
   row.appendChild(wrap);
   ci.appendChild(row);scrollBot();
+  
+  // Live Memory Extraction (Super Machine Optimization)
+  extractMemory(text);
+}
+
+function extractMemory(text) {
+  const memes = {
+    'project': /project\s+called\s+([\w\s]+)/i,
+    'goal': /goal\s+is\s+to\s+([\w\s]+)/i,
+    'business': /business\s+named\s+([\w\s]+)/i
+  };
+  for (const [k, v] of Object.entries(memes)) {
+    const m = text.match(v);
+    if (m) addMem(k, m[1]);
+  }
 }
 
 function appendToolRow(id,icon,type,msg){
@@ -1621,15 +1643,46 @@ User: Boss / Bvmbino (NEVER use full name)
 
 Behavior:
 - Direct, strategic, action-oriented. Zero filler.
-- Auto-optimize every user input — infer missing context, expand vague requests, match domain tone.
-- Format with **bold headers**, numbered steps, bullet lists, markdown tables.
-- For structured docs end with [EXPORT:type] on its own line.
-- Max 800 words unless task requires more.${mem}`;
+- **Bvmbino Council Mode**: For complex tasks, simulate an internal debate between the 17 experts of Enterprise AI (Atlas, Nexus, Echo, Chronos, Sentinel, Forge, Prism, Momentum, Radar, Harmony, Swift, Architect, Logistics, Ledger, Connect, Compass, Bridge). Provide a concise \`[COUNCIL DELIBERATION]\` block before your master answer.
+- Auto-optimize every user input — infer missing context, expand vague requests.
+- Format with **bold headers**, numbered steps, tables.
+- For docs end with [EXPORT:type].
+- Max 800 words.${mem}`;
 }
 
 // ── XCARD ──
 function xcard(type){
   return `<div class="xcard"><div class="xhead"><span class="xtype">${type}</span><span class="xlabel">ready to export</span></div><div class="xbtns"><div class="xbtn" onclick="expDoc('txt','${type}')">↓ TXT</div><div class="xbtn" onclick="expDoc('md','${type}')">↓ MD</div><div class="xbtn" onclick="doPdf()">↓ PDF</div><div class="xbtn" onclick="copyLast()">⎘ Copy</div></div></div>`;
+}
+
+function doPdf(){
+  const lastBubble = Array.from(document.querySelectorAll('.bubble.b-ai')).pop();
+  if(!lastBubble) { toast('No document to preview'); return; }
+  const content = lastBubble.innerHTML.replace(/\[EXPORT:\w+\]/g, '').replace(/<div class="macts">.*?<\/div>/g, '');
+  document.getElementById('preview-content').innerHTML = content;
+  document.getElementById('preview-modal').style.display = 'flex';
+  toast('Opening Pro Preview... ✨');
+}
+
+function saveAsPdf(){
+  const element = document.getElementById('preview-content');
+  const opt = {
+    margin: 10,
+    filename: `bvmbino-export-${Date.now()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  toast('Generating high-fidelity PDF... ⏳');
+  html2pdf().set(opt).from(element).save().then(()=>{
+    toast('PDF Exported successfully ✓');
+  }).catch(err=>{
+    console.error(err); toast('Export failed — try browser print');
+  });
+}
+
+function closePreview(){
+  document.getElementById('preview-modal').style.display='none';
 }
 
 // ── MARKDOWN ──
@@ -1776,7 +1829,7 @@ function toggleVoice(){
 }
 
 // ── INFINITE LOCAL MEMORY (IndexedDB) ──
-const DB_NAME='Bvmbino_Offline_Engine', DB_VER=2, STORE='sessions';
+const DB_NAME='Bvmbino_Offline_Engine', DB_VER=3, STORE='sessions';
 let dbInstance=null;
 
 function getDB(){
@@ -1800,7 +1853,7 @@ async function saveSession(title,messages,forceNew){
   try{
     const db=await getDB();
     const sessions=await loadSessions();
-    const existIdx=!forceNew?sessions.findIndex(s=>s.title===clean&&s.date===today):-1;
+    const existIdx = curSessId ? sessions.findIndex(s => s.id === curSessId) : sessions.findIndex(s => s.title === clean && s.date === today);
     const entry={
       id:existIdx>=0?sessions[existIdx].id:Date.now(),
       title:clean.slice(0,60),
@@ -1808,6 +1861,7 @@ async function saveSession(title,messages,forceNew){
       date:today,
       updatedAt:Date.now()
     };
+    curSessId = entry.id; // CRITICAL: Maintain session ID
     const tx=db.transaction(STORE,'readwrite');
     tx.objectStore(STORE).put(entry);
     tx.oncomplete=()=>renderHistory();
@@ -1840,7 +1894,7 @@ async function resumeSession(id){
   const sessions=await loadSessions();
   const session=sessions.find(s=>s.id===id);
   if(!session)return;
-  msgs=[...session.msgs];tokens=1840;
+  msgs=[...session.msgs];tokens=1840;curSessId=id; // CRITICAL: Set curSessId
   // Inject a hidden context note as a system-level assistant message so the agent knows where we left off
   if(msgs.length&&msgs[msgs.length-1].role==='assistant'){
     const topicNote=`[CONTEXT: This is a resumed conversation titled "${session.title}". The full history above is loaded. Continue naturally as if no interruption occurred.]`;
@@ -1947,13 +2001,18 @@ async function initClients(){
     const db=await getDB();
     const tx=db.transaction('clients','readwrite');
     const store=tx.objectStore('clients');
-    const countReq=store.count();
-    countReq.onsuccess=async()=>{
-      if(countReq.result===0){
-        PRELOAD_CLIENTS.forEach(c=>store.add(c));
-        renderClients();
-      }
-    };
+    
+    // Robust Sync: Add each pre-loaded client only if it doesn't exist
+    for (const c of PRELOAD_CLIENTS) {
+      const exist = await new Promise(res => {
+        const req = store.get(c.id);
+        req.onsuccess = () => res(!!req.result);
+        req.onerror = () => res(false);
+      });
+      if (!exist) store.add(c);
+    }
+    
+    tx.oncomplete = () => renderClients();
   }catch(e){}
 }
 
@@ -2032,6 +2091,14 @@ function toggleSettings(){
   const isOpen=s.style.display==='flex';
   s.style.display=isOpen?'none':'flex';
   if(!isOpen) renderSettings();
+}
+
+function toggleClients(){
+  const p=document.getElementById('client-panel');
+  const a=document.getElementById('client-arrow');
+  const isOpen=p.style.maxHeight!=='0px';
+  p.style.maxHeight=isOpen?'0px':'2000px';
+  if(a)a.style.transform=isOpen?'rotate(-90deg)':'none';
 }
 
 function renderSettings(){

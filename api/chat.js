@@ -90,14 +90,13 @@ export default async function handler(req, res) {
       chain.push({ ...base, model: 'google/gemini-2.0-flash-exp:free',               label: 'OR - Gemini 2.0 Flash',  maxOut: 4096, ctx: 'large' });
       chain.push({ ...base, model: 'deepseek/deepseek-chat-v3-0324:free',            label: 'OR - DeepSeek V3',        maxOut: 4096, ctx: 'large' });
       chain.push({ ...base, model: 'meta-llama/llama-3.3-70b-instruct:free',         label: 'OR - Llama 3.3 70B',     maxOut: 4096, ctx: 'large' });
-      chain.push({ ...base, model: 'mistralai/mistral-small-3.1-24b-instruct:free',  label: 'OR - Mistral Small 3.1',  maxOut: 4096, ctx: 'medium' });
-      chain.push({ ...base, model: 'qwen/qwen3-235b-a22b:free',                      label: 'OR - Qwen3 235B',        maxOut: 4096, ctx: 'large' });
     }
 
-    if (mistralKey) {
-      const base = { provider: 'mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: mistralKey, headers: {} };
-      chain.push({ ...base, model: 'mistral-small-latest', label: 'Mistral - Small Latest', maxOut: 4096, ctx: 'medium' });
-      chain.push({ ...base, model: 'open-mistral-7b',      label: 'Mistral - 7B',           maxOut: 4096, ctx: 'small' });
+    // Layer 4: Google Gemini Direct (Ultimate Fallback)
+    if (process.env.GEMINI_KEY) {
+      const gKey = process.env.GEMINI_KEY;
+      const gBase = { provider: 'google', url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${gKey}`, key: gKey };
+      chain.push({ ...gBase, model: 'gemini-2.0-flash', label: 'Google - Gemini 2.0 Flash', maxOut: 8192, ctx: 'large', isGoogle: true });
     }
 
     // Context sizing: small models get truncated messages to avoid 400 errors
@@ -126,14 +125,36 @@ export default async function handler(req, res) {
       const tid = setTimeout(() => ctrl.abort(), 55000);
 
       try {
-        const r = await fetch(att.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${att.key}`, ...att.headers },
-          body: JSON.stringify({ model: att.model, messages: msgs, max_tokens: Math.min(maxTok, att.maxOut), temperature: temp, stream: true }),
-          signal: ctrl.signal,
-        });
-
-        if (r.ok) { await pipeStream(r, att.label, tid); return; }
+        let r;
+        if (att.isGoogle) {
+          // Gemini REST format
+          r = await fetch(att.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: msgs.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+              generationConfig: { maxOutputTokens: Math.min(maxTok, att.maxOut), temperature: temp }
+            }),
+            signal: ctrl.signal,
+          });
+          if (r.ok) {
+            const data = await r.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            res.setHeader('Content-Type', 'text/plain');
+            res.setHeader('x-model', att.label);
+            res.write(text);
+            res.end();
+            return;
+          }
+        } else {
+          r = await fetch(att.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${att.key}`, ...att.headers },
+            body: JSON.stringify({ model: att.model, messages: msgs, max_tokens: Math.min(maxTok, att.maxOut), temperature: temp, stream: true }),
+            signal: ctrl.signal,
+          });
+          if (r.ok) { await pipeStream(r, att.label, tid); return; }
+        }
         clearTimeout(tid);
 
         // 429: quota exhausted → skip ALL models for this provider
