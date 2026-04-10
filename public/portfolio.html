@@ -4,31 +4,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tiegbe Bamba — Entrepreneur · Coach · Builder</title>
+  <title>Bvmbino Portfolio — Executive Showcase</title>
   <meta name="description"
-    content="Tiegbe Bamba — Pro Basketball Coach, Serial Entrepreneur, AI Builder. Strong Wave Service, Purgo Clean, Bvmbino AI Agent and more.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='12' y='18' width='76' height='50' rx='5' fill='%231a1a2e'/><rect x='17' y='23' width='66' height='40' rx='3' fill='%23e8a912'/><rect x='23' y='29' width='30' height='5' rx='2' fill='%230a0800' opacity='0.5'/><rect x='23' y='38' width='54' height='3' rx='1' fill='%230a0800' opacity='0.35'/><rect x='23' y='44' width='46' height='3' rx='1' fill='%230a0800' opacity='0.35'/><rect x='23' y='50' width='50' height='3' rx='1' fill='%230a0800' opacity='0.35'/><rect x='23' y='56' width='38' height='3' rx='1' fill='%230a0800' opacity='0.35'/><rect x='8' y='67' width='84' height='4' rx='2' fill='%231a1a2e'/><rect x='6' y='70' width='88' height='14' rx='4' fill='%232d2d3d'/><rect x='14' y='74' width='72' height='2' rx='1' fill='rgba(255,255,255,.06)'/><rect x='14' y='79' width='72' height='2' rx='1' fill='rgba(255,255,255,.06)'/><rect x='35' y='74' width='30' height='7' rx='3' fill='rgba(255,255,255,.05)'/></svg>">
+    content="Bvmbino Portfolio — High-Performance Business Solutions, AI Automation, and Strategic Consulting.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%23d4940a' d='M20 35c0-5 4-9 9-9h42c5 0 9 4 9 9v35c0 5-4 9-9 9H29c-5 0-9-4-9-9V35z'/><rect x='28' y='42' width='16' height='14' rx='4' fill='%230a0800'/><rect x='56' y='42' width='16' height='14' rx='4' fill='%230a0800'/><circle cx='36' cy='49' r='3.5' fill='%2322c55e'/><circle cx='64' cy='49' r='3.5' fill='%2322c55e'/><rect x='35' y='65' width='30' height='6' rx='3' fill='%230a0800'/><rect x='46' y='18' width='8' height='16' rx='4' fill='%23b58908'/><circle cx='50' cy='15' r='5' fill='%23d4940a'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap"
     rel="stylesheet">
   <style>
     :root {
-      --gold: #e8a912;
-      --gold2: #c89008;
-      --gold3: #ffd060;
+      --gold: #d4940a; /* Matte Gold Elite */
+      --gold2: #b58908;
+      --gold3: #f59e0b;
       --dark: #06080a;
       --dark2: #0b0e12;
       --dark3: #111419;
-      --border: rgba(232, 169, 18, .15);
-      --border2: rgba(232, 169, 18, .3);
+      --border: rgba(212, 148, 10, .15);
+      --border2: rgba(212, 148, 10, .3);
       --text1: #f0ece4;
-      --text2: #c8c0b4;
-      --text3: #8a8278;
-      --font: 'Outfit', sans-serif;
+      --text2: #9a9484;
+      --text3: #5a5548;
+      --font: 'Syne', sans-serif;
       --mono: 'JetBrains Mono', monospace;
-      --r: 14px;
-      --rsm: 8px;
+      --r: 16px;
+      --rsm: 10px;
     }
 
     * {
@@ -49,9 +50,17 @@
       overflow-x: hidden
     }
 
-    /* ── NOISE OVERLAY ── */
     body::before {
       content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, #111419 0%, #06080a 100%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    .noise-overlay {
       position: fixed;
       inset: 0;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
@@ -369,14 +378,37 @@
     }
 
     .venture-card {
-      background: var(--dark2);
+      background: rgba(11, 14, 18, 0.6);
+      backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, .06);
       border-radius: 16px;
-      padding: 28px;
-      transition: all .25s;
+      padding: 0; /* Padding handled by internal containers now */
+      transition: all .4s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: default;
       position: relative;
-      overflow: hidden
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .venture-img {
+      width: 100%;
+      height: 160px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .venture-img::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, var(--dark2) 0%, transparent 100%);
+    }
+
+    .venture-content {
+      padding: 24px;
+      flex: 1;
     }
 
     .venture-card::before {
@@ -1001,97 +1033,83 @@
       <div class="ventures-grid">
 
         <div class="venture-card fade-up">
-          <div class="venture-icon">🏢</div>
-          <div class="venture-name">Strong Wave Service</div>
-          <div class="venture-type">Consulting · Marketing · Strategy</div>
-          <div class="venture-desc">Full-service communication, marketing strategy, and B2B/B2C business consulting.
-            From brand identity to paid ad deployment and client acquisition systems.</div>
-          <div class="venture-tags">
-            <span class="vtag">Marketing</span>
-            <span class="vtag">B2B / B2C</span>
-            <span class="vtag">Strategy</span>
-            <span class="vtag">Growth</span>
+          <div class="venture-img" style="background-image: url('file:///C:/Users/tiegb/.gemini/antigravity/brain/04a3897e-3c05-4e39-8feb-8d340dcfd693/strong_wave_venture_1775662643413.png')"></div>
+          <div class="venture-content">
+            <div class="venture-icon">🏢</div>
+            <div class="venture-name">Strong Wave Service</div>
+            <div class="venture-type">Consulting · Marketing · Strategy</div>
+            <div class="venture-desc">Full-service communication, marketing strategy, and B2B/B2C business consulting.
+              From brand identity to paid ad deployment and client acquisition systems.</div>
+            <div class="venture-tags">
+              <span class="vtag">Marketing</span><span class="vtag">Strategy</span>
+            </div>
           </div>
         </div>
 
         <div class="venture-card fade-up">
-          <div class="venture-icon">🧹</div>
-          <div class="venture-name">Purgo Clean</div>
-          <div class="venture-type">B2B Commercial Cleaning · Île-de-France</div>
-          <div class="venture-desc">Professional commercial cleaning company serving offices, retail, and industrial
-            clients across the Paris region. Built from scratch with full sales, ops, and team infrastructure.</div>
-          <div class="venture-tags">
-            <span class="vtag">B2B Operations</span>
-            <span class="vtag">Île-de-France</span>
-            <span class="vtag">Client Acquisition</span>
+          <div class="venture-img" style="background-image: url('file:///C:/Users/tiegb/.gemini/antigravity/brain/04a3897e-3c05-4e39-8feb-8d340dcfd693/purgo_clean_venture_1775662664594.png')"></div>
+          <div class="venture-content">
+            <div class="venture-icon">🧹</div>
+            <div class="venture-name">Purgo Clean</div>
+            <div class="venture-type">B2B Commercial Cleaning · IDF</div>
+            <div class="venture-desc">Professional commercial cleaning company serving offices, retail, and industrial
+              clients across the Paris region. Built from scratch with full sales and ops infrastructure.</div>
+            <div class="venture-tags">
+              <span class="vtag">B2B Ops</span><span class="vtag">IDF</span>
+            </div>
           </div>
         </div>
 
         <div class="venture-card fade-up">
-          <div class="venture-icon">🏀</div>
-          <div class="venture-name">Pro Basketball Trainer, Mental Coach</div>
-          <div class="venture-type">Personal Coaching · Camps · Bootcamps</div>
-          <div class="venture-desc">Basketball training camps, bootcamps, and sensitization about depression and
-            injuries. Built on 15+ years of elite sports resilience and mental performance coaching.</div>
-          <div class="venture-tags">
-            <span class="vtag">Mindset</span>
-            <span class="vtag">Athletes</span>
-            <span class="vtag">Bootcamp</span>
-            <span class="vtag">Resilience</span>
+          <div class="venture-img" style="background-image: url('file:///C:/Users/tiegb/.gemini/antigravity/brain/04a3897e-3c05-4e39-8feb-8d340dcfd693/media__1775663167432.jpg')"></div>
+          <div class="venture-content">
+            <div class="venture-icon">🏀</div>
+            <div class="venture-name">Pro Basketball Training</div>
+            <div class="venture-type">Elite Performance · Mental Coach</div>
+            <div class="venture-desc">High-performance training camps, bootcamps, and mindset sensitization. Built on 15+ years of elite sports resilience and mental performance coaching.</div>
+            <div class="venture-tags">
+              <span class="vtag">Elite Sports</span><span class="vtag">Mindset</span>
+            </div>
           </div>
         </div>
 
         <div class="venture-card fade-up">
-          <div class="venture-icon">🤖</div>
-          <div class="venture-name">Entreprise AI</div>
-          <div class="venture-type">Enterprise AI · Business Automation</div>
-          <div class="venture-desc">Sophisticated AI business system with 17+ specialized modules for strategic
-            planning, automated operations, and sales growth. Full PWA mobile support for secure access.</div>
-          <div class="venture-tags">
-            <span class="vtag">AI / LLM</span>
-            <span class="vtag">Automation</span>
-            <span class="vtag">Strategy</span>
-            <span class="vtag">PWA</span>
+          <div class="venture-img" style="background-image: url('file:///C:/Users/tiegb/.gemini/antigravity/brain/04a3897e-3c05-4e39-8feb-8d340dcfd693/entreprise_ai_venture_1775662700468.png')"></div>
+          <div class="venture-content">
+            <div class="venture-icon">🤖</div>
+            <div class="venture-name">Entreprise AI</div>
+            <div class="venture-type">Enterprise AI · Suite</div>
+            <div class="venture-desc">Sophisticated AI business system with 17+ specialized modules for strategic
+              planning, automated operations, and sales growth. Full PWA support.</div>
+            <div class="venture-tags">
+              <span class="vtag">AI / LLM</span><span class="vtag">Automation</span>
+            </div>
           </div>
         </div>
 
         <div class="venture-card fade-up">
-          <div class="venture-icon">🤝</div>
-          <div class="venture-name">Association Bonkeur</div>
-          <div class="venture-type">Nonprofit · Social Impact</div>
-          <div class="venture-desc">Nonprofit organization dedicated to helping people in need. Community-driven
-            initiatives built on values of dignity, inclusion, and collective strength.</div>
-          <div class="venture-tags">
-            <span class="vtag">Nonprofit</span>
-            <span class="vtag">Community</span>
-            <span class="vtag">Social</span>
+          <div class="venture-img" style="background-image: url('file:///C:/Users/tiegb/.gemini/antigravity/brain/04a3897e-3c05-4e39-8feb-8d340dcfd693/formationpro_venture_1775662716344.png')"></div>
+          <div class="venture-content">
+            <div class="venture-icon">🎓</div>
+            <div class="venture-name">FormationPro</div>
+            <div class="venture-type">Qualiopi · CPF · IDF</div>
+            <div class="venture-desc">Professional training center specialising in conflict management, SST (First Aid), and mental performance consulting.</div>
+            <div class="venture-tags">
+              <span class="vtag">Formation</span><span class="vtag">Management</span>
+            </div>
           </div>
         </div>
 
         <div class="venture-card fade-up">
-          <div class="venture-icon">🎓</div>
-          <div class="venture-name">FormationPro</div>
-          <div class="venture-type">Formation CPF · IDF</div>
-          <div class="venture-desc">Professional training center in Île-de-France (Qualiopi, CPF eligible). Specializing
-            in conflict management, SST (First Aid), mental performance, and Elite 360° sport consulting.</div>
-          <div class="venture-tags">
-            <span class="vtag">Formation CPF</span>
-            <span class="vtag">SST</span>
-            <span class="vtag">Mindset</span>
-            <span class="vtag">Management</span>
-          </div>
-        </div>
-
-        <div class="venture-card fade-up">
-          <div class="venture-icon">🥤</div>
-          <div class="venture-name">Keo Jus</div>
-          <div class="venture-type">Distribution · Côte d'Ivoire</div>
-          <div class="venture-desc">Natural juice distribution business supplying premium Accor Hotels in Côte d'Ivoire.
-            First venture bridging French entrepreneurship with African market operations.</div>
-          <div class="venture-tags">
-            <span class="vtag">Distribution</span>
-            <span class="vtag">Côte d'Ivoire</span>
-            <span class="vtag">Hospitality</span>
+          <div class="venture-img" style="background-image: url('file:///C:/Users/tiegb/.gemini/antigravity/brain/04a3897e-3c05-4e39-8feb-8d340dcfd693/keo_jus_venture_1775662731566.png')"></div>
+          <div class="venture-content">
+            <div class="venture-icon">🥤</div>
+            <div class="venture-name">Keo Jus</div>
+            <div class="venture-type">Distribution · Côte d'Ivoire</div>
+            <div class="venture-desc">Natural premium juice distribution supplying Accor Hotels in CDI. Bridging French entrepreneurship with African market operations.</div>
+            <div class="venture-tags">
+              <span class="vtag">Hospitality</span><span class="vtag">CDI</span>
+            </div>
           </div>
         </div>
 
