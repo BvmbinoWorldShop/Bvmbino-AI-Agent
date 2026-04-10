@@ -4,10 +4,8 @@ import { CORE, SKILLS, detectSkill, getMaxTokens } from './lib/prompts.js';
 export const maxDuration = 60;
 
 /**
- * Auteur Production Engine: Orchestrator-Specialist Logic
- * 1. Orchestrator (Fast Llama 8B) classifies intent.
- * 2. Specialized models assigned based on task complexity.
- * 3. Cascade logic for high-stakes reliability.
+ * Bvmbino Auteur Engine: Elite Multi-Provider Orchestrator
+ * Hierarchy: Cerebras/Groq (Speed) -> Free Tiers (Value) -> Gemini (Logic)
  */
 
 export default async function handler(req, res) {
@@ -16,24 +14,25 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // Rate Limit: 10 req/min for chat to avoid quota abuse
-  if (isRateLimited(req, 10)) return res.status(429).json({ error: 'Rate limit exceeded (10 req/min)' });
+  if (isRateLimited(req, 15)) return res.status(429).json({ error: 'System busy (15 req/min)' });
 
-  // App Token Security: Closes the open API door
   const { validateAppToken, trackAbuse } = await import('./_cors.js');
-  if (!validateAppToken(req)) return res.status(403).json({ error: 'Unauthorized: Missing or invalid x-app-token' });
+  if (!validateAppToken(req)) return res.status(403).json({ error: 'Unauthorized: Missing session token' });
 
-  // Global Abuse Protection (Layer 6)
-  if (await trackAbuse(req)) return res.status(429).json({ error: 'System busy — too many requests from your IP' });
+  if (await trackAbuse(req)) return res.status(429).json({ error: 'Resource limit reached for this session' });
 
-  const GROQ_KEY       = process.env.GROQ_KEY;
-  const CEREBRAS_KEY   = process.env.CEREBRAS_KEY;
-  const OPENROUTER_KEY = process.env.OPENROUTER_KEY;
+  // ── KEY REGISTRY ──────────────────────────────────────────────────────────
+  const KEYS = {
+    groq:       process.env.GROQ_KEY,
+    cerebras:   process.env.CEREBRAS_KEY,
+    openrouter: process.env.OPENROUTER_KEY,
+    gemini:     process.env.GEMINI_KEY,
+    mistral:    process.env.MISTRAL_KEY,
+    anthropic:  process.env.ANTHROPIC_KEY
+  };
 
-  if (!GROQ_KEY && !OPENROUTER_KEY) {
-    return res.status(500).json({ 
-      error: 'AI Configuration Missing: GROQ_KEY or OPENROUTER_KEY must be set in Vercel environment variables.' 
-    });
+  if (!KEYS.groq && !KEYS.openrouter && !KEYS.cerebras && !KEYS.gemini) {
+    return res.status(500).json({ error: 'AI Orchestration Offline: No provider keys detected.' });
   }
 
   try {
@@ -43,73 +42,97 @@ export default async function handler(req, res) {
     const validErr = validateMessages(messages);
     if (validErr) return res.status(400).json({ error: validErr });
 
-    // --- 1. ORCHESTRATION LAYER (Intent Detection) ---
-    // If no explicit skill detected by frontend simple regex, use LLM-based orchestration
+    // ── 1. ORCHESTRATION ────────────────────────────────────────────────────
     let activeSkill = detectSkill(messages, system);
     let specialistModel = requestedModel || 'llama-3.3-70b-versatile';
-    let provider = 'groq';
+    
+    // Auto-detect native provider from model slug
+    let primaryProvider = 'groq';
+    if (specialistModel.includes('/')) primaryProvider = 'openrouter';
+    if (specialistModel.includes('gemini')) primaryProvider = 'gemini';
+    if (specialistModel.includes('mistral')) primaryProvider = 'mistral';
+    if (specialistModel.includes('claude')) primaryProvider = 'anthropic';
+    if (specialistModel.startsWith('llama3.1-')) primaryProvider = 'cerebras';
 
-    // Auteur Routing Logic
+    // Skill-based overrides for elite performance
     if (activeSkill) {
       if (['writer', 'content', 'email', 'resume'].includes(activeSkill)) {
-        specialistModel = 'llama-3.3-70b';
-        provider = CEREBRAS_KEY ? 'cerebras' : 'groq';
+        specialistModel = KEYS.cerebras ? 'llama3.1-70b' : 'llama-3.3-70b-versatile';
+        primaryProvider = KEYS.cerebras ? 'cerebras' : 'groq';
       } else if (['strategy', 'budget', 'psych', 'lex'].includes(activeSkill)) {
         specialistModel = 'deepseek/deepseek-chat-v3-0324:free';
-        provider = 'openrouter';
+        primaryProvider = 'openrouter';
       } else if (['search', 'scrape'].includes(activeSkill)) {
-        specialistModel = 'google/gemini-2.0-flash-exp:free';
-        provider = 'openrouter';
+        specialistModel = 'gemini-2.0-flash';
+        primaryProvider = 'gemini';
       }
     }
 
-    // --- 2. BUILD PROMPT STACK ---
+    // ── 2. PROMPT BUILDING ──────────────────────────────────────────────────
     const isTemplate = activeSkill && activeSkill.startsWith('TEMPLATE_');
     const cleanSkill = isTemplate ? activeSkill.replace('TEMPLATE_', '') : activeSkill;
     const skillPrompt = cleanSkill ? `\n\n## ACTIVE SPECIALIST: ${cleanSkill.toUpperCase()}\n${SKILLS[cleanSkill]}` : '';
     
-    // Client Auto-Focus Injection
     let clientPrompt = '';
     const { clientContext } = body;
     if (clientContext) {
-      clientPrompt = `\n\n[CLIENT_CONTEXT ACTIVE]\nFocus all logic, strategy, and tone on this specific client/business:\nName: ${clientContext.name}\nContext: ${clientContext.desc}`;
+      clientPrompt = `\n\n[CLIENT_CONTEXT ACTIVE]\nFocus all logic, strategy, and tone on this business:\nName: ${clientContext.name}\nContext: ${clientContext.desc}`;
     }
 
     const fullSystem = CORE + clientPrompt + skillPrompt + (system ? `\n\n${system}` : '');
-
     const chatMessages = [
       { role: 'system', content: fullSystem },
       ...(messages || []).map(m => ({ role: m.role, content: m.content })),
     ];
 
-    // --- 3. EXECUTE WITH CASCADE SAFETY ---
+    // ── 3. CASCADE ROTATION (Speed -> Free -> Gemini) ───────────────────────
     const chain = [];
     
-    // Custom specialist logic
-    if (provider === 'cerebras' && CEREBRAS_KEY) {
-        chain.push({ provider: 'cerebras', url: 'https://api.cerebras.ai/v1/chat/completions', key: CEREBRAS_KEY, model: specialistModel });
-        chain.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: GROQ_KEY, model: 'llama-3.3-70b-versatile' });
-    } else if (provider === 'openrouter' && OPENROUTER_KEY) {
-        chain.push({ provider: 'openrouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: OPENROUTER_KEY, model: specialistModel });
-        chain.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: GROQ_KEY, model: 'llama-3.3-70b-versatile' });
-    } else {
-        chain.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: GROQ_KEY, model: specialistModel });
-        chain.push({ provider: 'openrouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: OPENROUTER_KEY, model: 'meta-llama/llama-3.3-70b-instruct:free' });
+    // Step 1: User's Primary Choice
+    if (KEYS[primaryProvider]) {
+      chain.push({ provider: primaryProvider, model: specialistModel });
     }
 
-    async function streamResponse(attempt) {
-      const headers = { 
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${attempt.key}` 
-      };
-      if (attempt.provider === 'openrouter') {
-        headers['HTTP-Referer'] = 'https://bvmbino-ai-agent.vercel.app';
-        headers['X-Title'] = 'Bvmbino Auteur Engine';
+    // Step 2: Speed Tiers (Cerebras & Groq)
+    if (KEYS.cerebras && primaryProvider !== 'cerebras') {
+      chain.push({ provider: 'cerebras', model: 'llama3.1-70b' });
+    }
+    if (KEYS.groq && primaryProvider !== 'groq') {
+      chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
+    }
+
+    // Step 3: Best Free Tier (OpenRouter)
+    if (KEYS.openrouter && primaryProvider !== 'openrouter') {
+      chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct:free' });
+    }
+
+    // Step 4: Logic Pillar (Gemini)
+    if (KEYS.gemini && primaryProvider !== 'gemini') {
+      chain.push({ provider: 'gemini', model: 'gemini-2.0-flash' });
+    }
+
+    // ── 4. EXECUTION ────────────────────────────────────────────────────────
+    async function executeAttempt(attempt) {
+      let url, authHeader;
+      const key = KEYS[attempt.provider];
+
+      switch(attempt.provider) {
+        case 'groq': url = 'https://api.groq.com/openai/v1/chat/completions'; authHeader = `Bearer ${key}`; break;
+        case 'cerebras': url = 'https://api.cerebras.ai/v1/chat/completions'; authHeader = `Bearer ${key}`; break;
+        case 'openrouter': url = 'https://openrouter.ai/api/v1/chat/completions'; authHeader = `Bearer ${key}`; break;
+        case 'gemini': url = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'; authHeader = `Bearer ${key}`; break;
+        case 'mistral': url = 'https://api.mistral.ai/v1/chat/completions'; authHeader = `Bearer ${key}`; break;
+        case 'anthropic': url = 'https://api.anthropic.com/v1/messages'; authHeader = key; break; // Anthropic needs custom handling but usually OR covers it
+        default: throw new Error(`Unknown provider: ${attempt.provider}`);
       }
 
-      const response = await fetch(attempt.url, {
+      const response = await fetch(url, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+          ...(attempt.provider === 'openrouter' ? { 'HTTP-Referer': 'https://bvmbino-ai-agent.vercel.app', 'X-Title': 'Bvmbino Pro' } : {})
+        },
         body: JSON.stringify({
           model: attempt.model,
           messages: chatMessages,
@@ -119,11 +142,14 @@ export default async function handler(req, res) {
         })
       });
 
-      if (!response.ok) throw new Error(`Provider ${attempt.provider} failed: ${response.status}`);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(`${attempt.provider} (${response.status}): ${err.error?.message || 'unknown'}`);
+      }
 
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('x-specialist', attempt.model);
-      res.setHeader('x-skill', cleanSkill || 'none');
+      res.setHeader('x-provider', attempt.provider);
       
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -136,29 +162,26 @@ export default async function handler(req, res) {
       res.end();
     }
 
+    let lastError = null;
     for (const attempt of chain) {
       try {
-        if (!attempt.key) continue;
-        await streamResponse(attempt);
+        await executeAttempt(attempt);
         return;
       } catch (err) {
-        console.warn(`Attempt failed for ${attempt.model}:`, err.message);
+        lastError = err;
+        console.warn(`[Cascade] ${attempt.provider} failed:`, err.message);
         continue;
       }
     }
 
     res.status(500).json({ 
-      error: 'All specialist models exhausted or failed.',
-      diagnostics: {
-        groq: !!GROQ_KEY,
-        openrouter: !!OPENROUTER_KEY,
-        cerebras: !!CEREBRAS_KEY,
-        lastError: lastErr?.message || 'unknown'
-      }
+      error: 'All providers failed.',
+      last_error: lastError?.message,
+      diagnostics: { groq: !!KEYS.groq, cerebras: !!KEYS.cerebras, openrouter: !!KEYS.openrouter, gemini: !!KEYS.gemini }
     });
 
   } catch (err) {
-    console.error('Orchestrator Error:', err);
-    if (!res.headersSent) res.status(500).json({ error: 'Internal Orchestrator Error' });
+    console.error('Orchestrator Crash:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Orchestrator Error' });
   }
 }
