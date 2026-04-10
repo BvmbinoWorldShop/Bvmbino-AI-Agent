@@ -15,11 +15,26 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (isRateLimited(req)) return res.status(429).json({ error: 'Rate limit exceeded' });
+  
+  // Rate Limit: 10 req/min for chat to avoid quota abuse
+  if (isRateLimited(req, 10)) return res.status(429).json({ error: 'Rate limit exceeded (10 req/min)' });
+
+  // App Token Security: Closes the open API door
+  const { validateAppToken, trackAbuse } = await import('./_cors.js');
+  if (!validateAppToken(req)) return res.status(403).json({ error: 'Unauthorized: Missing or invalid x-app-token' });
+
+  // Global Abuse Protection (Layer 6)
+  if (await trackAbuse(req)) return res.status(429).json({ error: 'System busy — too many requests from your IP' });
 
   const GROQ_KEY       = process.env.GROQ_KEY;
   const CEREBRAS_KEY   = process.env.CEREBRAS_KEY;
   const OPENROUTER_KEY = process.env.OPENROUTER_KEY;
+
+  if (!GROQ_KEY && !OPENROUTER_KEY) {
+    return res.status(500).json({ 
+      error: 'AI Configuration Missing: GROQ_KEY or OPENROUTER_KEY must be set in Vercel environment variables.' 
+    });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -52,7 +67,15 @@ export default async function handler(req, res) {
     const isTemplate = activeSkill && activeSkill.startsWith('TEMPLATE_');
     const cleanSkill = isTemplate ? activeSkill.replace('TEMPLATE_', '') : activeSkill;
     const skillPrompt = cleanSkill ? `\n\n## ACTIVE SPECIALIST: ${cleanSkill.toUpperCase()}\n${SKILLS[cleanSkill]}` : '';
-    const fullSystem = CORE + skillPrompt + (system ? `\n\n${system}` : '');
+    
+    // Client Auto-Focus Injection
+    let clientPrompt = '';
+    const { clientContext } = body;
+    if (clientContext) {
+      clientPrompt = `\n\n[CLIENT_CONTEXT ACTIVE]\nFocus all logic, strategy, and tone on this specific client/business:\nName: ${clientContext.name}\nContext: ${clientContext.desc}`;
+    }
+
+    const fullSystem = CORE + clientPrompt + skillPrompt + (system ? `\n\n${system}` : '');
 
     const chatMessages = [
       { role: 'system', content: fullSystem },
@@ -124,7 +147,15 @@ export default async function handler(req, res) {
       }
     }
 
-    res.status(500).json({ error: 'All specialist models exhausted or failed.' });
+    res.status(500).json({ 
+      error: 'All specialist models exhausted or failed.',
+      diagnostics: {
+        groq: !!GROQ_KEY,
+        openrouter: !!OPENROUTER_KEY,
+        cerebras: !!CEREBRAS_KEY,
+        lastError: lastErr?.message || 'unknown'
+      }
+    });
 
   } catch (err) {
     console.error('Orchestrator Error:', err);
