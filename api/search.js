@@ -6,8 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (isRateLimited(req)) return res.status(429).json({ error: 'Rate limit exceeded (30 req/min)' });
 
-  const gKey = process.env.GEMINI_KEY_2;
-  if (!gKey) return res.status(500).json({ error: 'Search key missing' });
+  const gKey = process.env.GEMINI_KEY_2 || process.env.GEMINI_KEY || process.env.GOOGLE_API_KEY;
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -41,13 +40,15 @@ export default async function handler(req, res) {
 
     // Step 3: Summarize with Gemini (uses GEMINI_KEY_2 — separate quota from chat)
     let answer = '';
-    if (apiKey && rawText) {
+    if (!gKey) {
+      answer = '⚠️ Gemini API key not configured. Summary unavailable, showing raw search results.';
+    } else if (rawText) {
       const cleanText = rawText.replace(/[#*`]/g, '').slice(0, 3000);
       const gCtrl = new AbortController();
       const gTid = setTimeout(() => gCtrl.abort(), 8000);
       try {
         const gRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${gKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
