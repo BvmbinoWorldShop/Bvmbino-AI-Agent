@@ -458,10 +458,11 @@ textarea.set-input{resize:vertical;min-height:80px;line-height:1.5;}
   .bubble th,.bubble td{padding:5px 8px;}
   .bubble pre{padding:10px;font-size:11px;}
   /* Main — extends into the home indicator zone so inzone truly reaches the screen edge */
-  .main{position:fixed;top:0;left:0;right:0;height:calc(100dvh + env(safe-area-inset-bottom,34px));display:flex;flex-direction:column;overflow:hidden;}
-  .chat{flex:1;min-height:0;overflow-y:auto;}
-  /* Inzone sits at the very bottom — minimal padding, no safe area gap */
-  .inzone{flex-shrink:0;padding-bottom:8px;}
+  .main{position:fixed;top:0;left:0;right:0;bottom:0;height:100dvh;height:var(--app-height,100dvh);display:flex;flex-direction:column;overflow:hidden;}
+  .chat{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  /* Inzone sits cleanly above home indicator and software keyboard */
+  .inzone{flex-shrink:0;padding:6px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bg2);}
+  .infoot{display:flex;align-items:center;gap:6px;padding-top:4px;flex-wrap:wrap;}
 }
 @media(max-width:420px){
   .chat{padding:8px;}
@@ -477,6 +478,8 @@ textarea.set-input{resize:vertical;min-height:80px;line-height:1.5;}
   .matrix-grid{grid-template-columns:repeat(2,1fr);}
   .wcuse{display:none;}
   .b-us,.b-ai{max-width:95vw;}
+  .kbhint{display:none;}
+  .inzone{padding:4px 8px calc(6px + env(safe-area-inset-bottom,0px));}
 }
 
 /* ── PREMIUM VISUAL UPGRADES ── */
@@ -1081,7 +1084,10 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
 // iOS viewport fix — window.innerHeight is the exact visible height (accounts for URL bar, home indicator)
 // CSS dvh/vh units do NOT reliably fill the screen on iPhone Safari; this JS approach does.
 (function(){
-  function _setAppH(){document.documentElement.style.setProperty('--app-height',window.innerHeight+'px');}
+  function _setAppH(){
+    var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
   function _setInzoneH(){
     var iz=document.querySelector('.inzone');
     if(iz)document.documentElement.style.setProperty('--inzone-h',iz.offsetHeight+'px');
@@ -1090,6 +1096,10 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
   _tick();
   window.addEventListener('resize',_tick);
   window.addEventListener('orientationchange',function(){setTimeout(_tick,200);});
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', _tick);
+    window.visualViewport.addEventListener('scroll', _tick);
+  }
   // Track inzone size changes (file attached, textarea grows, etc.)
   document.addEventListener('DOMContentLoaded',function(){
     _setInzoneH();
@@ -1606,6 +1616,7 @@ function xcard(type) {
       <div class="xbtn" onclick="window.expLastPdf && window.expLastPdf()">↓ PDF</div>
       <div class="xbtn" onclick="window.expLastHtml && window.expLastHtml()">↓ HTML</div>
       <div class="xbtn" onclick="window.copyLast && window.copyLast()">⎘ Copy</div>
+      <div class="xbtn" style="background:rgba(34,197,94,.18);border-color:#22c55e;color:#4ade80;font-weight:700" onclick="window.sendAgentEmail && window.sendAgentEmail(this)">🚀 Send Real Email</div>
       ${webhookBtns}
     </div>
   </div>`;
@@ -3319,9 +3330,9 @@ async function callAI() {
 
       if (proxyRes.ok) {
         let reply = '';
+        let streamBubble = null;
         if (useStream && proxyRes.headers.get('content-type')?.includes('text/event-stream')) {
           let firstChunk = true;
-          let streamBubble = null;
           reply = await _streamOpenAI(proxyRes, (accumulated) => {
             if (firstChunk) { hideTyping(); streamBubble = createStreamingBubble(); firstChunk = false; }
             streamBubble?.update(accumulated);
@@ -3334,8 +3345,22 @@ async function callAI() {
 
         if (reply) {
           hideTyping();
-          state.msgs.push({ role: 'assistant', content: reply });
-          appendAiText(reply);
+          const clean = reply.trim();
+          state.msgs.push({ role: 'assistant', content: clean });
+          
+          // SINGLE RESPONSE FIX: If streamBubble was active, finalize it in place.
+          // Never call appendAiText() afterwards, which caused the duplicate answer bug!
+          if (streamBubble) {
+            streamBubble.finalize(clean, null);
+          } else {
+            appendAiText(clean, null);
+          }
+
+          window.logFeed && window.logFeed('billy', clean.slice(0, 90) + (clean.length > 90 ? '…' : ''));
+          updTok(clean.length / 3.5);
+          state.abortController = null;
+          window.__unlockUI?.();
+          saveSession(document.getElementById('tbtitle')?.textContent || 'Conversation');
           haptic([10, 30]);
           return;
         }
@@ -5247,6 +5272,59 @@ if (document.readyState === 'loading') {
 
 
 
+
+// ── REAL AGENT EMAIL DISPATCH ──
+window.sendAgentEmail = async function(btn) {
+  const card = btn.closest('.mrow') || btn.closest('.bubble') || document.body;
+  const text = card.textContent || '';
+  
+  const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  const defaultTo = emailMatch ? emailMatch[1] : '';
+  const to = prompt('Send this email to:', defaultTo);
+  if (!to || !to.includes('@')) {
+    toast('Invalid recipient email');
+    return;
+  }
+
+  const subjMatch = text.match(/Subject:\s*([^\n\r]+)/i) || text.match(/Objet:\s*([^\n\r]+)/i);
+  const subject = subjMatch ? subjMatch[1].trim() : 'Strategic Update from Bvmbino AI';
+
+  let body = text;
+  if (subjMatch) {
+    body = text.slice(text.indexOf(subjMatch[0]) + subjMatch[0].length).trim();
+  }
+
+  const origTxt = btn.textContent;
+  btn.textContent = '⏳ Sending...';
+  btn.style.pointerEvents = 'none';
+
+  try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, body })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.mailtoUrl) {
+        window.open(data.mailtoUrl, '_blank');
+        toast('✉️ Opened draft in your email app');
+      } else {
+        toast('✅ ' + data.message);
+      }
+      btn.textContent = '✅ Email Dispatched';
+    } else {
+      toast('⚠️ ' + (data.error || 'Failed to dispatch'));
+      btn.textContent = '❌ Failed';
+    }
+  } catch (err) {
+    window.open('mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body.slice(0, 1500)), '_blank');
+    toast('✉️ Opened in Mail client');
+    btn.textContent = '✉️ Opened Mail';
+  } finally {
+    btn.style.pointerEvents = 'auto';
+  }
+};
 </script>
 </body>
 </html>
