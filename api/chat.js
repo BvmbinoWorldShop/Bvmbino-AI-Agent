@@ -32,7 +32,17 @@ export default async function handler(req, res) {
   };
 
   if (!KEYS.groq && !KEYS.openrouter && !KEYS.cerebras && !KEYS.gemini) {
-    return res.status(500).json({ error: 'Configuration Error: No AI provider keys found in Vercel environment.' });
+    const diagnostics = {
+      GROQ_KEY: !!KEYS.groq,
+      OPENROUTER_KEY: !!KEYS.openrouter,
+      CEREBRAS_KEY: !!KEYS.cerebras,
+      GEMINI_KEY: !!KEYS.gemini
+    };
+    return res.status(500).json({ 
+      error: 'Configuration Error: No authorized AI provider keys found.',
+      diagnostics,
+      instructions: 'Check Vercel Dashboard -> Settings -> Environment Variables. Ensure "Production" is checked for your keys.'
+    });
   }
 
   try {

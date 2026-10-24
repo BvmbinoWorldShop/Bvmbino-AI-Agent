@@ -1,0 +1,64 @@
+# Implementation Plan: Bvmbino Pro V4.0 Final Production Overhaul
+
+This plan outlines the final high-fidelity upgrade to the Bvmbino Pro platform, merging the "Obsidian Gold" admin aesthetics with the robust multi-agent orchestration.
+
+## Features & Goals
+
+### 1. High-Fidelity "Obsidian Gold" Interface
+- **3D Welcome Screen**: Transition from basic floating icons to a dedicated "Orbital Ring" core in the center for a premium landing experience.
+- **Triple-Pane Workflow**: Solidify the Sidebar (Left), Workspace (Center), and Memory Hub (Right) layout with smooth CSS transitions.
+- **Micro-Animations**: Implement wait-less 3rd-party-free animations for a snappy, premium feel.
+
+### 2. Strategic Sidebar Hub
+- **Active Engine Badge**: Real-time status indicator showing the primary AI provider (Groq/Gemini/Claude).
+- **Empire Portfolio**: Full `Add/Delete` controls for business entities (Purgo Clean, Keo Jus, etc.) with persistent context injection.
+- **Skills Expansion**: A visual grid of all 25+ skills, categorized by function (Sales, Content, Strategy).
+
+### 3. Deep Memory Hub & Swarm Logic
+- **Three Fixed Tiers**: Visualizing Global Context, Active Ventures, and Strategic Objectives.
+- **Dynamic Chip Feed**: A real-time visualization of what the AI has "learned" during the session.
+- **Strategic Swarm**: Integrating `/aimas` (Macro-Agency) and `/aros` (Revenue Engine) to trigger multi-agent orchestration in a single step.
+
+### 4. Admin Pro Settings
+- **Safe Key Storage**: Implementation of a `localStorage` secure vault for user-provided keys.
+- **Control Bar**: Interactive sliders for Temperature (Creativity) and Streaming toggles.
+- **Audit Verification**: Visual indicator that the system is securely connected to the backend.
+
+---
+
+## Proposed Changes
+
+### [MODIFY] [premium-styles.css](file:///c:/Users/tiegb/Documents/bvmbino%20ai%20agent/public/css/premium-styles.css)
+- Define "Obsidian Gold" color tokens (`--gold-metal`, `--obsidian-bg`, etc.).
+- Add 3D keyframe animations for the Orbital Core.
+- Layout refinements for the triple-pane setup.
+
+### [MODIFY] [index.html](file:///c:/Users/tiegb/Documents/bvmbino%20ai%20agent/public/index.html)
+- Update `<nav>`, `<aside>`, and `<main>` structures to support modern flex/grid layouts.
+- Integrate placeholders for the new Settings and Portfolio modals.
+
+### [MODIFY] [core.js](file:///c:/Users/tiegb/Documents/bvmbino%20ai%20agent/public/js/core.js)
+- Enhance `SYSTEM_IDENTITY` for the "Bvmbino Chef" persona v4.0.
+- Update `CMDS` and `PROMPTS` to include `/aimas` and `/aros`.
+
+### [MODIFY] [ui.js](file:///c:/Users/tiegb/Documents/bvmbino%20ai%20agent/public/js/ui.js)
+- Implement `renderEmpirePortfolio()` with Add/Delete logic.
+- Add handlers for the new Temperature and Streaming sliders.
+- Refine the `renderMemoryFeed()` logic to use a chip-based visualization.
+
+### [MODIFY] [store.js](file:///c:/Users/tiegb/Documents/bvmbino%20ai%20agent/public/js/store.js)
+- Enhance the `Vault` storage scheme to support partitioned keys and memory feed persistence.
+
+---
+
+## Verification Plan
+
+### Automated/Browser Testing
+- **UI Launch**: Verify the 3D scene animates correctly at 60fps.
+- **Context Injection**: Select "Purgo Clean" -> verify system prompt includes the venture's context.
+- **Skill Execution**: Trigger `/aimas` -> verify the multi-agent swarm response initiates.
+- **Persistence**: Add a client -> refresh -> verify the client remains in the sidebar.
+
+### Manual Verification
+- Testing the sidebar "Add Client" flow on mobile.
+- Verifying the "Safe Key" settings persist across sessions.

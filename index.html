@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+  <title>Bvmbino Pro · Sovereign v6.1</title>
+  <link rel="stylesheet" href="./index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0a0800">
+</head>
+<body>
+
+<div class="ov" id="ov"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sb" id="sb">
+  <div class="sb-top">
+    <div class="logo" id="logo-btn">
+      <div class="lmark">
+        <svg width="18" height="18" viewBox="0 0 100 100" fill="none">
+          <rect x="15" y="30" width="70" height="52" rx="12" fill="#0a0800"/>
+          <rect x="25" y="42" width="16" height="13" rx="4" fill="#e8a912"/>
+          <rect x="59" y="42" width="16" height="13" rx="4" fill="#e8a912"/>
+          <circle cx="33" cy="48" r="3" fill="#22c55e"/>
+          <circle cx="67" cy="48" r="3" fill="#22c55e"/>
+          <rect x="36" y="66" width="28" height="5" rx="2.5" fill="#e8a912"/>
+          <rect x="40" y="14" width="20" height="18" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="3"/>
+          <circle cx="50" cy="8" r="4" fill="#e8a912"/>
+          <line x1="50" y1="8" x2="50" y2="14" stroke="#e8a912" stroke-width="2.5"/>
+          <rect x="3" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/>
+          <rect x="85" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2"/>
+        </svg>
+      </div>
+      <div>
+        <div class="lname">Bvmbino <span class="badge b-pu" style="font-size:8px">Pro</span></div>
+        <div class="ltag">Private Admin · v6.1 Sovereign</div>
+      </div>
+    </div>
+    <button class="nbtn" id="new-chat-btn">
+      <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.8" stroke-linecap="round"/></svg>
+      New conversation
+    </button>
+  </div>
+  <div class="sb-scroll">
+    <div class="ssect">
+      <span class="sbl">Active Engine</span>
+      <div class="engine-badge" id="ai-engine-badge">
+        <span class="pulse" style="color:var(--gn)"></span>
+        <span id="engine-label">Connecting…</span>
+      </div>
+    </div>
+    <div class="ssect">
+      <button id="toggle-clients-btn" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:8px">
+        <span class="sbl" style="margin-bottom:0">🏰 Empire Pillars</span>
+        <span id="client-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);transition:transform .25s">▲</span>
+      </button>
+      <div id="client-panel" style="overflow:hidden;max-height:600px;transition:max-height .35s ease;">
+        <div id="client-list" class="qacts"></div>
+        <button class="qbtn" id="add-client-btn" style="margin-top:4px;border:1px dashed var(--bd2);background:none;justify-content:center;opacity:.7">
+          <span>+ Add Entity</span>
+        </button>
+      </div>
+    </div>
+    <div class="ssect">
+      <span class="sbl">Skills & Tools</span>
+      <div class="qacts">
+        <button class="qbtn" id="train-agent-btn" style="background:rgba(232,169,18,.1);border-color:var(--pu2)"><span class="qi">🧠</span><span>Train Agent</span><span class="qsub">Save context</span></button>
+        <button class="qbtn" id="gen-image-nav-btn"><span class="qi">🎨</span><span>Generate Image</span><span class="qsub">AI Art · Free</span></button>
+        <button class="qbtn" id="attach-file-nav-btn"><span class="qi">📎</span><span>Attach File</span><span class="qsub">Multimodal</span></button>
+      </div>
+    </div>
+    <div class="ssect">
+      <button id="toggle-history-btn" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:8px">
+        <span class="sbl" style="margin-bottom:0">📂 Recent Chats</span>
+        <span id="hist-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);transition:transform .25s">▼</span>
+      </button>
+      <div id="hist" class="qacts" style="overflow:hidden;max-height:0"></div>
+    </div>
+    <div class="ssect">
+      <span class="sbl">Model Selection</span>
+      <div id="model-list" class="qacts"></div>
+    </div>
+  </div>
+</aside>
+<div class="sb-toggle" id="sb-toggle-btn">«</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <button class="mb-menu" id="mb-menu-btn">☰</button>
+      <div class="tb-title" id="tbtitle">Bvmbino Pro · Command Hub</div>
+    </div>
+    <div class="tb-right">
+      <div class="badge b-gn" style="padding:4px 8px;font-size:10px"><span class="pulse"></span>Memory Active</div>
+      <button class="icobtn" id="tb-gen-img-btn" title="Generate Image">🎨</button>
+      <button class="icobtn" id="tb-mem-hub-btn" title="Memory Hub">💾</button>
+      <button class="icobtn" id="tb-settings-btn" title="Settings">⚙️</button>
+    </div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div id="ci">
+      <!-- Content Rendered via JS -->
+    </div>
+  </div>
+
+  <div class="inzone">
+    <div class="inwrap">
+      <div class="file-strip" id="file-strip"></div>
+      <div class="smenu" id="smenu"></div>
+      <div class="intop">
+        <textarea id="inp" placeholder="Order strategic offensive..." rows="1"></textarea>
+        <input type="file" id="file-input" style="display:none" multiple>
+        <button class="langbtn" id="lang-btn">EN</button>
+        <button class="micbtn" id="mic-btn">🎙️</button>
+        <button class="sbtn" id="sbtn">↑</button>
+        <button class="sbtn" id="cancel-btn" style="display:none;background:var(--rd)">⏹</button>
+      </div>
+      <div class="infoot">
+        <div class="pill on"><span class="pdot"></span>memory</div>
+        <div class="pill"><span class="pdot"></span>web search</div>
+        <div class="pill" id="pdf-export-pill"><span class="pdot"></span>PDF export</div>
+        <span class="kbhint" style="margin-left:auto">↵ send · ⇧↵ newline · Ctrl+K new</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══ MEMORY PANEL ═══ -->
+<aside class="mpanel closed" id="mpanel">
+  <div class="mp-toggle" id="mp-toggle-btn">»</div>
+  <div class="mph"><div class="mpt">💾 SOVEREIGN VAULT</div><button class="icobtn" id="close-mpanel-btn">✕</button></div>
+  <div class="mpe">
+    <div class="mp-tier">
+      <div class="mp-tier-head"><span class="mp-tier-label">VENTURES Context</span><button class="icobtn" id="edit-ventures-btn" style="width:20px;height:20px;font-size:9px">✎</button></div>
+      <div class="editable-zone" id="mp-ventures" contenteditable="false">Active context for FormationPro, Strong Wave, and Purgo Clean.</div>
+    </div>
+    <div class="mp-tier">
+      <div class="mp-tier-head"><span class="mp-tier-label">PROJECTS Goals</span><button class="icobtn" id="edit-projects-btn" style="width:20px;height:20px;font-size:9px">✎</button></div>
+      <div class="editable-zone" id="mp-projects" contenteditable="false">Current Objectives: Scaling FormationPro sales in Abidjan.</div>
+    </div>
+    <div class="mp-tier">
+      <div class="mp-tier-head"><span class="mp-tier-label">LIVE INTELLIGENCE Feed</span></div>
+      <div id="mems" class="editable-zone" style="font-size:10px;line-height:1.4">
+        <div class="me"><div class="mek">System</div><div class="mev">Memory vault active and synchronized.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mpf">
+    <div class="mpst"><span class="mpsl">Context Level</span><span class="mpsv" id="tok-pct">0%</span></div>
+    <div class="tbar-wrap"><div class="tfill" id="tbar-fill" style="width:0%"></div></div>
+  </div>
+</aside>
+
+<!-- TRAIN MODAL -->
+<div class="modal-overlay" id="train-modal">
+  <div class="modal-card" style="max-width:480px">
+    <div class="modal-hdr"><div class="modal-t">🧠 Train Specialist</div><button class="icobtn" id="close-train">✕</button></div>
+    <div class="modal-body">
+      <span class="lbl">Agent Knowledge Base</span>
+      <textarea class="set-input" id="train-input" rows="8" placeholder="Paste business context, rules, or data to bake into the specialist's mind..."></textarea>
+    </div>
+    <div class="modal-foot">
+      <button id="train-save-btn" class="nbtn" style="flex:1">💾 Save to Memory</button>
+      <button class="icobtn" id="close-train-2" style="width:auto;padding:0 12px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE GEN MODAL -->
+<div class="modal-overlay" id="image-modal">
+  <div class="modal-card">
+    <div class="modal-hdr"><div class="modal-t">🎨 AI Image Generator</div><button class="icobtn" id="close-image">✕</button></div>
+    <div class="modal-body">
+      <div><span class="lbl">Prompt</span><textarea class="set-input" id="img-prompt" rows="3" placeholder="Cinematic shot..."></textarea></div>
+      <div id="img-result" style="display:none;margin-top:8px"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="gen-img-btn" class="nbtn" style="flex:1">🎨 Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE MODAL -->
+<div class="modal-overlay" id="voice-modal">
+  <div class="modal-card" style="max-width:400px;background:rgba(10,8,0,0.98);border:2px solid var(--pu2);">
+    <div class="modal-hdr"><div class="modal-t">🎙️ Billy Live</div><button class="icobtn" id="close-voice-btn">✕</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;align-items:center;padding:40px 20px">
+      <div id="voice-status" style="font-size:10px;color:var(--pu2);text-transform:uppercase;letter-spacing:2px;margin-bottom:20px">Listening…</div>
+      <div class="voice-pulse-wrap" id="voice-pulse-wrap">
+        <div class="v-ring"></div>
+        <div class="v-ring"></div>
+        <div class="v-ring"></div>
+        <div class="v-core" style="font-size:40px">🤖</div>
+      </div>
+      <div id="voice-transcript" style="margin-top:24px;font-size:13px;text-align:center;color:var(--t2);min-height:36px;">Speak your orders, Boss.</div>
+      <div id="voice-billy-reply" style="margin-top:14px;font-size:13px;font-weight:600;text-align:center;color:var(--t1);min-height:40px;"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:center">
+      <button class="nbtn" id="end-voice-btn" style="color:var(--rd)">⏹️ End Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-card" style="max-width:540px">
+    <div class="modal-hdr"><div class="modal-t">⚙️ Sovereign Settings</div><button class="icobtn" id="close-settings">✕</button></div>
+    <div class="modal-body">
+      <div><span class="lbl">🤖 Active Model</span><div id="model-list-settings" class="qacts"></div></div>
+      <div>
+        <span class="lbl">🔑 API Keys</span>
+        <div class="key-row"><input class="set-input" type="password" id="key-groq" placeholder="Groq Key"></div>
+        <div class="key-row"><input class="set-input" type="password" id="key-openai" placeholder="OpenAI Key"></div>
+        <button id="save-keys-btn" class="nbtn" style="margin-top:6px">💾 Save Keys</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

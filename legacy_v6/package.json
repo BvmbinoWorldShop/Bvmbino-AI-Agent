@@ -1,0 +1,19 @@
+{
+  "name": "bvmbino-ai-agent",
+  "version": "4.0.0",
+  "description": "Bvmbino Pro v4.0 — Tactical Auteur Intelligence",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "deploy": "vercel --prod"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

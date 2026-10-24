@@ -1,0 +1,225 @@
+--- function boot ---
+───────────────────────────────────────────
+async function boot() {
+  console.log('BVMBINO Pro v5.7 · Booting…');
+
+  // Rehydrate persisted config first — never fails
+  try {
+    state.model          = localStorage.getItem('v3_model')        || state.model;
+    state.activeClientId = localStorage.getItem('v3_active_client') || null;
+    state.config.temp    = parseFloat(localStorage.getItem('v4_temp') || '0.7');
+    state.config.stream  = false; // stream:false — no SSE handler in standalone
+  } catch(e) {}
+
+  // Token fetch — non-fatal, ignore completely
+  try { await initializeToken(); } catch(e) {}
+
+  // IndexedDB — non-fatal, app works without it (falls back to LS)
+  try { await initDB(); } catch(e) { console.warn('IndexedDB unavailable, using localStorage fallback'); }
+
+  // UI state restoration
+  try {
+    const showAll = localStorage.getItem('bvmbino_show_all_agents');
+    if (showAll !== null) state.showAllAgents = (showAll === 'true');
+    
+    const leftCollapsed = localStorage.getItem('bvmbino_sb_left_collapsed');
+    if (l
+
+--- function toggleLeftSidebar ---
+Context cleared');
+  }
+}
+
+// ── LAYOUT TOGGLES ──
+function toggleLeftSidebar(val) {
+  const sb = document.getElementById('sb');
+  if (val !== undefined) {
+    if (val) sb.classList.add('collapsed'); else sb.classList.remove('collapsed');
+  } else {
+    sb.classList.toggle('collapsed');
+  }
+  localStorage.setItem('bvmbino_sb_left_collapsed', sb.classList.contains('collapsed'));
+}
+
+function toggleRightSidebar(val) {
+  const mp = document.getElementById('mpanel');
+  if (val !== undefined) {
+    if (val) mp.classList.add('collapsed'); else mp.classList.remove('collapsed');
+  } else {
+    mp.classList.toggle('collapsed');
+  }
+  localStorage.setItem('bvmbino_sb_right_collapsed', mp.classList.contains('collapsed'));
+}
+
+function toggleAgents(forceAll) {
+  state.showAllAgents = forceAll !== undefined ? !!forceAll : !state.showAllAgents;
+  localStorage.setItem('bvmbino_show_all_agents', state.showAllAgents);
+  renderWelcome();
+}
+
+// Initial restore
+window.addEventListener('DOMContentLoaded', () => {
+  // We handle restoration in boot() for clea
+
+--- function toggleRightSidebar ---
+llapsed', sb.classList.contains('collapsed'));
+}
+
+function toggleRightSidebar(val) {
+  const mp = document.getElementById('mpanel');
+  if (val !== undefined) {
+    if (val) mp.classList.add('collapsed'); else mp.classList.remove('collapsed');
+  } else {
+    mp.classList.toggle('collapsed');
+  }
+  localStorage.setItem('bvmbino_sb_right_collapsed', mp.classList.contains('collapsed'));
+}
+
+function toggleAgents(forceAll) {
+  state.showAllAgents = forceAll !== undefined ? !!forceAll : !state.showAllAgents;
+  localStorage.setItem('bvmbino_show_all_agents', state.showAllAgents);
+  renderWelcome();
+}
+
+// Initial restore
+window.addEventListener('DOMContentLoaded', () => {
+  // We handle restoration in boot() for cleaner orchestration, 
+  // but keeping a minimal hook here for early paint if possible
+});
+
+async function addNewClient() {
+  const name = prompt('Business/Client Name:'); if (!name) return;
+  const desc = prompt('Brief Context/Description:'); if (!desc) return;
+  const c = { id: 'c' + Date.now(), name, desc };
+  await saveClient(c);
+
+--- function smartRouteMsg ---
+ for Billy's autonomy and dual-layer routing.
+ */
+function smartRouteMsg(text) {
+  if (!text || text.trim().split(/\s+/).filter(Boolean).length < 2) return null;
+  if (/^\s*\/\w+/.test(text)) return null;
+
+  const lower = text.toLowerCase();
+  let best = null, bestScore = 0;
+
+  for (const { skill, kw } of SKILL_ROUTER) {
+    let score = 0;
+    for (const k of kw) {
+      if (lower.includes(k)) {
+        // Weighted scoring: longer phrases score higher
+        score += k.split(' ').length;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = skill;
+    }
+  }
+
+  // Gatekeeper: If confidence is low, let Billy handle it with an "autonomous" mindset
+  if (!best || bestScore < 2) {
+    return {
+      skill: 'billy',
+      enhanced: `[BILLY GATEKEEPER MODE]
+The user's request doesn't match a specific specialist high-confidence trigger. 
+As the primary Sovereign AI, think critically for yourself. 
+Provide an honest, direct, and autonomous answer. 
+Avoid generic AI boilerplate; be a powerful agentic partner.
+
+User R
+
+--- boot() { ---
+──────────────────────────────────
+async function boot() {
+  console.log('BVMBINO Pro v5.7 · Booting…');
+
+  // Rehydrate persisted config first — never fails
+  try {
+    state.model          = localStorage.getItem('v3_model')        || state.model;
+    state.activeClientId = localStorage.getItem('v3_active_client') || null;
+    state.config.temp    = parseFloat(localStorage.getItem('v4_temp') || '0.7');
+    state.config.stream  = false; // stream:false — no SSE handler in standalone
+  } catch(e) {}
+
+  // Token fetch — non-fatal, ignore completely
+  try { await initializeToken(); } catch(e) {}
+
+  // IndexedDB — non-fatal, app works without it (falls back to LS)
+  try { await initDB(); } catch(e) { console.warn('IndexedDB unavailable, using localStorage fallback'); }
+
+  // UI state restoration
+  try {
+    const showAll = localStorage.getItem('bvmbino_show_all_agents');
+    if (showAll !== null) state.showAllAgents = (showAll === 'true');
+    
+    const leftCollapsed = localStorage.getItem('bvmbino_sb_left_collapsed');
+    if (leftCollap
+
+--- smartRouteMsg( ---
+y's autonomy and dual-layer routing.
+ */
+function smartRouteMsg(text) {
+  if (!text || text.trim().split(/\s+/).filter(Boolean).length < 2) return null;
+  if (/^\s*\/\w+/.test(text)) return null;
+
+  const lower = text.toLowerCase();
+  let best = null, bestScore = 0;
+
+  for (const { skill, kw } of SKILL_ROUTER) {
+    let score = 0;
+    for (const k of kw) {
+      if (lower.includes(k)) {
+        // Weighted scoring: longer phrases score higher
+        score += k.split(' ').length;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = skill;
+    }
+  }
+
+  // Gatekeeper: If confidence is low, let Billy handle it with an "autonomous" mindset
+  if (!best || bestScore < 2) {
+    return {
+      skill: 'billy',
+      enhanced: `[BILLY GATEKEEPER MODE]
+The user's request doesn't match a specific specialist high-confidence trigger. 
+As the primary Sovereign AI, think critically for yourself. 
+Provide an honest, direct, and autonomous answer. 
+Avoid generic AI boilerplate; be a powerful agentic partner.
+
+User Request: "
+
+--- exportLastMd( ---
+rtLastPdf();
+      if (type === 'last-md')   this.exportLastMd();
+      if (type === 'last-copy') this.copyLast();
+    });
+
+    // ─ § FILE UPLOAD ─────────────────────────────────────────────
+    this._on('filebtn',    'click', () => this.dom.fileInput?.click());
+    this._on('upload-btn', 'click', () => this.dom.fileInput?.click());
+
+    this.dom.fileInput?.addEventListener('change', e => {
+      this.handleFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    // Drag & drop
+    document.addEventListener('dragover', e => e.preventDefault());
+    document.addEventListener('drop', e => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) this.handleFiles(e.dataTransfer.files);
+    });
+
+    // File chip remove — delegated on strip
+    this.dom.strip?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-remove-file]');
+      if (btn) this.removeFile(parseInt(btn.dataset.removeFile, 10));
+    });
+
+    // ─ § VOICE INPUT ─────────────────────────────────────────────
+    this._on('micbtn',   'cl
+

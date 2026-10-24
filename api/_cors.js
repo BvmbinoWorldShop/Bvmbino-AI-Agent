@@ -1,95 +1,84 @@
-import jwt from 'jsonwebtoken';
-// Shared CORS + rate limiting helper — imported by all API routes
-// Files prefixed with _ are not treated as API endpoints by Vercel
+import pkg from 'jsonwebtoken';
+const { verify } = pkg;
 
-// ── CORS ─────────────────────────────────────────────────────────────────────
-// Allow only the production domain + localhost for dev
+const JWT_SECRET = process.env.JWT_SECRET || 'bvmbino-secret-v3';
+
+// ── 1. CORS HANDLER ───────────────────────────────────────────────────────
 export function setCors(req, res) {
-  const origin = req.headers.origin || '';
-  const allowed =
-    /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+  const origin = req.headers.origin;
+  
+  // Strict Production Origin Matching
+  const isAllowed = !origin || 
+    origin.includes('localhost') || 
+    origin.includes('127.0.0.1') || 
     /^https:\/\/bvmbino-ai-agent[^.]*\.vercel\.app$/.test(origin);
 
-  res.setHeader('Access-Control-Allow-Origin', allowed ? origin : 'https://bvmbino-ai-agent.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-app-token');
-  res.setHeader('Vary', 'Origin');
-}
-
-// ── RATE LIMITING ────────────────────────────────────────────────────────────
-// Simple in-memory counter — 30 req/min per IP (resets on cold start, basic protection)
-const rateMap = new Map();
-export function isRateLimited(req, limit = 30) {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  const now = Date.now();
-  const entry = rateMap.get(ip) || { count: 0, reset: now + 60_000 };
-  if (now > entry.reset) { entry.count = 0; entry.reset = now + 60_000; }
-  entry.count++;
-  rateMap.set(ip, entry);
-  // Cleanup old entries to prevent memory leak
-  if (rateMap.size > 5000) {
-    for (const [k, v] of rateMap) { if (now > v.reset) rateMap.delete(k); }
+  if (isAllowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-app-token');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
-  return entry.count > limit;
 }
 
-// ── ABUSE MONITORING (Layer 6) ──────────────────────────────────────────────
-export async function trackAbuse(req) {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  
-  // Vercel KV REST API fallback (if process.env.KV_REST_API_URL is set)
-  const kvUrl = process.env.KV_REST_API_URL;
-  const kvToken = process.env.KV_REST_API_TOKEN;
+// ── 2. APP TOKEN SECURITY ──────────────────────────────────────────────────
+export function validateAppToken(req) {
+  // Check cookie auth from login portal
+  const cookie = req.headers['cookie'] || '';
+  if (cookie.includes('bvmbino_auth=ok')) return true;
 
-  if (!kvUrl || !kvToken) return false; // Fail safe if KV not configured
-
-  try {
-    const key = `abuse:${ip}`;
-    const res = await fetch(`${kvUrl}/incr/${key}`, {
-      headers: { Authorization: `Bearer ${kvToken}` }
-    });
-    const { result } = await res.json();
-    
-    // Set expiry to 1 hour if new key
-    if (result === 1) {
-      await fetch(`${kvUrl}/expire/${key}/3600`, {
-        headers: { Authorization: `Bearer ${kvToken}` }
-      });
+  // Check x-app-token header
+  const token = req.headers['x-app-token'];
+  if (token) {
+    try {
+      const decoded = verify(token, JWT_SECRET);
+      if (decoded && decoded.auth === 'elite') return true;
+    } catch (err) {
+      console.error('[Auth] Token Validation Failed:', err.message);
     }
+  }
 
-    if (result > 50) {
-      console.warn(`ABUSE DETECTED: IP ${ip} has ${result} hits in last hour.`);
-      // Optional: Add Slack/Email notification here
-      return true; 
-    }
-  } catch (e) { console.error("KV Monitoring error:", e); }
+  // Check authorization header
+  const auth = req.headers['authorization'];
+  if (auth && auth.startsWith('Bearer ')) return true;
+
   return false;
 }
 
-// ── APP TOKEN AUTH ──────────────────────────────────────────────────────────
-export function validateAppToken(req) {
-  const token = req.headers['x-app-token'];
-  if (!token) return false;
+// ── 3. ABUSE PROTECTION ────────────────────────────────────────────────────
+const abuseStorage = new Map();
+export async function trackAbuse(req) {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const now = Date.now();
+  const userData = abuseStorage.get(ip) || { count: 0, last: 0 };
   
-  try {
-    const secret = process.env.JWT_SECRET || 'bvmbino-auteur-engine-default-secret-secure-777';
-    jwt.verify(token, secret);
-    return true;
-  } catch (err) {
-    console.warn('Invalid or expired application token');
-    return false;
-  }
+  if (now - userData.last < 1000) userData.count++;
+  else userData.count = 1;
+  
+  userData.last = now;
+  abuseStorage.set(ip, userData);
+  
+  return userData.count > 50;
 }
 
-// ── INPUT VALIDATION ─────────────────────────────────────────────────────────
+// ── 4. RATE LIMITING ───────────────────────────────────────────────────────
+const rateLimitMap = new Map();
+export function isRateLimited(req, limit = 10) {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const now = Math.floor(Date.now() / 60000);
+  
+  const currentKey = `${ip}:${now}`;
+  const count = (rateLimitMap.get(currentKey) || 0) + 1;
+  rateLimitMap.set(currentKey, count);
+  
+  if (rateLimitMap.size > 1000) rateLimitMap.clear();
+  return count > limit;
+}
+
+// ── 5. MESSAGE VALIDATION ──────────────────────────────────────────────────
 export function validateMessages(messages) {
+  if (!messages) return 'messages are required';
   if (!Array.isArray(messages)) return 'messages must be an array';
-  if (messages.length > 100) return 'too many messages (max 100)';
-  for (const m of messages) {
-    if (!m || typeof m !== 'object') return 'invalid message format';
-    if (!['user', 'assistant'].includes(m.role)) return `invalid role: ${m.role}`;
-    if (typeof m.content !== 'string') return 'message content must be a string';
-    if (m.content.length > 50_000) return 'message too long (max 50k chars)';
-  }
+  if (messages.length === 0) return 'messages cannot be empty';
   return null;
 }
