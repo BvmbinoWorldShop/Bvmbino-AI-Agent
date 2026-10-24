@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
   // Rate Limit check
-  if (isRateLimited(req, 30)) return res.status(429).json({ error: 'System busy — too many requests' });
+  if (isRateLimited(req, 40)) return res.status(429).json({ error: 'System busy — too many requests' });
 
   // Security layer
   if (!validateAppToken(req)) return res.status(403).json({ error: 'Unauthorized: Session required' });
@@ -32,16 +32,9 @@ export default async function handler(req, res) {
   };
 
   if (!KEYS.groq && !KEYS.openrouter && !KEYS.cerebras && !KEYS.gemini) {
-    const diagnostics = {
-      GROQ_KEY: !!KEYS.groq,
-      OPENROUTER_KEY: !!KEYS.openrouter,
-      CEREBRAS_KEY: !!KEYS.cerebras,
-      GEMINI_KEY: !!KEYS.gemini
-    };
     return res.status(500).json({ 
       error: 'Configuration Error: No authorized AI provider keys found.',
-      diagnostics,
-      instructions: 'Check Vercel Dashboard -> Settings -> Environment Variables. Ensure "Production" is checked for your keys.'
+      instructions: 'Check Vercel Dashboard -> Settings -> Environment Variables. Ensure keys are checked for Production.'
     });
   }
 
@@ -54,30 +47,30 @@ export default async function handler(req, res) {
 
     // ── 1. ORCHESTRATION ────────────────────────────────────────────────────
     let activeSkill = detectSkill(messages, system);
-    let specialistModel = requestedModel || 'llama-3.3-70b-versatile';
+    let specialistModel = requestedModel || (KEYS.cerebras ? 'llama3.1-70b' : 'llama-3.3-70b-versatile');
     
     // Smart Routing Logic
-    let primaryProvider = 'groq';
+    let primaryProvider = KEYS.cerebras ? 'cerebras' : (KEYS.groq ? 'groq' : 'openrouter');
     if (specialistModel.includes('/')) primaryProvider = 'openrouter';
     else if (specialistModel.includes('gemini')) primaryProvider = 'gemini';
     else if (specialistModel.includes('mistral')) primaryProvider = 'mistral';
     else if (specialistModel.includes('claude')) primaryProvider = 'anthropic';
-    else if (specialistModel.startsWith('llama3.1-') || specialistModel.startsWith('llama-3.3-')) primaryProvider = 'cerebras';
+    else if (specialistModel.startsWith('llama3.1-')) primaryProvider = 'cerebras';
 
     // Skill-based specialization overrides
     if (activeSkill) {
       if (['writer', 'content', 'email', 'resume'].includes(activeSkill)) {
-        specialistModel = KEYS.cerebras ? 'llama-3.3-70b' : 'llama-3.3-70b-versatile';
+        specialistModel = KEYS.cerebras ? 'llama3.1-70b' : 'llama-3.3-70b-versatile';
         primaryProvider = KEYS.cerebras ? 'cerebras' : 'groq';
       } else if (['strategy', 'budget', 'psych', 'lex'].includes(activeSkill)) {
-        specialistModel = 'deepseek/deepseek-chat-v3-0324:free';
+        specialistModel = 'meta-llama/llama-3.3-70b-instruct';
         primaryProvider = 'openrouter';
       } else if (['search', 'scrape'].includes(activeSkill)) {
         specialistModel = 'gemini-1.5-flash';
         primaryProvider = 'gemini';
       } else if (activeSkill === 'coach') {
-        specialistModel = KEYS.groq ? 'llama-3.3-70b-versatile' : 'gemini-1.5-flash';
-        primaryProvider = KEYS.groq ? 'groq' : 'gemini';
+        specialistModel = KEYS.cerebras ? 'llama3.1-70b' : 'llama-3.3-70b-versatile';
+        primaryProvider = KEYS.cerebras ? 'cerebras' : 'groq';
       }
     }
 
@@ -103,20 +96,23 @@ export default async function handler(req, res) {
     if (KEYS[primaryProvider]) {
       chain.push({ provider: primaryProvider, model: specialistModel });
     }
-    // Fallbacks
-    if (KEYS.groq && primaryProvider !== 'groq') {
-      chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
+    
+    // Robust fallbacks across all active keys
+    if (KEYS.cerebras) {
+      chain.push({ provider: 'cerebras', model: 'llama3.1-8b' });
+      chain.push({ provider: 'cerebras', model: 'llama3.1-70b' });
     }
-    if (KEYS.cerebras && primaryProvider !== 'cerebras') {
-      chain.push({ provider: 'cerebras', model: 'llama-3.3-70b' });
+    if (KEYS.openrouter) {
+      chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct' });
+      chain.push({ provider: 'openrouter', model: 'deepseek/deepseek-chat' });
     }
-    if (KEYS.gemini && primaryProvider !== 'gemini') {
+    if (KEYS.gemini) {
+      chain.push({ provider: 'gemini', model: 'gemini-2.0-flash' });
       chain.push({ provider: 'gemini', model: 'gemini-1.5-flash' });
-    }
-    if (KEYS.openrouter && primaryProvider !== 'openrouter') {
-      chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct:free' });
+      chain.push({ provider: 'gemini', model: 'gemini-1.5-pro' });
     }
     if (KEYS.groq) {
+      chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
       chain.push({ provider: 'groq', model: 'llama-3.1-8b-instant' });
     }
 
@@ -124,15 +120,21 @@ export default async function handler(req, res) {
     async function executeAttempt(attempt) {
       let url, headers;
       const key = KEYS[attempt.provider];
+      let reqModel = attempt.model;
 
       switch(attempt.provider) {
-        case 'groq': 
-          url = 'https://api.groq.com/openai/v1/chat/completions';
-          headers = { 'Authorization': `Bearer ${key}` };
-          break;
         case 'cerebras': 
           url = 'https://api.cerebras.ai/v1/chat/completions';
           headers = { 'Authorization': `Bearer ${key}` };
+          // Ensure valid Cerebras model names
+          if (!reqModel.startsWith('llama3.1-') && !reqModel.startsWith('llama-3.3-')) {
+            reqModel = 'llama3.1-8b';
+          }
+          break;
+        case 'groq': 
+          url = 'https://api.groq.com/openai/v1/chat/completions';
+          headers = { 'Authorization': `Bearer ${key}` };
+          if (reqModel.startsWith('llama3.1-70b')) reqModel = 'llama-3.3-70b-versatile';
           break;
         case 'openrouter': 
           url = 'https://openrouter.ai/api/v1/chat/completions';
@@ -141,10 +143,12 @@ export default async function handler(req, res) {
             'HTTP-Referer': 'https://bvmbino-ai-agent.vercel.app',
             'X-Title': 'Bvmbino Pro'
           };
+          if (reqModel.endsWith(':free')) reqModel = reqModel.replace(':free', '');
           break;
         case 'gemini': 
           url = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
           headers = { 'Authorization': `Bearer ${key}` };
+          if (!reqModel.includes('gemini')) reqModel = 'gemini-1.5-flash';
           break;
         case 'mistral': 
           url = 'https://api.mistral.ai/v1/chat/completions';
@@ -168,7 +172,7 @@ export default async function handler(req, res) {
           ...headers
         },
         body: JSON.stringify({
-          model: attempt.model,
+          model: reqModel,
           messages: chatMessages,
           stream: true,
           temperature: 0.7,
@@ -178,11 +182,11 @@ export default async function handler(req, res) {
 
       if (!response.ok) {
         const txt = await response.text();
-        throw new Error(`${attempt.provider}/${attempt.model} (${response.status}): ${txt.slice(0, 160)}`);
+        throw new Error(`${attempt.provider}/${reqModel} (${response.status}): ${txt.slice(0, 160)}`);
       }
 
       res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('x-specialist', attempt.model);
+      res.setHeader('x-specialist', reqModel);
       res.setHeader('x-provider', attempt.provider);
       
       const reader = response.body.getReader();
@@ -195,13 +199,22 @@ export default async function handler(req, res) {
     }
 
     const errors = [];
-    for (const attempt of chain) {
+    // Deduplicate attempts
+    const seen = new Set();
+    const uniqueChain = chain.filter(a => {
+      const k = `${a.provider}:${a.model}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    for (const attempt of uniqueChain) {
       try {
         await executeAttempt(attempt);
         return;
       } catch (err) {
         errors.push(err.message);
-        console.warn(`[Orchestrator] Attempt failure (${attempt.provider}):`, err.message);
+        console.warn(`[Orchestrator] Attempt failure:`, err.message);
         continue;
       }
     }
