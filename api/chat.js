@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
   // Rate Limit check
-  if (isRateLimited(req, 20)) return res.status(429).json({ error: 'System busy — too many requests' });
+  if (isRateLimited(req, 30)) return res.status(429).json({ error: 'System busy — too many requests' });
 
   // Security layer
   if (!validateAppToken(req)) return res.status(403).json({ error: 'Unauthorized: Session required' });
@@ -62,26 +62,29 @@ export default async function handler(req, res) {
     else if (specialistModel.includes('gemini')) primaryProvider = 'gemini';
     else if (specialistModel.includes('mistral')) primaryProvider = 'mistral';
     else if (specialistModel.includes('claude')) primaryProvider = 'anthropic';
-    else if (specialistModel.startsWith('llama3.1-')) primaryProvider = 'cerebras';
+    else if (specialistModel.startsWith('llama3.1-') || specialistModel.startsWith('llama-3.3-')) primaryProvider = 'cerebras';
 
     // Skill-based specialization overrides
     if (activeSkill) {
       if (['writer', 'content', 'email', 'resume'].includes(activeSkill)) {
-        specialistModel = KEYS.cerebras ? 'llama3.1-70b' : 'llama-3.3-70b-versatile';
+        specialistModel = KEYS.cerebras ? 'llama-3.3-70b' : 'llama-3.3-70b-versatile';
         primaryProvider = KEYS.cerebras ? 'cerebras' : 'groq';
       } else if (['strategy', 'budget', 'psych', 'lex'].includes(activeSkill)) {
         specialistModel = 'deepseek/deepseek-chat-v3-0324:free';
         primaryProvider = 'openrouter';
       } else if (['search', 'scrape'].includes(activeSkill)) {
-        specialistModel = 'gemini-2.0-flash';
+        specialistModel = 'gemini-1.5-flash';
         primaryProvider = 'gemini';
+      } else if (activeSkill === 'coach') {
+        specialistModel = KEYS.groq ? 'llama-3.3-70b-versatile' : 'gemini-1.5-flash';
+        primaryProvider = KEYS.groq ? 'groq' : 'gemini';
       }
     }
 
     // ── 2. PROMPT STACK ─────────────────────────────────────────────────────
     const isTemplate = activeSkill && activeSkill.startsWith('TEMPLATE_');
     const cleanSkill = isTemplate ? activeSkill.replace('TEMPLATE_', '') : activeSkill;
-    const skillPrompt = cleanSkill ? `\n\n## ACTIVE SPECIALIST: ${cleanSkill.toUpperCase()}\n${SKILLS[cleanSkill]}` : '';
+    const skillPrompt = cleanSkill ? `\n\n## ACTIVE SPECIALIST: ${cleanSkill.toUpperCase()}\n${SKILLS[cleanSkill] || ''}` : '';
     
     let clientPrompt = '';
     const { clientContext } = body;
@@ -101,17 +104,20 @@ export default async function handler(req, res) {
       chain.push({ provider: primaryProvider, model: specialistModel });
     }
     // Fallbacks
-    if (KEYS.cerebras && primaryProvider !== 'cerebras') {
-      chain.push({ provider: 'cerebras', model: 'llama3.1-70b' });
-    }
     if (KEYS.groq && primaryProvider !== 'groq') {
       chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
+    }
+    if (KEYS.cerebras && primaryProvider !== 'cerebras') {
+      chain.push({ provider: 'cerebras', model: 'llama-3.3-70b' });
+    }
+    if (KEYS.gemini && primaryProvider !== 'gemini') {
+      chain.push({ provider: 'gemini', model: 'gemini-1.5-flash' });
     }
     if (KEYS.openrouter && primaryProvider !== 'openrouter') {
       chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct:free' });
     }
-    if (KEYS.gemini && primaryProvider !== 'gemini') {
-      chain.push({ provider: 'gemini', model: 'gemini-1.5-flash-latest' });
+    if (KEYS.groq) {
+      chain.push({ provider: 'groq', model: 'llama-3.1-8b-instant' });
     }
 
     // ── 4. EXECUTION ────────────────────────────────────────────────────────
@@ -152,7 +158,7 @@ export default async function handler(req, res) {
             'anthropic-dangerous-direct-browser-access': 'true'
           };
           break;
-        default: throw new Error('Unknown Provider');
+        default: throw new Error('Unknown Provider: ' + attempt.provider);
       }
 
       const response = await fetch(url, {
@@ -172,7 +178,7 @@ export default async function handler(req, res) {
 
       if (!response.ok) {
         const txt = await response.text();
-        throw new Error(`${attempt.provider} (${response.status}): ${txt.slice(0, 100)}`);
+        throw new Error(`${attempt.provider}/${attempt.model} (${response.status}): ${txt.slice(0, 160)}`);
       }
 
       res.setHeader('Content-Type', 'text/event-stream');
@@ -188,13 +194,13 @@ export default async function handler(req, res) {
       res.end();
     }
 
-    let lastError = null;
+    const errors = [];
     for (const attempt of chain) {
       try {
         await executeAttempt(attempt);
         return;
       } catch (err) {
-        lastError = err;
+        errors.push(err.message);
         console.warn(`[Orchestrator] Attempt failure (${attempt.provider}):`, err.message);
         continue;
       }
@@ -202,12 +208,12 @@ export default async function handler(req, res) {
 
     res.status(500).json({ 
       error: 'All providers exhausted.',
-      last_error: lastError?.message,
+      errors,
       diagnostics: { groq: !!KEYS.groq, cerebras: !!KEYS.cerebras, openrouter: !!KEYS.openrouter, gemini: !!KEYS.gemini }
     });
 
   } catch (err) {
     console.error('Final Orchestrator Failure:', err);
-    if (!res.headersSent) res.status(500).json({ error: 'System Error: Check logs.' });
+    if (!res.headersSent) res.status(500).json({ error: 'System Error: ' + err.message });
   }
 }
