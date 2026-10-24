@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVMBINO 2.0 · Legacy Technical Record</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #06080a;
+            --s1: #0b0e12;
+            --s2: #111419;
+            --t1: #f0ece4;
+            --t2: #aba492;
+            --pu: #e8a912;
+            --pu2: #ffc842;
+            --bd: rgba(232, 169, 18, 0.15);
+            --font: 'Syne', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg);
+            background: radial-gradient(circle at 50% -20%, #111419 0%, #06080a 80%);
+            color: var(--t1);
+            font-family: var(--font);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+            border-bottom: 1px solid var(--bd);
+            padding-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 4rem;
+            letter-spacing: 2px;
+            color: var(--pu);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--pu2);
+            margin-top: 40px;
+            border-left: 4px solid var(--pu);
+            padding-left: 15px;
+        }
+
+        .bilingual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .lang-card {
+            background: var(--s1);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--bd);
+        }
+
+        .tag {
+            display: inline-block;
+            background: var(--bd);
+            color: var(--pu2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .milestone {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 30px;
+        }
+
+        .milestone::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--pu);
+        }
+
+        .milestone-date {
+            font-family: var(--mono);
+            color: var(--pu);
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            background: var(--s2);
+            border: 1px solid var(--bd);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .faq-box {
+            background: rgba(232, 169, 18, 0.05);
+            border: 1px dashed var(--pu);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 100px;
+            padding-top: 40px;
+            border-top: 1px solid var(--bd);
+            font-size: 0.9rem;
+            color: var(--t2);
+        }
+
+        @media (max-width: 768px) {
+            .bilingual-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="tag">System Status: Hardened & Independent</div>
+            <h1>BVMBINO 2.0</h1>
+            <p style="font-family: var(--mono); color: var(--t2);">Legacy Technical Record · Histoire Technique Héritée</p>
+        </header>
+
+        <div class="bilingual-grid">
+            <div class="lang-card">
+                <div class="tag">English</div>
+                <p><strong>The Evolution of Bvmbino:</strong> From a monolithic concept to a secure, modular production hub. Every line of code has been audited for the extreme demands of the Auteur workflow.</p>
+            </div>
+            <div class="lang-card">
+                <div class="tag">Français</div>
+                <p><strong>L'Évolution de Bvmbino :</strong> D'un concept monolithique à un hub de production sécurisé et modulaire. Chaque ligne de code a été auditée pour les exigences extrêmes du flux de travail Auteur.</p>
+            </div>
+        </div>
+
+        <h2>I. Architectural Milestones · Jalons Architecturaux</h2>
+        
+        <div class="milestone">
+            <div class="milestone-date">Phase 1: Genesis</div>
+            <p><strong>EN:</strong> Initialization of the core chat loop and personality layers.<br>
+            <strong>FR:</strong> Initialisation de la boucle de chat principale et des couches de personnalité.</p>
+        </div>
+
+        <div class="milestone">
+            <div class="milestone-date">Phase 2: Modularization</div>
+            <p><strong>EN:</strong> Decoupling logic into <code>store.js</code>, <code>render.js</code>, and <code>api.js</code> to enable elite specialist agents.<br>
+            <strong>FR:</strong> Découplage de la logique en modules distincts pour permettre l'intervention d'agents spécialistes d'élite.</p>
+        </div>
+
+        <div class="milestone">
+            <div class="milestone-date">Phase 3: Iron Hardening</div>
+            <p><strong>EN:</strong> Implementation of AES-GCM 256-bit encryption for local data and "The Vault" security protocol.<br>
+            <strong>FR:</strong> Mise en œuvre du cryptage AES-GCM 256 bits pour les données locales et protocole de sécurité "The Vault".</p>
+        </div>
+
+        <div class="milestone">
+            <div class="milestone-date">Phase 4: Independence Prototype</div>
+            <p><strong>EN:</strong> Localization of external JS libraries and 100% PWA offline-readiness.<br>
+            <strong>FR:</strong> Localisation des bibliothèques JS externes et préparation 100 % hors ligne pour PWA.</p>
+        </div>
+
+        <div class="milestone">
+            <div class="milestone-date">Phase 5: Auteur Finalization</div>
+            <p><strong>EN:</strong> Deployment of the full 24-specialist command suite and the high-stakes Cinematic PDF Engine.<br>
+            <strong>FR:</strong> Déploiement de la suite complète de 24 commandes spécialisées et du moteur PDF cinématique "High-Stakes".</p>
+        </div>
+
+        <h2>II. Security Matrix · Matrice de Sécurité</h2>
+        <div class="chart-container">
+            <!-- Conceptual SVG Bar Chart -->
+            <svg width="400" height="200" viewBox="0 0 400 200">
+                <text x="0" y="20" fill="#aba492" font-size="12">Security Level Progression</text>
+                <rect x="50" y="150" width="40" height="30" fill="#3d3a33" />
+                <rect x="120" y="120" width="40" height="60" fill="#6d685b" />
+                <rect x="190" y="80" width="40" height="100" fill="#e8a912" />
+                <rect x="260" y="30" width="40" height="150" fill="#ffc842" />
+                <text x="50" y="195" fill="#aba492" font-size="10">V1</text>
+                <text x="120" y="195" fill="#aba492" font-size="10">V2</text>
+                <text x="190" y="195" fill="#aba492" font-size="10">Vault</text>
+                <text x="260" y="195" fill="#aba492" font-size="10">Alpha</text>
+            </svg>
+            <p style="font-size: 0.85rem; color: var(--t2); margin-top: 20px;">
+                Protection has evolved from basic Obfuscation to Tier-1 Cryptography.
+            </p>
+        </div>
+
+        <h2>III. Independence & Local Access FAQ</h2>
+        
+        <div class="faq-box">
+            <p><strong>Q: How do I open BVMBINO 2.0 locally?</strong></p>
+            <p><strong>EN:</strong> Since the app uses modern JavaScript modules, place the folder in your Documents. To run it, open your terminal in the folder and type <code>npx serve</code> or use the "Live Server" extension in VS Code. This bypasses browser security restrictions while keeping your data local.<br>
+            <strong>FR:</strong> Puisque l'application utilise des modules JS modernes, placez le dossier dans vos Documents. Pour l'exécuter, ouvrez votre terminal dans le dossier et tapez <code>npx serve</code> ou utilisez l'extension "Live Server".</p>
+        </div>
+
+        <div class="faq-box">
+            <p><strong>Q: How do I install this on iOS/Android?</strong></p>
+            <p><strong>EN:</strong> Use "Add to Home Screen" in Safari (iOS) or Chrome (Android). BVMBINO will run as a standalone app without the browser UI.<br>
+            <strong>FR:</strong> Utilisez "Sur l'écran d'accueil" dans Safari (iOS) ou Chrome (Android). BVMBINO fonctionnera comme une application autonome.</p>
+        </div>
+
+        <div class="faq-box">
+            <p><strong>Q: Is this app independent from the cloud?</strong></p>
+            <p><strong>EN:</strong> Yes. By localizing <code>html2pdf.js</code> and implementing Service Workers, the engine can boot and export documents even without an internet connection.<br>
+            <strong>FR:</strong> Oui. En localisant <code>html2pdf.js</code> et en utilisant les Service Workers, le moteur peut démarrer et exporter des documents même sans connexion Internet.</p>
+        </div>
+
+        <footer>
+            <p>Confidential Record · Propriété de BVMBINO 2.0 Auteur Production</p>
+            <p>© 2026 · Built by Antigravity Engineering</p>
+        </footer>
+    </div>
+</body>
+</html>

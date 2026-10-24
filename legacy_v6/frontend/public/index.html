@@ -1,0 +1,4285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#06080a">
+  <meta name="apple-mobile-web-app-title" content="Bvmbino AI">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='28' width='64' height='52' rx='10' fill='%23e8a912'/><rect x='26' y='40' width='16' height='14' rx='4' fill='%230a0800'/><rect x='58' y='40' width='16' height='14' rx='4' fill='%230a0800'/><circle cx='34' cy='47' r='4' fill='%2322c55e'/><circle cx='66' cy='47' r='4' fill='%2322c55e'/><rect x='30' y='64' width='40' height='7' rx='3' fill='%230a0800'/><rect x='34' y='66' width='6' height='3' rx='1' fill='%23ffc842'/><rect x='44' y='66' width='6' height='3' rx='1' fill='%23ffc842'/><rect x='54' y='66' width='6' height='3' rx='1' fill='%23ffc842'/><rect x='46' y='14' width='8' height='16' rx='4' fill='%23c89008'/><circle cx='50' cy='11' r='6' fill='%23ffc842'/><rect x='6' y='42' width='12' height='10' rx='5' fill='%23d4940a'/><rect x='82' y='42' width='12' height='10' rx='5' fill='%23d4940a'/></svg>">
+  <!-- PWA / SEO Metadata -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#06080a">
+  <link rel="apple-touch-icon" href="https://bvmbino-ai-agent.vercel.app/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Bvmbino Pro · Auteur Engine</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #06080a;
+      --s1: #0b0e12;
+      --s2: #111419;
+      --s3: #181c22;
+      --s4: #1f242b;
+      --bd: rgba(255, 200, 60, .06);
+      --bd2: rgba(255, 200, 60, .12);
+      --bd3: rgba(255, 200, 60, .22);
+      --t1: #f0ece4;
+      --t2: #9a9484;
+      --t3: #5a5548;
+      --t4: #342f28;
+      --pu: #e8a912;
+      --pu2: #ffc842;
+      --pu3: rgba(232, 169, 18, .12);
+      --gn: #22c55e;
+      --am: #f59e0b;
+      --rd: #ef4444;
+      --r: 12px;
+      --rsm: 8px;
+      --font: 'Syne', sans-serif;
+      --mono: 'JetBrains Mono', monospace
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--t1);
+      display: flex;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 500' opacity='0.03'%3E%3Cpath fill='%23e8a912' d='M150 100h20v20h-20zM200 150h40v20h-40zM300 100h60v40h-60zM450 200h100v60H450zM700 150h80v40h-80zM850 100h30v20h-30zM100 300h50v30h-50zM250 350h70v40h-70zM500 400h120v20H500zM800 350h100v40H800z'/%3E%3C/svg%3E") center/cover no-repeat;
+      pointer-events: none;
+      z-index: 0
+    }
+
+    /* SIDEBAR */
+    .sb {
+      width: 256px;
+      background: linear-gradient(180deg, #181c22 0%, #06080a 100%);
+      border-right: 1px solid var(--bd);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+      z-index: 10
+    }
+
+    .sb-top {
+      padding: 18px 14px 14px;
+      border-bottom: 1px solid var(--bd);
+      flex-shrink: 0
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px
+    }
+
+    .lmark {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #e8a912, #d4940a);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #0a0800;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(232, 169, 18, .25)
+    }
+
+    .lmark::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .25) 0%, transparent 60%)
+    }
+
+    .lname {
+      font-size: 20px;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: var(--t1)
+    }
+
+    .ltag {
+      font-size: 9px;
+      color: var(--t3);
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 1.2px
+    }
+
+    .nbtn {
+      width: 100%;
+      padding: 9px 12px;
+      background: linear-gradient(135deg, #e8a912, #d4940a);
+      color: #0a0800;
+      border: none;
+      border-radius: var(--rsm);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: opacity .15s, transform .1s;
+      box-shadow: 0 2px 10px rgba(232, 169, 18, .2)
+    }
+
+    .nbtn:hover {
+      opacity: .88
+    }
+
+    .nbtn:active {
+      transform: scale(.97)
+    }
+
+    .sbl {
+      font-size: 9px;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      font-family: var(--mono);
+      margin-bottom: 7px
+    }
+
+    .ssect {
+      padding: 10px 14px 6px;
+      flex-shrink: 0
+    }
+
+    .sb-scroll {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0
+    }
+
+    .sb-scroll .ssect {
+      flex-shrink: unset
+    }
+
+    .mtabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px
+    }
+
+    /* Model Selection UI */
+    .mod-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px
+    }
+
+    .mod-item {
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, .02);
+      border: 1px solid var(--bd);
+      border-radius: var(--rsm);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      cursor: pointer;
+      transition: all .15s;
+      font-size: 10px;
+      color: var(--t3);
+      position: relative;
+      min-height: 46px;
+      justify-content: center
+    }
+
+    .mod-item:hover {
+      background: rgba(255, 255, 255, .04);
+      color: var(--t2)
+    }
+
+    .mod-item.on {
+      background: rgba(232, 169, 18, .06);
+      border-color: rgba(232, 169, 18, .3);
+      color: var(--pu2)
+    }
+
+    .live-sig {
+      width: 5px;
+      height: 5px;
+      background: var(--rd);
+      border-radius: 50%;
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      box-shadow: 0 0 6px var(--rd);
+      animation: sig-pulse 1.5s infinite
+    }
+
+    @keyframes sig-pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .3;
+        transform: scale(.8)
+      }
+    }
+
+    /* Model Selection Section */
+    .mod-sect {
+      padding: 0 14px 14px;
+      border-bottom: 1px solid var(--bd)
+    }
+
+    .mod-sect .sbl {
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .mod-sect .sbl::after {
+      content: 'LIVE';
+      font-size: 8px;
+      padding: 1px 4px;
+      background: rgba(239, 68, 68, .1);
+      color: var(--rd);
+      border: 1px solid rgba(239, 68, 68, .2);
+      border-radius: 4px;
+      letter-spacing: 1px
+    }
+
+    .mtab {
+      padding: 7px 8px;
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-radius: var(--rsm);
+      color: var(--t3);
+      font-size: 10px;
+      font-family: var(--mono);
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+      position: relative;
+      overflow: hidden
+    }
+
+    .mtab:hover {
+      color: var(--t2);
+      border-color: var(--bd2)
+    }
+
+    .mtab.on {
+      background: var(--pu3);
+      border-color: rgba(232, 169, 18, .4);
+      color: var(--pu2)
+    }
+
+    .mtab.on::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--pu2);
+      opacity: .5
+    }
+
+    .qacts {
+      display: flex;
+      flex-direction: column;
+      gap: 2px
+    }
+
+    .qbtn {
+      padding: 8px 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--rsm);
+      color: var(--t2);
+      font-size: 12px;
+      font-family: var(--font);
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: all .12s;
+      width: 100%
+    }
+
+    .qbtn:hover {
+      background: var(--s3);
+      border-color: var(--bd);
+      color: var(--t1)
+    }
+
+    .qi {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0
+    }
+
+    .qsub {
+      font-size: 9px;
+      color: var(--t3);
+      margin-left: auto;
+      font-family: var(--mono)
+    }
+
+    .sb-hist {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 10px 14px
+    }
+
+    .hi {
+      padding: 7px 10px;
+      border-radius: var(--rsm);
+      color: var(--t3);
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all .1s;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .hi:hover {
+      background: var(--s2);
+      color: var(--t2)
+    }
+
+    .hdot {
+      width: 4px;
+      height: 4px;
+      background: var(--t4);
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden
+    }
+
+    .topbar {
+      height: 50px;
+      border-bottom: 1px solid var(--bd);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 10px;
+      flex-shrink: 0;
+      background: rgba(8, 8, 9, .8);
+      backdrop-filter: blur(10px)
+    }
+
+    .tb-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0
+    }
+
+    .tb-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .badge {
+      font-size: 9px;
+      font-family: var(--mono);
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      letter-spacing: 0.3px
+    }
+
+    .b-pu {
+      background: rgba(232, 169, 18, .08);
+      color: var(--pu2);
+      border: 1px solid rgba(232, 169, 18, .25)
+    }
+
+    .b-gn {
+      background: rgba(34, 197, 94, .08);
+      color: var(--gn);
+      border: 1px solid rgba(34, 197, 94, .2)
+    }
+
+    .b-am {
+      background: rgba(245, 158, 11, .08);
+      color: var(--am);
+      border: 1px solid rgba(245, 158, 11, .2)
+    }
+
+    .pulse {
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+      animation: pulse-anim 2s infinite
+    }
+
+    @keyframes pulse-anim {
+      0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4)
+      }
+
+      70% {
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0)
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0)
+      }
+    }
+
+
+    /* Settings Modal */
+    .settings-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(6, 8, 10, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px
+    }
+
+    .set-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--s1);
+      border: 1px solid var(--bd2);
+      border-radius: var(--rlg);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      animation: pop-in 0.25s ease-out
+    }
+
+    @keyframes pop-in {
+      from {
+        opacity: 0;
+        transform: scale(0.95)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    .set-hdr {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--bd2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .set-t {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--t1)
+    }
+
+    .set-body {
+      padding: 24px
+    }
+
+    .set-sect {
+      margin-bottom: 24px
+    }
+
+    .set-st {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--t4);
+      margin-bottom: 12px;
+      font-family: var(--mono)
+    }
+
+    .set-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--t2)
+    }
+
+    .set-foot {
+      padding: 18px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid var(--bd2)
+    }
+
+    .cli {
+      position: relative;
+      transition: all 0.2s
+    }
+
+    .cli.active {
+      border-color: var(--pu2);
+      background: rgba(232, 169, 18, 0.05);
+      box-shadow: 0 0 15px rgba(232, 169, 18, 0.1)
+    }
+
+    .cli.active::after {
+      content: '🎯';
+      margin-left: auto;
+      font-size: 10px
+    }
+
+    .cli-del {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: var(--rd);
+      cursor: pointer
+    }
+
+    .cli:hover .cli-del {
+      opacity: 1
+    }
+
+    .icobtn {
+      width: 30px;
+      height: 30px;
+      background: none;
+      border: 1px solid var(--bd);
+      border-radius: var(--rsm);
+      color: var(--t3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      flex-shrink: 0
+    }
+
+    .icobtn:hover {
+      background: var(--s2);
+      color: var(--t2);
+      border-color: var(--bd2)
+    }
+
+    /* CHAT */
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth
+    }
+
+    .ci {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      position: relative;
+    }
+
+    .ci::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 600px;
+      height: 300px;
+      transform: translate(-50%, -50%);
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1010 466'%3E%3Cpath fill='%23e8a912' opacity='0.04' d='M159.2 110.1c.3.5.7 1 1 1.4 1 1.2 2 2.4 3 3.5.5.6 1 1.1 1.5 1.7.9 1 1.8 2 2.7 3 .6.7 1.2 1.4 1.8 2.1 1 1.2 2.1 2.3 3.1 3.5.3.3.6.6.9.9 1.1 1.2 2.2 2.5 3.3 3.7.8.9 1.6 1.8 2.4 2.7 1 1.1 2 2.2 3.1 3.2.4.4.9.8 1.3 1.2 1 1 2 1.9 3 2.8.6.6 1.2 1.1 1.8 1.7 1 .9 2 1.8 3 2.7.5.4 1 .9 1.5 1.3 1.1 1 2.2 2 3.3 2.9.1.1.2.2.3.3 1 .9 2 1.7 3 2.6.5.4 1 .8 1.5 1.2 1.1.9 2.2 1.7 3.3 2.5.4.3.7.6 1.1 1 1 .8 2.1 1.5 3.2 2.2l1.6 1.1c1 .7 2 1.3 3 2l1.5 1c1.1.7 2.2 1.4 3.3 2 .3.2.7.4 1 .6 1.1.7 2.2 1.3 3.4 1.9.5.3.9.5 1.4.8 1.1.6 2.1 1.2 3.2 1.7-.5 0-.1 0 0 0z'/%3E%3C/svg%3E") no-repeat center;
+      background-size: contain;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* WELCOME */
+    .welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 0;
+      position: relative;
+      overflow: hidden
+    }
+
+    /* 3D floating objects */
+    .w3d-scene {
+      position: relative;
+      width: 240px;
+      height: 120px;
+      margin-bottom: 20px;
+      perspective: 600px
+    }
+
+    .w3d-obj {
+      position: absolute;
+      font-size: 42px;
+      filter: drop-shadow(0 8px 20px rgba(0, 0, 0, .5));
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      will-change: transform
+    }
+
+    .w3d-money {
+      left: 10px;
+      top: 10px;
+      animation: float3d-money 4s infinite;
+      font-size: 48px
+    }
+
+    .w3d-ball {
+      left: 95px;
+      top: 0;
+      animation: float3d-ball 3.5s infinite;
+      font-size: 52px
+    }
+
+    .w3d-book {
+      left: 175px;
+      top: 15px;
+      animation: float3d-book 4.5s infinite;
+      font-size: 44px
+    }
+
+    .w3d-trophy {
+      left: 45px;
+      top: 55px;
+      animation: float3d-trophy 5s infinite;
+      font-size: 36px
+    }
+
+    .w3d-brain {
+      left: 150px;
+      top: 60px;
+      animation: float3d-brain 4.2s infinite;
+      font-size: 34px
+    }
+
+    @keyframes float3d-money {
+
+      0%,
+      100% {
+        transform: translateY(0) rotateY(0deg) scale(1)
+      }
+
+      25% {
+        transform: translateY(-14px) rotateY(15deg) scale(1.05)
+      }
+
+      50% {
+        transform: translateY(-6px) rotateY(0deg) scale(1)
+      }
+
+      75% {
+        transform: translateY(-18px) rotateY(-10deg) scale(1.03)
+      }
+    }
+
+    @keyframes float3d-ball {
+
+      0%,
+      100% {
+        transform: translateY(0) rotateX(0deg) scale(1)
+      }
+
+      30% {
+        transform: translateY(-20px) rotateX(15deg) scale(1.08)
+      }
+
+      60% {
+        transform: translateY(-8px) rotateX(-5deg) scale(1.02)
+      }
+
+      80% {
+        transform: translateY(-16px) rotateX(8deg) scale(1.05)
+      }
+    }
+
+    @keyframes float3d-book {
+
+      0%,
+      100% {
+        transform: translateY(0) rotateZ(0deg) scale(1)
+      }
+
+      20% {
+        transform: translateY(-12px) rotateZ(5deg) scale(1.04)
+      }
+
+      50% {
+        transform: translateY(-18px) rotateZ(-3deg) scale(1.06)
+      }
+
+      80% {
+        transform: translateY(-5px) rotateZ(2deg) scale(1)
+      }
+    }
+
+    @keyframes float3d-trophy {
+
+      0%,
+      100% {
+        transform: translateY(0) rotateY(0deg)
+      }
+
+      35% {
+        transform: translateY(-10px) rotateY(-12deg)
+      }
+
+      65% {
+        transform: translateY(-16px) rotateY(8deg)
+      }
+    }
+
+    @keyframes float3d-brain {
+
+      0%,
+      100% {
+        transform: translateY(0) rotateZ(0deg)
+      }
+
+      40% {
+        transform: translateY(-14px) rotateZ(6deg)
+      }
+
+      70% {
+        transform: translateY(-8px) rotateZ(-4deg)
+      }
+    }
+
+    .w3d-glow {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 30px;
+      background: radial-gradient(ellipse, rgba(232, 169, 18, .15) 0%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(8px)
+    }
+
+    .wt {
+      font-size: 36px;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffc842, #e8a912, #ffc842);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .ws {
+      font-size: 13px;
+      color: var(--t2);
+      max-width: 380px;
+      line-height: 1.6;
+      margin-bottom: 28px
+    }
+
+    .wgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+      max-width: 480px
+    }
+
+    .wcard {
+      padding: 14px;
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      text-align: left;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .wcard:hover {
+      background: var(--s3);
+      border-color: rgba(232, 169, 18, .25);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .3)
+    }
+
+    .wcard:active {
+      transform: scale(.97)
+    }
+
+    .wci {
+      font-size: 18px;
+      margin-bottom: 7px
+    }
+
+    .wct {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: var(--pu2)
+    }
+
+    .wcd {
+      font-size: 10px;
+      color: var(--t3);
+      line-height: 1.4
+    }
+
+    .shint {
+      margin-top: 20px;
+      font-size: 10px;
+      color: var(--t3);
+      font-family: var(--mono)
+    }
+
+    .shint code {
+      background: var(--s3);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--pu2);
+      border: 1px solid var(--bd)
+    }
+
+    /* MESSAGES */
+    .mrow {
+      display: flex;
+      gap: 11px;
+      padding: 6px 0
+    }
+
+    .mrow.user {
+      flex-direction: row-reverse
+    }
+
+    .av {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 3px
+    }
+
+    .av-ai {
+      background: linear-gradient(135deg, #e8a912, #d4940a);
+      color: #0a0800;
+      font-family: var(--mono);
+      font-size: 8px;
+      font-weight: 700
+    }
+
+    .av-us {
+      background: var(--s4);
+      color: var(--t2)
+    }
+
+    .mwrap {
+      flex: 1;
+      min-width: 0;
+      max-width: 85%
+    }
+
+    .mrow.user .mwrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end
+    }
+
+    .mmeta {
+      font-size: 10px;
+      color: var(--t3);
+      font-family: var(--mono);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .mmtag {
+      font-size: 8px;
+      padding: 1px 5px;
+      background: var(--pu3);
+      color: var(--pu2);
+      border-radius: 10px;
+      border: 1px solid rgba(232, 169, 18, .2)
+    }
+
+    .tool-tag {
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 10px;
+      border: 1px solid
+    }
+
+    .tool-tag.search {
+      background: rgba(34, 197, 94, .08);
+      color: #4ade80;
+      border-color: rgba(34, 197, 94, .2)
+    }
+
+    .tool-tag.scrape {
+      background: rgba(245, 158, 11, .1);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, .2)
+    }
+
+    .tool-tag.image {
+      background: rgba(239, 68, 68, .1);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, .2)
+    }
+
+    .tool-tag.pdf {
+      background: rgba(99, 179, 237, .1);
+      color: #60a5fa;
+      border-color: rgba(99, 179, 237, .2)
+    }
+
+    .bubble {
+      padding: 11px 15px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.68
+    }
+
+    .b-ai {
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-top-left-radius: 3px
+    }
+
+    .b-us {
+      background: linear-gradient(135deg, #e8a912, #c89008);
+      color: #0a0800;
+      border-top-right-radius: 3px;
+      font-weight: 500
+    }
+
+    .bubble strong {
+      font-weight: 600;
+      color: var(--pu2)
+    }
+
+    .b-us strong {
+      color: #0a0800
+    }
+
+    .bubble em {
+      color: var(--t2);
+      font-style: italic
+    }
+
+    .bubble .bh {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--t1);
+      display: block;
+      margin: 12px 0 5px;
+      letter-spacing: -.2px
+    }
+
+    .bubble .bh:first-child {
+      margin-top: 0
+    }
+
+    .bubble .bl {
+      display: flex;
+      gap: 7px;
+      margin: 3px 0
+    }
+
+    .bubble .bld {
+      color: var(--pu2);
+      flex-shrink: 0;
+      line-height: 1.68
+    }
+
+    .bubble .bn {
+      display: flex;
+      gap: 8px;
+      margin: 3px 0
+    }
+
+    .bubble .bnn {
+      color: var(--pu2);
+      flex-shrink: 0;
+      font-size: 11px;
+      font-family: var(--mono);
+      line-height: 1.68;
+      min-width: 18px
+    }
+
+    .bubble code {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--s4);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--pu2);
+      border: 1px solid var(--bd)
+    }
+
+    .b-us code {
+      background: rgba(0, 0, 0, .15);
+      color: #0a0800;
+      border-color: rgba(0, 0, 0, .15)
+    }
+
+    .bubble pre {
+      background: var(--s4);
+      border: 1px solid var(--bd);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 10px 0;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.6;
+      color: #c9d1d9
+    }
+
+    .bubble pre code {
+      background: none;
+      padding: 0;
+      border: none;
+      color: inherit
+    }
+
+    .bubble table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 12px
+    }
+
+    .bubble th {
+      padding: 7px 10px;
+      background: var(--s3);
+      color: var(--t2);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      text-align: left;
+      border-bottom: 1px solid var(--bd2)
+    }
+
+    .bubble td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--bd);
+      color: var(--t1)
+    }
+
+    .bubble tr:last-child td {
+      border-bottom: none
+    }
+
+    /* TOOL RESULT BANNERS */
+    .tool-banner {
+      padding: 8px 12px;
+      border-radius: var(--rsm);
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .tb-search {
+      background: rgba(34, 197, 94, .06);
+      border: 1px solid rgba(34, 197, 94, .15);
+      color: #4ade80
+    }
+
+    .tb-scrape {
+      background: rgba(245, 158, 11, .06);
+      border: 1px solid rgba(245, 158, 11, .15);
+      color: #fbbf24
+    }
+
+    .tb-image {
+      background: rgba(239, 68, 68, .06);
+      border: 1px solid rgba(239, 68, 68, .15);
+      color: #f87171
+    }
+
+    /* EXPORT CARD */
+    .xcard {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--s3);
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      animation: fi .3s ease
+    }
+
+    .xhead {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px
+    }
+
+    .xtype {
+      font-size: 9px;
+      font-family: var(--mono);
+      padding: 2px 7px;
+      background: rgba(245, 158, 11, .1);
+      color: #fbbf24;
+      border-radius: 4px;
+      border: 1px solid rgba(245, 158, 11, .2);
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .xlabel {
+      font-size: 11px;
+      color: var(--t2);
+      font-family: var(--mono)
+    }
+
+    .xbtns {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap
+    }
+
+    .xbtn {
+      padding: 5px 10px;
+      background: var(--s2);
+      border: 1px solid var(--bd2);
+      border-radius: 5px;
+      color: var(--t2);
+      font-size: 10px;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: all .1s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none
+    }
+
+    .xbtn:hover {
+      background: var(--s3);
+      color: var(--t1);
+      border-color: var(--bd3)
+    }
+
+    /* IMAGE CARD */
+    .imgcard {
+      margin-top: 10px;
+      background: var(--s3);
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      overflow: hidden;
+      animation: fi .3s ease
+    }
+
+    .imgcard img {
+      width: 100%;
+      display: block
+    }
+
+    .imgcard-foot {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .imgcard-label {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--t2);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .img-spinner {
+      width: 100%;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: var(--s3)
+    }
+
+    .spin-ring {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--bd2);
+      border-top-color: var(--pu);
+      border-radius: 50%;
+      animation: spin 1s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .spin-label {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--t3)
+    }
+
+    /* MSG ACTIONS — always visible so mobile users can see them without hovering */
+    .macts {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap
+    }
+
+    .mact {
+      padding: 4px 9px;
+      background: var(--s3);
+      border: 1px solid var(--bd);
+      border-radius: 5px;
+      color: var(--t3);
+      font-size: 10px;
+      cursor: pointer;
+      font-family: var(--mono);
+      transition: all .1s;
+      display: flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .mact:hover {
+      background: var(--s4);
+      color: var(--t2);
+      border-color: var(--bd2)
+    }
+
+    .mact.liked {
+      color: var(--gn);
+      border-color: rgba(34, 197, 94, .3);
+      background: rgba(34, 197, 94, .07)
+    }
+
+    /* TYPING */
+    .tbub {
+      padding: 11px 16px;
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-radius: 12px;
+      border-top-left-radius: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .td {
+      width: 5px;
+      height: 5px;
+      background: var(--t3);
+      border-radius: 50%;
+      animation: tdance 1.2s ease-in-out infinite
+    }
+
+    .td:nth-child(2) {
+      animation-delay: .2s
+    }
+
+    .td:nth-child(3) {
+      animation-delay: .4s
+    }
+
+    @keyframes tdance {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0)
+      }
+
+      30% {
+        transform: translateY(-5px)
+      }
+    }
+
+    @keyframes fi {
+      from {
+        opacity: 0;
+        transform: translateY(-3px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* INPUT */
+    .inzone {
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--bd);
+      flex-shrink: 0
+    }
+
+    .inwrap {
+      background: var(--s2);
+      border: 1px solid var(--bd2);
+      border-radius: var(--r);
+      transition: border-color .15s, box-shadow .15s;
+      position: relative
+    }
+
+    .inwrap:focus-within {
+      border-color: rgba(232, 169, 18, .45);
+      box-shadow: 0 0 0 3px rgba(232, 169, 18, .08)
+    }
+
+    .intop {
+      display: flex;
+      align-items: flex-end
+    }
+
+    #inp {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--t1);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 10px 14px 8px;
+      resize: none;
+      max-height: 120px;
+      min-height: 38px;
+      line-height: 1.5;
+      width: 100%
+    }
+
+    #inp::placeholder {
+      color: var(--t3)
+    }
+
+    .sbtn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #e8a912, #d4940a);
+      border: none;
+      border-radius: 7px;
+      color: #0a0800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity .15s, transform .1s;
+      flex-shrink: 0;
+      margin: 0 8px 7px 0;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(232, 169, 18, .2)
+    }
+
+    .sbtn:hover {
+      opacity: .85
+    }
+
+    .sbtn:active {
+      transform: scale(.93)
+    }
+
+    .sbtn:disabled {
+      opacity: .3;
+      cursor: default
+    }
+
+    .infoot {
+      display: flex;
+      align-items: center;
+      padding: 0 10px 8px;
+      gap: 5px;
+      flex-wrap: wrap
+    }
+
+    .pill {
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--s3);
+      border: 1px solid var(--bd);
+      color: var(--t3);
+      font-size: 9px;
+      cursor: pointer;
+      font-family: var(--mono);
+      transition: all .1s;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      letter-spacing: .3px
+    }
+
+    .pill:hover {
+      color: var(--t2);
+      border-color: var(--bd2)
+    }
+
+    .pill.on {
+      background: var(--pu3);
+      border-color: rgba(232, 169, 18, .35);
+      color: var(--pu2)
+    }
+
+    .pill.web-on {
+      background: rgba(34, 197, 94, .08);
+      border-color: rgba(34, 197, 94, .25);
+      color: #4ade80
+    }
+
+    .micbtn {
+      width: 34px;
+      height: 34px;
+      background: none;
+      border: 1px solid var(--bd);
+      border-radius: 7px;
+      color: var(--t3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      flex-shrink: 0;
+      font-size: 15px;
+      margin: 0 4px 7px 0
+    }
+
+    .micbtn:hover {
+      background: var(--s3);
+      color: var(--t2)
+    }
+
+    .micbtn.recording {
+      background: rgba(239, 68, 68, .1);
+      border-color: rgba(239, 68, 68, .3);
+      color: #f87171;
+      animation: pulse-rec 1.5s infinite
+    }
+
+    @keyframes pulse-rec {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, .3)
+      }
+
+      50% {
+        box-shadow: 0 0 0 5px rgba(239, 68, 68, 0)
+      }
+    }
+
+    .langbtn {
+      padding: 2px 6px;
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-radius: 5px;
+      color: var(--t3);
+      font-size: 9px;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: all .1s;
+      margin: 0 4px 7px 0;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .langbtn:hover {
+      border-color: var(--pu2);
+      color: var(--pu2)
+    }
+
+    .pdot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor
+    }
+
+    .kbhint {
+      margin-left: auto;
+      font-size: 9px;
+      color: var(--t4);
+      font-family: var(--mono)
+    }
+
+    /* SLASH MENU */
+    .smenu {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 10px;
+      background: var(--s2);
+      border: 1px solid var(--bd2);
+      border-radius: var(--r);
+      padding: 5px;
+      display: none;
+      min-width: 240px;
+      z-index: 50;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .5)
+    }
+
+    .smenu.show {
+      display: block
+    }
+
+    .si {
+      padding: 7px 10px;
+      border-radius: var(--rsm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background .1s
+    }
+
+    .si:hover,
+    .si.sel {
+      background: var(--s3)
+    }
+
+    .scmd {
+      font-family: var(--mono);
+      color: var(--pu2);
+      font-size: 11px;
+      min-width: 90px
+    }
+
+    .sdesc {
+      color: var(--t3);
+      font-size: 11px
+    }
+
+    /* MEMORY PANEL */
+    .mpanel {
+      width: 224px;
+      background: var(--s1);
+      border-left: 1px solid var(--bd);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0
+    }
+
+    .mph {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--bd);
+      font-size: 9px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--t3);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0
+    }
+
+    .mpe {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .me {
+      padding: 9px 11px;
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-radius: var(--rsm);
+      transition: border-color .5s
+    }
+
+    .mek {
+      font-family: var(--mono);
+      color: var(--pu2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 3px;
+      opacity: .8
+    }
+
+    .mev {
+      color: var(--t2);
+      font-size: 11px;
+      line-height: 1.4
+    }
+
+    .me.new {
+      border-color: rgba(124, 92, 252, .45)
+    }
+
+    .mpf {
+      border-top: 1px solid var(--bd);
+      padding: 10px 14px;
+      flex-shrink: 0
+    }
+
+    .mpst {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px
+    }
+
+    .mpsl {
+      font-size: 9px;
+      color: var(--t3);
+      font-family: var(--mono)
+    }
+
+    .mpsv {
+      font-size: 9px;
+      color: var(--pu2);
+      font-family: var(--mono)
+    }
+
+    .tbar {
+      height: 2px;
+      background: var(--s4);
+      border-radius: 1px;
+      overflow: hidden
+    }
+
+    .tfill {
+      height: 100%;
+      background: var(--pu);
+      border-radius: 1px;
+      transition: width .6s ease
+    }
+
+    /* TOAST */
+    .twrap {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none
+    }
+
+    .toast {
+      padding: 8px 14px;
+      background: var(--s3);
+      border: 1px solid var(--bd2);
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--t1);
+      white-space: nowrap;
+      animation: tin .2s ease, tout .3s ease 1.7s forwards
+    }
+
+    @keyframes tin {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    @keyframes tout {
+      from {
+        opacity: 1
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-4px)
+      }
+    }
+
+    .sc {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: var(--pu2);
+      margin-left: 2px;
+      animation: tdance .8s infinite;
+      vertical-align: middle
+    }
+
+    ::-webkit-scrollbar {
+      width: 3px
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--s4);
+      border-radius: 2px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    .mb-menu {
+      display: none;
+      background: none;
+      border: 1px solid var(--bd);
+      color: var(--t3);
+      cursor: pointer;
+      border-radius: var(--rsm);
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px
+    }
+
+    .ov {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 9
+    }
+
+    /* 📄 PRO PDF ENGINE (CSS Optimized) */
+    @media print {
+      @page {
+        margin: 15mm;
+        size: auto;
+      }
+
+      body {
+        background: white !important;
+        color: #1a1a1a !important;
+        font-size: 11pt !important;
+        line-height: 1.6 !important;
+      }
+
+      .sb,
+      .topbar,
+      .inzone,
+      .mpanel,
+      .twrap,
+      .icobtn,
+      .badge,
+      .macts,
+      .settings-modal,
+      .ov {
+        display: none !important;
+      }
+
+      .main,
+      .chat,
+      .ci {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+
+      .bubble {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin-bottom: 30px !important;
+        color: black !important;
+      }
+
+      .bubble strong {
+        color: black !important;
+        border-bottom: 1px solid #eee;
+      }
+
+      .mrow.user {
+        display: none !important;
+      }
+
+      .av,
+      .mmeta {
+        display: none !important;
+      }
+
+      .bubble .bh {
+        font-size: 18pt !important;
+        margin-top: 40px !important;
+        color: #000 !important;
+        border-bottom: 2px solid #e8a912 !important;
+        padding-bottom: 5px !important;
+      }
+
+      .bubble table {
+        border: 1px solid #ddd !important;
+      }
+
+      .bubble th {
+        background: #f9f9f9 !important;
+        color: black !important;
+      }
+
+      h1,
+      h2,
+      h3 {
+        page-break-after: avoid;
+      }
+    }
+
+    @media(max-width:960px) {
+      .mpanel {
+        display: none
+      }
+    }
+
+    @media(max-width:640px) {
+      .sb {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 10;
+        transform: translateX(-100%)
+      }
+
+      .sb.open {
+        transform: none
+      }
+
+      .ov.open {
+        display: block
+      }
+
+      .mb-menu {
+        display: flex
+      }
+
+      .wgrid {
+        grid-template-columns: 1fr
+      }
+
+      .ci {
+        padding: 18px 14px 14px
+      }
+
+      .w3d-scene {
+        width: 200px;
+        height: 100px;
+        transform: scale(.85)
+      }
+
+      .qbtn {
+        padding: 10px 12px;
+        font-size: 13px
+      }
+
+      .bubble {
+        font-size: 14px;
+        padding: 12px 14px
+      }
+
+      #inp {
+        font-size: 16px;
+        min-height: 48px
+      }
+
+      .sbtn {
+        width: 40px;
+        height: 40px
+      }
+
+      .micbtn {
+        width: 38px;
+        height: 38px
+      }
+
+      .infoot {
+        padding: 0 8px 10px
+      }
+
+      .topbar {
+        padding: 0 12px
+      }
+    }
+
+    /* ── SMART ROUTER & SLASH ANIMATIONS ── */
+    @keyframes siIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .si {
+      animation: siIn .12s ease both
+    }
+
+    .si:nth-child(1) {
+      animation-delay: 0s
+    }
+
+    .si:nth-child(2) {
+      animation-delay: .03s
+    }
+
+    .si:nth-child(3) {
+      animation-delay: .06s
+    }
+
+    .si:nth-child(4) {
+      animation-delay: .09s
+    }
+
+    .si:nth-child(5) {
+      animation-delay: .12s
+    }
+
+    .si:nth-child(n+6) {
+      animation-delay: .15s
+    }
+
+    .qbtn {
+      transition: background .15s, transform .12s, box-shadow .15s !important
+    }
+
+    .qbtn:hover {
+      transform: translateX(3px) !important;
+      box-shadow: inset 3px 0 0 var(--pu) !important
+    }
+
+    @keyframes routeBadge {
+      0% {
+        opacity: 0;
+        transform: translateY(6px) scale(.95)
+      }
+
+      60% {
+        transform: translateY(-2px) scale(1.02)
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1)
+      }
+    }
+
+    .toast-route {
+      animation: routeBadge .3s ease forwards;
+      background: rgba(34, 197, 94, .12) !important;
+      border-color: rgba(34, 197, 94, .35) !important;
+      color: #4ade80 !important
+    }
+
+    .sugg-chip {
+      display: inline-flex;
+      margin-top: 10px;
+      padding: 5px 10px;
+      background: rgba(232, 169, 18, .08);
+      border: 1px solid rgba(232, 169, 18, .25);
+      border-radius: 20px;
+      color: var(--pu2);
+      font-size: 10px;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: all .15s;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      animation: fi .4s ease
+    }
+
+    .sugg-chip:hover {
+      background: rgba(232, 169, 18, .15);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .2)
+    }
+
+    .cli.active {
+      border-color: var(--pu2);
+      background: rgba(232, 169, 18, .1);
+      box-shadow: 0 0 10px rgba(232, 169, 18, 0.15)
+    }
+
+    .cli {
+      overflow: hidden;
+      min-width: 0;
+      width: 100%
+    }
+
+    .cli .qsub {
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .cli-del {
+      opacity: 0;
+      margin-left: auto;
+      color: var(--t4);
+      transition: opacity .1s;
+      font-size: 10px;
+      padding: 4px
+    }
+
+    .cli:hover .cli-del {
+      opacity: 1
+    }
+
+    .cli-del:hover {
+      color: #f87171
+    }
+  </style>
+</head>
+
+<body>
+  <div class="ov" id="ov" onclick="closeSb()"></div>
+  <aside class="sb" id="sb">
+    <div class="sb-top">
+      <div class="logo" onclick="newChat()" style="cursor:pointer" title="Back to home">
+        <div class="lmark"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <rect x="15" y="30" width="70" height="52" rx="12" fill="#0a0800" />
+            <rect x="25" y="42" width="16" height="13" rx="4" fill="#e8a912" />
+            <rect x="59" y="42" width="16" height="13" rx="4" fill="#e8a912" />
+            <circle cx="33" cy="48" r="3" fill="#22c55e" />
+            <circle cx="67" cy="48" r="3" fill="#22c55e" />
+            <rect x="36" y="66" width="28" height="5" rx="2.5" fill="#e8a912" />
+            <rect x="40" y="14" width="20" height="18" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="3" />
+            <circle cx="50" cy="8" r="4" fill="#e8a912" />
+            <line x1="50" y1="8" x2="50" y2="14" stroke="#e8a912" stroke-width="2.5" />
+            <rect x="3" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2" />
+            <rect x="85" y="48" width="12" height="8" rx="4" fill="#0a0800" stroke="#e8a912" stroke-width="2" />
+          </svg></div>
+        <div style="display:flex;flex-direction:column">
+          <div class="lname" style="display:flex;align-items:center;gap:6px">Bvmbino <span
+              style="font-size:9px;background:var(--pu2);color:#0a0800;padding:1px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-family:var(--font);font-weight:700">Pro</span>
+          </div>
+          <div class="ltag">AI Agent · v3.0</div>
+        </div>
+      </div>
+      <button class="nbtn" onclick="newChat()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 1v10M1 6h10" stroke="#0a0800" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        New conversation
+      </button>
+      <a href="/portfolio.html" class="qbtn"
+        style="margin-top:8px;border:1px solid var(--bd2);color:var(--pu2);font-weight:600;text-decoration:none;display:flex;align-items:center">
+        <span class="qi" style="background:rgba(232,169,18,.1)">🌐</span>
+        <span>Internal Portfolio</span>
+        <span style="font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--mono);opacity:0.6">PRO</span>
+      </a>
+    </div>
+    <div class="sb-scroll">
+      <div class="mod-sect">
+        <span class="sbl">Active Engine</span>
+        <div id="model-list" class="mod-list">
+          <!-- Dynamic Model List -->
+        </div>
+      </div>
+      <div class="ssect">
+        <button onclick="toggleTools()"
+          style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:7px;">
+          <span class="sbl" style="margin-bottom:0">📁 Tools &amp; Skills</span>
+          <span id="tools-arrow"
+            style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
+        </button>
+        <div id="toolsPanel" class="qacts" style="overflow:hidden;transition:max-height .3s ease;max-height:2000px">
+          <button class="qbtn" onclick="openTrain()"
+            style="background:rgba(232,169,18,0.1);border-color:var(--pu2);margin-bottom:8px">
+            <span class="qi">🧠</span><span>Train Agent</span><span class="qsub">Save context</span>
+          </button>
+          <button class="qbtn" onclick="slash('sales')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">💰</span><span>Sales Script</span><span
+              class="qsub">/sales</span></button>
+          <button class="qbtn" onclick="slash('writer')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">✍️</span><span>Deep Writer</span><span
+              class="qsub">/writer</span></button>
+          <button class="qbtn" onclick="slash('budget')"><span class="qi"
+              style="background:rgba(34,197,94,.08)">💳</span><span>Budget &amp; Finance</span><span
+              class="qsub">/budget</span></button>
+          <button class="qbtn" onclick="slash('psych')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">🧠</span><span>Psychology</span><span
+              class="qsub">/psych</span></button>
+          <button class="qbtn" onclick="slash('imgprompt')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">🎨</span><span>Image Prompt</span><span
+              class="qsub">/imgprompt</span></button>
+          <button class="qbtn" onclick="slash('campaign')"><span class="qi"
+              style="background:rgba(245,158,11,.1)">📣</span><span>Marketing</span><span
+              class="qsub">/campaign</span></button>
+          <button class="qbtn" onclick="slash('outreach')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">📨</span><span>Cold Outreach</span><span
+              class="qsub">/outreach</span></button>
+          <button class="qbtn" onclick="slash('proposal')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">💼</span><span>Client Proposal</span><span
+              class="qsub">/proposal</span></button>
+          <button class="qbtn" onclick="slash('strategy')"><span class="qi"
+              style="background:rgba(34,197,94,.08)">📈</span><span>Strategy</span><span
+              class="qsub">/strategy</span></button>
+          <button class="qbtn" onclick="slash('course')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">🎓</span><span>Course Builder</span><span
+              class="qsub">/course</span></button>
+          <button class="qbtn" onclick="slash('schedule')"><span class="qi"
+              style="background:rgba(34,197,94,.1)">📅</span><span>Schedule</span><span
+              class="qsub">/schedule</span></button>
+          <button class="qbtn" onclick="slash('resume')"><span class="qi"
+              style="background:rgba(232,169,18,.12)">📄</span><span>Resume Builder</span><span
+              class="qsub">/resume</span></button>
+          <button class="qbtn" onclick="slash('present')"><span class="qi"
+              style="background:rgba(99,179,237,.1)">🖥️</span><span>Presentation</span><span
+              class="qsub">/present</span></button>
+          <button class="qbtn" onclick="slash('scrape')"><span class="qi"
+              style="background:rgba(245,158,11,.1)">🌐</span><span>Scrape Website</span><span
+              class="qsub">/scrape</span></button>
+          <button class="qbtn" onclick="slash('search')"><span class="qi"
+              style="background:rgba(34,197,94,.08)">🔍</span><span>Web Search</span><span
+              class="qsub">/search</span></button>
+          <button class="qbtn" onclick="slash('automate')"><span class="qi"
+              style="background:rgba(99,179,237,.1)">⚡</span><span>Automation</span><span
+              class="qsub">/automate</span></button>
+          <button class="qbtn" onclick="slash('security')"><span class="qi"
+              style="background:rgba(239,68,68,.1)">🔐</span><span>Security Audit</span><span
+              class="qsub">/security</span></button>
+        </div>
+      </div>
+      <div class="ssect" style="padding-bottom:4px">
+        <button onclick="toggleHistory()"
+          style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer">
+          <span class="sbl" style="margin-bottom:0">📂 Recent</span>
+          <span id="hist-arrow"
+            style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
+        </button>
+        <div id="hist" style="overflow:hidden;transition:max-height .35s ease;max-height:2000px"></div>
+      </div>
+      <div class="ssect">
+        <button onclick="toggleClients()"
+          style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:7px;">
+          <span class="sbl" style="margin-bottom:0">💼 Client Context</span>
+          <span id="client-arrow"
+            style="margin-left:auto;font-size:9px;color:var(--t3);font-family:var(--mono);transition:transform .25s">▼</span>
+        </button>
+        <div id="client-panel" style="overflow:hidden;transition:max-height .35s ease;max-height:2000px">
+          <div id="client-list" class="qacts">
+            <!-- Dynamic Client Cards -->
+          </div>
+          <button class="qbtn" onclick="addNewClient()"
+            style="margin-top:8px;border:1px dashed var(--bd2);background:none;justify-content:center;opacity:0.7">
+            <span>+ Add New Client</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+
+  <main class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <button class="mb-menu" onclick="openSb()">☰</button>
+        <div class="tb-title" id="tbtitle">New conversation</div>
+      </div>
+      <div class="tb-right" style="display:flex;align-items:center;gap:8px">
+        <div class="badge b-pu" id="ai-engine-badge" style="padding:4px 8px;font-size:10px;display:none"><span
+            class="pulse"></span><span id="mbadge">Groq · Llama 3.3</span></div>
+        <div class="badge b-gn" id="mem-badge" style="padding:4px 8px;font-size:10px"><span class="pulse"></span>Memory
+        </div>
+        <button class="icobtn" onclick="toggleTranslation()" id="top-trans" title="Toggle translation"
+          style="width:32px;height:32px;font-size:14px;background:var(--s2)">🌐</button>
+        <button class="icobtn" onclick="toggleSettings()" id="top-settings" title="System Settings"
+          style="width:32px;height:32px;font-size:14px;background:var(--s2)">⚙️</button>
+      </div>
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="ci" id="ci">
+        <div class="welcome" id="welcome">
+          <div class="w3d-scene">
+            <div class="w3d-obj w3d-money">💰</div>
+            <div class="w3d-obj w3d-ball">🏀</div>
+            <div class="w3d-obj w3d-book">📖</div>
+            <div class="w3d-obj w3d-trophy">🏆</div>
+            <div class="w3d-obj w3d-brain">🧠</div>
+            <div class="w3d-glow"></div>
+          </div>
+          <div class="wt">Bvmbino AI Agent</div>
+          <div class="ws">Your personal AI powerhouse — sales, content, finance, writing, strategy & more. 17 skills
+            ready. Type <strong style="color:var(--pu2)">/</strong> to see them all.</div>
+          <div class="wgrid">
+            <div class="wcard" onclick="slash('sales')">
+              <div class="wci">💰</div>
+              <div class="wct">Close Deals</div>
+              <div class="wcd">Sales scripts, objection handlers, follow-up DMs</div>
+            </div>
+            <div class="wcard" onclick="slash('content')">
+              <div class="wci">🎬</div>
+              <div class="wct">Create Content</div>
+              <div class="wcd">Instagram, LinkedIn, X, Reels + AI image prompts</div>
+            </div>
+            <div class="wcard" onclick="slash('budget')">
+              <div class="wci">💳</div>
+              <div class="wct">Budget & Finance</div>
+              <div class="wcd">Expense audit, cash flow plan, money optimization</div>
+            </div>
+            <div class="wcard" onclick="slash('writer')">
+              <div class="wci">✍️</div>
+              <div class="wct">Deep Writer</div>
+              <div class="wcd">Books, articles, blogs — human voice, zero AI feel</div>
+            </div>
+            <div class="wcard" onclick="slash('strategy')">
+              <div class="wci">📈</div>
+              <div class="wct">Business Strategy</div>
+              <div class="wcd">90-day growth plans, B2B acquisition, funnels</div>
+            </div>
+            <div class="wcard" onclick="slash('campaign')">
+              <div class="wci">📣</div>
+              <div class="wct">Ad Campaign</div>
+              <div class="wcd">Full campaign + ad copy for every platform</div>
+            </div>
+          </div>
+          <div class="shint">Type <code>/</code> to see all 17 skills · <code>/budget</code> · <code>/writer</code> ·
+            <code>/sales</code> · <code>/content</code> · <code>/imgprompt</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inzone">
+      <div class="inwrap" id="inwrap">
+        <div class="smenu" id="smenu"></div>
+        <div class="intop">
+          <textarea id="inp" placeholder="Type anything Boss… or /" rows="1" oninput="onInp()"
+            onkeydown="onKey(event)"></textarea>
+          <button class="langbtn" id="langbtn" onclick="toggleVoiceLang()" title="Switch Voice Language">EN</button>
+          <button class="micbtn" id="micbtn" onclick="toggleVoice()" title="Voice input">🎙️</button>
+          <button class="sbtn" id="sbtn" onclick="send()">↑</button>
+        </div>
+        <div class="infoot">
+          <div class="pill on" id="p-mem" onclick="togglePill(this)"><span class="pdot"></span>memory</div>
+          <div class="pill" id="p-web" onclick="togglePill(this)"><span class="pdot"></span>web search</div>
+          <div class="pill" id="p-pdf" onclick="togglePill(this)"><span class="pdot"></span>PDF export</div>
+          <span id="char-counter" style="font-size:9px;font-family:var(--mono);color:var(--t3);margin-left:2px"></span>
+          <span class="kbhint" style="margin-left:auto">↵ send · ⇧↵ newline · Ctrl+K new</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="mpanel">
+    <div class="mph"><span class="pulse"></span>Agent Memory</div>
+    <div class="mpe" id="mems">
+      <div class="me">
+        <div class="mek">user</div>
+        <div class="mev">Boss / Bvmbino · Pro Basketball Player/Coach · Purgo Clean (owner) · Mindset Formateur · AI
+          Consultant · Marketing &amp; Communication</div>
+      </div>
+      <div class="me">
+        <div class="mek">active model</div>
+        <div class="mev" id="mem-model">Groq · Llama 3.3</div>
+      </div>
+      <div class="me">
+        <div class="mek">ventures</div>
+        <div class="mev">Purgo Clean (Île-de-France) · Keo Jus (Côte d'Ivoire / Accor Hotels) · FormationPro · Marketing
+          Consultancy</div>
+      </div>
+      <div class="me">
+        <div class="mek">project</div>
+        <div class="mev">Bvmbino AI Agent — cross-platform app</div>
+      </div>
+      <div class="me">
+        <div class="mek">tools</div>
+        <div class="mev" id="mem-tools">memory</div>
+      </div>
+    </div>
+    <div class="mpf">
+      <div class="mpst"><span class="mpsl">Context window</span><span class="mpsv" id="tok-pct">1.8%</span></div>
+      <div class="mpst" style="margin-bottom:8px"><span class="mpsl" id="tok-count">1,840 / 100k tokens</span></div>
+      <div class="tbar">
+        <div class="tfill" id="tbar" style="width:1.8%"></div>
+      </div>
+    </div>
+  </aside>
+
+  </div>
+
+  <!-- 📃 PRO PREVIEW MODAL -->
+  <div class="settings-modal" id="preview-modal" style="display:none;background:rgba(6,8,10,0.95)">
+    <div class="set-card" style="max-width:800px;height:90vh;display:flex;flex-direction:column">
+      <div class="set-hdr">
+        <div class="set-t">📄 Pro Document Preview</div>
+        <div style="display:flex;gap:8px">
+          <button class="sbtn" style="margin:0;padding:0 15px;height:32px;font-size:11px" onclick="window.print()">Print
+            PDF</button>
+          <button class="icobtn" onclick="closePreview()">✕</button>
+        </div>
+      </div>
+      <div id="preview-content"
+        style="flex:1;overflow-y:auto;padding:40px;background:white;color:black;font-family:serif;line-height:1.6">
+        <!-- High-Ticket Content Here -->
+      </div>
+      <div class="set-foot" style="display:flex;justify-content:center">
+        <span style="font-size:10px;color:var(--t4);font-family:var(--mono)">Bvmbino Pro · CSS Print Engine v2.0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="twrap" id="toasts"></div>
+
+  <script>
+    const MODELS = { claude: 'Groq · Llama 3.3', gpt4: 'Groq · Llama 3.3', gemini: 'Groq · Llama 3.3', grok: 'Groq · Llama 3.3' };
+    const CMDS = [
+      { cmd: '/resume', desc: 'Tailored resume: /resume [url or job]', icon: '📄' },
+      { cmd: '/campaign', desc: 'Full ad campaign + deployment guide', icon: '📣' },
+      { cmd: '/strategy', desc: 'Business growth strategy', icon: '📈' },
+      { cmd: '/sales', desc: 'Sales script + objection handlers', icon: '💰' },
+      { cmd: '/content', desc: 'Social post: /content [topic]', icon: '🎬' },
+      { cmd: '/imgprompt', desc: 'AI image prompt: /imgprompt [idea]', icon: '🎨' },
+      { cmd: '/course', desc: 'Build full course: /course [topic]', icon: '🎓' },
+      { cmd: '/scrape', desc: 'Scrape website: /scrape [url]', icon: '🌐' },
+      { cmd: '/search', desc: 'Web search: /search [query]', icon: '🔍' },
+      { cmd: '/schedule', desc: 'Build weekly schedule as PDF', icon: '📅' },
+      { cmd: '/present', desc: 'Build presentation: /present [topic]', icon: '🖥️' },
+      { cmd: '/automate', desc: 'Automation workflow design', icon: '⚡' },
+      { cmd: '/pitch', desc: 'Investor pitch content', icon: '💼' },
+      { cmd: '/email', desc: 'Write professional email', icon: '✉️' },
+      { cmd: '/budget', desc: 'Budget analysis: /budget [info]', icon: '💳' },
+      { cmd: '/writer', desc: 'Deep writing: /writer [topic]', icon: '✍️' },
+      { cmd: '/psych', desc: 'Human Psychology & Behavioral Expert', icon: '🧠' },
+      { cmd: '/pdf', desc: 'Export last answer as PDF', icon: '📋' },
+      { cmd: '/security', desc: 'Security audit — scan code & deps', icon: '🔐' },
+      { cmd: '/enhance', desc: 'Amplify & scale your idea', icon: '🚀' },
+      { cmd: '/builder', desc: 'App/Workflow builder stack', icon: '🛠️' },
+      { cmd: '/lex', desc: 'Attorney & Legal Advisor', icon: '⚖️' },
+    ];
+
+    const PROMPTS = {
+      resume: `ACT AS AN ELITE ATS OPTIMIZATION SPECIALIST & CAREER ARCHITECT. Paste the job URL or description after /resume. I will engineer an ATS-compliant, high-authority resume that aligns your NCAA D1/World-Class background with exact job parameters using PAR (Problem-Action-Result) statements and semantic keyword stacking.`,
+      campaign: `ACT AS AN ELITE FULL-STACK MARKETING STRATEGIST & MEDIA BUYER. Define business/product, objective (leads/sales), and budget. I will deliver: Omnichannel Strategy, Creative Ad Matrix (FB/IG/GG/LI/TT), ROAS Calibration specs, and high-velocity deployment checklists. [EXPORT:campaign]`,
+      strategy: `ACT AS AN ELITE CORPORATE STRATEGY CONSULTANT & GTM ARCHITECT. I will generate a 90-day B2B Dominance Plan for Purgo Clean or your chosen venture. Includes: SWOT-TOWS analysis, Blue Ocean positioning, high-velocity outreach scripts, and tactical KPI tracking. [EXPORT:strategy]`,
+      automate: `ACT AS AN ELITE AUTOMATION ENGINEERING ARCHITECT & WORKFLOW SPECIALIST. Trigger: New inquiry. Workflow: API Orchestration (Make.com/Zapier), JSON parsing, conditional branching, and automated high-friction task removal. Delivering tech-stack blueprints and efficiency ROI. [EXPORT:workflow]`,
+      scrape: `ACT AS AN ELITE DATA EXTRACTION ENGINEER & WEB INTELLIGENCE SPECIALIST. Provide URL and targets. I will execute DOM navigation, regex extraction, and structured data synthesis.`,
+      search: `ACT AS AN ELITE TACTICAL MARKET INTELLIGENCE LEAD. Provide query. I will perform Boolean triangulation, SERP analysis, and cross-reference verification to deliver high-signal business intel.`,
+      course: `ACT AS AN ELITE INSTRUCTIONAL DESIGN ARCHITECT & TRANSFORMATION STRATEGIST. Provide Topic, Audience, and Format. Delivering: Transformation Arc, High-Density Module Map (Bloom's Taxonomy), Deep-Work Assignments, and ROI Success Metrics. [EXPORT:course]`,
+      schedule: `ACT AS AN ELITE HIGH-PERFORMANCE CHRONOTYPE & BIO-HACKING SPECIALIST. Optimization of Basketball training, Coaching, Purgo, Keo Jus, and Family. Zone Management: DEEP Work (Peak Energy), ADMIN (Operations), RECOVERY (Rest). Required Format: === DAY === Time | Activity | Zone. [EXPORT:schedule]`,
+      present: `ACT AS AN ELITE VISUAL NARRATIVE ARCHITECT & KEYNOTE DIRECTOR. Provide Topic, Audience, and Slide count. I will deliver a "Director's Storyboard": High-intensity Hooks, Emotional Pendulum slides, and high-stakes Closer Scripts. [EXPORT:presentation]`,
+      pitch: `ACT AS AN ELITE INVESTOR RELATIONS LEAD & STARTUP STRATEGIST. Generating Bvmbino AI Pitch: Problem/Solution Gap, Market Penetration Index, Revenue Velocity, and Transactional Moat. [EXPORT:pitch]`,
+      email: `ACT AS AN ELITE PROFESSIONAL COMMUNICATIONS DIRECTOR. Provide recipient and goal. Delivering: High-velocity openers, value-based body prose, and low-friction CTA engineering.`,
+      security: `ACT AS AN ELITE CYBERSECURITY AUDITOR & STRUCTURAL INTEGRITY LEAD. Scanning project for XSS Vectors, SQL Injection Surface, Auth Token Entropy, and Dependency vulnerabilities. Delivering: Priority Remediation Matrix.`,
+      sales: `ACT AS AN MASTER CLOSING SPECIALIST & TRANSACTIONAL PSYCHOLOGIST. Delivering: High-Stakes Closing Script, SPIN/BANT Discovery Questions, Objection Displacement Matrix (Price/Timing/Doubt), and Assumptive Close sequences. [EXPORT:sales]`,
+      content: `ACT AS AN ELITE CONVERSION ARCHITECT & VIRAL LOOP SPECIALIST. Domains: Basketball, Mindset, Purgo, AI. Delivering: IG/LI/X Hooks Matrix, Rhythmic Body Prose, Reel/Video Storyboards, and High-Auteur AI Image Prompts. [EXPORT:content]`,
+      imgprompt: `ACT AS AN ELITE CINEMATIC AUTEUR & MEDIA PRODUCTION DIRECTOR. Transform visual idea into production-grade plot. Technicals: Sony A7R V/Canon EOS R5, Anamorphic Optics, Volumetric Lighting (Kelvin calibrated), Focal Plane Depth, and Auteur Texture details.`,
+      outreach: `ACT AS AN ELITE B2B GROWTH LEAD & COLD OUTREACH ARCHITECT. Delivering: Personalized Multi-Channel Sequences, Frictionless Openers (Social Proof Stacking), and Low-Cognitive-Load CTAs for high response velocity.`,
+      proposal: `ACT AS AN ELITE HIGH-TICKET SALES ARCHITECT & REVENUE STRATEGIST. Includes: Executive Summary (Problem/Solution Gap), Tiered Offerings (The Rule of 3), Outcome-Based Framing, and Investment Matrix. [EXPORT:proposal]`,
+      budget: `ACT AS AN ELITE QUANTITATIVE FINANCIAL ENGINEER & UNIT ECONOMICS SPECIALIST. Delivering: CFO Deep-Audit, Income Snapshot, Expense Rationalization (LTV/CAC Ratios), and 90-Day Cash-Flow Velocity Plan. [EXPORT:budget]`,
+      writer: `ACT AS AN ELITE MASTER NARRATIVE GHOSTWRITER & RHETORICAL ARCHITECT. Long-form content with high Lexical Density, Rhythmic Sentence Flow, and Soulful Resonance (Zero AI Patterning). [EXPORT:article]`,
+      psych: `ACT AS AN ELITE BEHAVIORAL ECONOMIST & HUMAN BEHAVIOR ANALYST. Analyzing context via Loss Aversion, Framing Effects, and Social Cascades. Delivering: Strategic Intervention & Influence Playbook. [EXPORT:psych]`,
+      enhance: `ACT AS AN ELITE PROMPT ENGINEERING ARCHITECT & LLM LOGIC SPECIALIST. Enhancing input via Chain-of-Thought (CoT) and Variable Injection. Scaling market potential for immediate high-stakes action: `,
+      builder: `ACT AS AN ELITE LEAD INFRASTRUCTURE ARCHITECT. Building via Vercel/Supabase/Groq stack. Delivering: Step-by-step Technical Implementation Roadmap.`,
+      lex: `ACT AS AN ELITE BUSINESS LAW & CONFORMITY SPECIALIST (LEX). Analyzing for Legal Risk, Contractual Gaps (Indemnification/Force Majeure), and Global Regulatory Conformity.`,
+    };
+
+    let model = 'claude', msgs = [], tokens = 1840, busy = false, pills = new Set(['p-mem']), slashSel = -1, slashItems = [], msgStore = {}, translationOn = false, curSessId = null;
+
+    function toggleTranslation() {
+      translationOn = !translationOn;
+      const b = document.getElementById('top-trans');
+      if (b) {
+        b.style.background = translationOn ? 'var(--pu3)' : 'var(--s2)';
+        b.style.borderColor = translationOn ? 'var(--pu2)' : 'var(--bd)';
+        b.style.color = translationOn ? 'var(--pu2)' : 'var(--t3)';
+        b.style.boxShadow = translationOn ? '0 0 10px rgba(232,169,18,0.2)' : 'none';
+      }
+      localStorage.setItem('translation_on', translationOn ? '1' : '0');
+      toast(translationOn ? 'Instant Translation: ON (French)' : 'Instant Translation: OFF');
+    }
+    (function () {
+      if (localStorage.getItem('translation_on') === '1') setTimeout(toggleTranslation, 500);
+    })();
+
+    // ── SIDEBAR ──
+    function openSb() { document.getElementById('sb').classList.add('open'); document.getElementById('ov').classList.add('open') }
+    function closeSb() { document.getElementById('sb').classList.remove('open'); document.getElementById('ov').classList.remove('open') }
+    function toggleTools() {
+      const p = document.getElementById('toolsPanel');
+      const a = document.getElementById('tools-arrow');
+      const isOpen = p.style.maxHeight !== '0px';
+      p.style.maxHeight = isOpen ? '0px' : '2000px';
+      a.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+      localStorage.setItem('tools_open', isOpen ? '0' : '1');
+    }
+    (function () {
+      const s = localStorage.getItem('tools_open');
+      if (s === '0') { const p = document.getElementById('toolsPanel'); const a = document.getElementById('tools-arrow'); if (p) { p.style.maxHeight = '0px'; if (a) a.style.transform = 'rotate(-90deg)'; } }
+    })();
+
+    function setModel(el, m) {
+      document.querySelectorAll('.mtab').forEach(b => b.classList.remove('on'));
+      el.classList.add('on'); model = m;
+      document.getElementById('mbadge').textContent = MODELS[m];
+      document.getElementById('mem-model').textContent = MODELS[m];
+      addMem('model', 'Now using ' + MODELS[m]);
+      toast('Switched to ' + MODELS[m]);
+    }
+
+    function togglePill(el) {
+      el.classList.toggle('on');
+      if (el.id === 'p-web') el.classList.toggle('web-on', el.classList.contains('on'));
+      if (pills.has(el.id)) pills.delete(el.id); else pills.add(el.id);
+      document.getElementById('mem-tools').textContent = [...pills].map(p => p.replace('p-', '')).join(', ') || 'none';
+    }
+
+    // ── SLASH MENU ──
+    function onInp() {
+      const el = document.getElementById('inp');
+      el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+      // Character counter
+      const chars = el.value.length; const cc = document.getElementById('char-counter');
+      if (cc) { cc.textContent = chars > 0 ? `${chars.toLocaleString()} chars` : ''; cc.style.color = chars > 3500 ? 'var(--rd)' : chars > 2000 ? 'var(--am)' : 'var(--t3)'; }
+      const v = el.value, menu = document.getElementById('smenu');
+      // Show slash menu on /command (before space)
+      const slashMatch = v.match(/^(\/\S*)$/);
+      if (slashMatch) {
+        const q = slashMatch[1].toLowerCase();
+        slashItems = CMDS.filter(c => c.cmd.startsWith(q));
+        if (slashItems.length) {
+          menu.innerHTML = slashItems.map((c, i) =>
+            `<div class="si${i === slashSel ? ' sel' : ''}" onclick="applySlash('${c.cmd}')">
+          <span style="font-size:13px">${c.icon}</span>
+          <span class="scmd">${c.cmd}</span>
+          <span class="sdesc">${c.desc}</span>
+        </div>`).join('');
+          menu.classList.add('show'); return;
+        }
+      }
+      menu.classList.remove('show'); slashSel = -1;
+    }
+
+    function applySlash(cmd) {
+      document.getElementById('smenu').classList.remove('show');
+      const key = cmd.slice(1);
+      const el = document.getElementById('inp');
+      // Commands that need an argument typed after them
+      if (['scrape', 'search', 'course', 'present', 'resume', 'content', 'imgprompt', 'outreach', 'proposal', 'budget', 'writer', 'psych'].includes(key)) {
+        el.value = cmd + ' '; el.focus(); onInp();
+        return;
+      }
+      // /pdf is handled separately (exports last message)
+      if (key === 'pdf') { rmWelcome(); doPdf(); return; }
+      if (PROMPTS[key]) {
+        rmWelcome();
+        const val = el.value.slice(cmd.length).trim();
+        let finalPrompt = PROMPTS[key];
+        if (key === 'enhance' && val) finalPrompt = PROMPTS.enhance + val;
+
+        // Inject Client Context if active
+        if (activeClientId) {
+          const client = PRELOAD_CLIENTS.find(c => c.id === activeClientId);
+          if (client) finalPrompt = `[FOR CLIENT: ${client.name}] Context: ${client.desc}\n\nTask: ${finalPrompt}`;
+          el.value = ''; send(finalPrompt);
+        } else {
+          // No client: show the full prompt in chat for transparency
+          el.value = ''; send(`[SKILL: /${key}] Prompt:\n\n${finalPrompt}`);
+        }
+      }
+    }
+
+    function slash(key) {
+      rmWelcome();
+      const el = document.getElementById('inp');
+      if (['scrape', 'search', 'course', 'present', 'resume', 'outreach', 'proposal', 'budget', 'writer', 'psych'].includes(key)) {
+        el.value = '/' + key + ' '; el.focus();
+        toast(`Using Skill: /${key}`);
+        return;
+      }
+      applySlash('/' + key);
+    }
+
+    function onKey(e) {
+      const menu = document.getElementById('smenu');
+      if (menu.classList.contains('show')) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); slashSel = Math.min(slashSel + 1, slashItems.length - 1); onInp(); return; }
+        if (e.key === 'ArrowUp') { e.preventDefault(); slashSel = Math.max(slashSel - 1, -1); onInp(); return; }
+        if ((e.key === 'Tab' || e.key === 'Enter') && slashSel >= 0) { e.preventDefault(); applySlash(slashItems[slashSel].cmd); return; }
+        if (e.key === 'Escape') { menu.classList.remove('show'); slashSel = -1; return; }
+      }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    }
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); newChat(); }
+      if (e.key === 'Escape') document.getElementById('smenu').classList.remove('show');
+    });
+
+    // ── CHAT ──
+    function rmWelcome() { const w = document.getElementById('welcome'); if (w) w.remove(); }
+
+    function newChat() {
+      saveSessionMemory();
+      if (msgs.length) saveSession(document.getElementById('tbtitle').textContent, msgs, true);
+      msgs = []; tokens = 1840; updTok(0); curSessId = null;
+      document.getElementById('tbtitle').textContent = 'New conversation';
+      document.getElementById('ci').innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="w3d-scene">
+        <div class="w3d-obj w3d-money">💰</div>
+        <div class="w3d-obj w3d-ball">🏀</div>
+        <div class="w3d-obj w3d-book">📖</div>
+        <div class="w3d-obj w3d-trophy">🏆</div>
+        <div class="w3d-obj w3d-brain">🧠</div>
+        <div class="w3d-glow"></div>
+      </div>
+      <div class="wt">Bvmbino AI Agent</div>
+      <div class="ws">Your personal AI powerhouse — sales, content, finance, writing, strategy & more. 17 skills ready. Type <strong style="color:var(--pu2)">/</strong> to see them all.</div>
+      <div class="wgrid">
+        <div class="wcard" onclick="slash('sales')"><div class="wci">💰</div><div class="wct">Close Deals</div><div class="wcd">Sales scripts, objection handlers, follow-up DMs</div></div>
+        <div class="wcard" onclick="slash('content')"><div class="wci">🎬</div><div class="wct">Create Content</div><div class="wcd">Instagram, LinkedIn, X, Reels + AI image prompts</div></div>
+        <div class="wcard" onclick="slash('budget')"><div class="wci">💳</div><div class="wct">Budget & Finance</div><div class="wcd">Expense audit, cash flow plan, money optimization</div></div>
+        <div class="wcard" onclick="slash('writer')"><div class="wci">✍️</div><div class="wct">Deep Writer</div><div class="wcd">Books, articles, blogs — human voice, zero AI feel</div></div>
+        <div class="wcard" onclick="slash('strategy')"><div class="wci">📈</div><div class="wct">Business Strategy</div><div class="wcd">90-day growth plans, B2B acquisition, funnels</div></div>
+        <div class="wcard" onclick="slash('campaign')"><div class="wci">📣</div><div class="wct">Ad Campaign</div><div class="wcd">Full campaign + ad copy for every platform</div></div>
+      </div>
+      <div class="shint">Type <code>/</code> to see all 17 skills · <code>/budget</code> · <code>/writer</code> · <code>/sales</code> · <code>/content</code> · <code>/imgprompt</code></div>
+    </div>`;
+      closeSb(); toast('New conversation · Ctrl+K');
+    }
+
+    // ── INTENT DETECTION ──
+    function detectIntent(text) {
+      const t = text.toLowerCase().trim();
+      // /scrape command or URL-like input
+      if (t.startsWith('/scrape ')) {
+        const url = text.slice(8).trim();
+        return url ? { type: 'scrape', url } : null;
+      }
+      if (t.startsWith('/search ')) {
+        return { type: 'search', query: text.slice(8).trim() };
+      }
+      if (t.startsWith('/resume')) {
+        const input = text.slice(7).trim();
+        return { type: 'resume', input };
+      }
+      if (t.startsWith('/campaign')) {
+        return { type: 'campaign' };
+      }
+      if (t.startsWith('/schedule')) {
+        const parts = text.trim().toLowerCase().split(/\s+/);
+        const view = ['daily', 'weekly', 'biweekly', 'monthly'].find(v => parts.includes(v)) || 'weekly';
+        return { type: 'schedule', view };
+      }
+      if (t.startsWith('/course ')) {
+        return { type: 'course', topic: text.slice(8).trim() };
+      }
+      if (t.startsWith('/present ')) {
+        return { type: 'present', topic: text.slice(9).trim() };
+      }
+      if (t.startsWith('/content ')) {
+        const topic = text.slice(9).trim();
+        return { type: 'content', topic };
+      }
+      if (t.startsWith('/imgprompt ')) {
+        const idea = text.slice(11).trim();
+        return { type: 'imgprompt', idea };
+      }
+      if (t.startsWith('/outreach ') || t.startsWith('/proposal ') || t.startsWith('/budget ') || t.startsWith('/writer ')) {
+        return { type: 'ai' };// route straight to callAI with message intact
+      }
+      if (t.startsWith('/pdf')) {
+        return { type: 'pdf' };
+      }
+      // Natural language URL detection
+      const urlMatch = text.match(/https?:\/\/[^\s]+/);
+      if (urlMatch && (t.includes('scrape') || t.includes('analyze') || t.includes('extract') || t.includes('read') || t.includes('what does') || t.includes('summarize'))) {
+        return { type: 'scrape', url: urlMatch[0] };
+      }
+      // Natural language search
+      if (t.startsWith('search for ') || t.startsWith('search ') || t.startsWith('find information about ') || t.startsWith('look up ')) {
+        const q = text.replace(/^(search for|search|find information about|look up) /i, '').trim();
+        return { type: 'search', query: q };
+      }
+      return null;
+    }
+
+    // ── SMART INTENT ROUTER v2 — all 17 skills, 200+ patterns ──
+    const SKILL_ROUTER = [
+      {
+        skill: 'content', kw: [
+          'instagram', 'linkedin', 'twitter', 'tiktok', 'facebook post', 'x post', 'reel', 'story', 'stories',
+          'caption', 'hashtag', 'viral', 'social media post', 'content creator', 'create content', 'need content',
+          'write a post', 'write a caption', 'post for my', 'social strategy', 'hook line', 'cta', 'call to action',
+          'engagement', 'followers', 'brand content', 'carousel', 'short video', 'ugc', 'influencer',
+          'content calendar', 'content plan', 'post ideas', 'content for my business', 'post about',
+        ]
+      },
+      {
+        skill: 'sales', kw: [
+          'close a deal', 'closing technique', 'sales script', 'sales pitch', 'objection handling', 'objection',
+          'follow-up message', 'follow up with', 'cold call script', 'warm call', 'pipeline',
+          'sell my service', 'pitch my offer', 'win the client', 'convert prospect', 'discovery call',
+          'sales strategy', 'dm script', 'commission', 'upsell', 'cross-sell', 'proposal call',
+          'client is hesitating', 'client said no', 'quote rejected', 'negotiate price',
+        ]
+      },
+      {
+        skill: 'budget', kw: [
+          'my expenses', 'my budget', 'my finances', 'cash flow', 'monthly spending', 'i owe', 'debt problem',
+          'save money', 'financial plan', 'how much should i', 'revenue target', 'profit margin',
+          'money management', 'financial situation', 'salary allocation', 'income streams', 'break even',
+          'overhead cost', 'operating cost', 'business finance', 'personal finance', 'invest my money',
+          'charges', 'dépenses', 'budget mensuel', 'flux de trésorerie',
+        ]
+      },
+      {
+        skill: 'writer', kw: [
+          'write an article', 'write a blog', 'long form article', 'write an essay', 'book chapter',
+          'ghostwrite', 'write a story', 'editorial piece', 'newsletter content', 'write me a', 'write about',
+          'blog post about', 'opinion piece', 'in-depth article', 'copywriting', 'human writing',
+          'write without ai feel', 'no ai feel', 'natural writing', 'deep dive on',
+        ]
+      },
+      {
+        skill: 'email', kw: [
+          'write an email', 'draft an email', 'email to my client', 'professional email', 'follow-up email',
+          'email template', 'email sequence', 'email campaign', 'relance par email', 'mail professionnel',
+          're-engagement email', 'onboarding email', 'cold email template', 'email for new client',
+          'introduction email', 'confirmation email', 'thank you email', 'reminder email',
+        ]
+      },
+      {
+        skill: 'course', kw: [
+          'build a course', 'create a course', 'online course', 'course outline', 'curriculum design',
+          'learning plan', 'lesson plan', 'e-learning', 'module breakdown', 'training program',
+          'teach people about', 'formation en ligne', 'créer une formation', 'educational content',
+          'workshop structure', 'course content', 'course for my clients', 'certification program',
+        ]
+      },
+      {
+        skill: 'strategy', kw: [
+          'business strategy', 'growth strategy', 'scale my business', 'grow my company', 'market strategy',
+          'go to market', 'business plan', 'action plan', '90 day plan', 'competitive advantage',
+          'market positioning', 'business model', 'revenue strategy', 'acquisition strategy',
+          'how to grow', 'how to scale', 'expand my business', 'swot analysis', 'business roadmap',
+          'stratégie business', 'plan de croissance', 'développement', 'prospection stratégie',
+        ]
+      },
+      {
+        skill: 'resume', kw: [
+          'my resume', 'my cv', 'cover letter', 'job application', 'apply for', 'job offer', 'job search',
+          'career change', 'curriculum vitae', 'lettre de motivation', 'interview prep', 'linkedin profile',
+          'professional bio', 'update my cv', 'work experience', 'job description', 'hiring', 'recruitment',
+        ]
+      },
+      {
+        skill: 'campaign', kw: [
+          'ad campaign', 'facebook ad', 'meta ad', 'google ad', 'paid advertising', 'run ads', 'advertising',
+          'ad creative', 'ad copy', 'targeting audience', 'retargeting', 'google ads', 'sponsored post',
+          'marketing campaign', 'campagne pub', 'publicité payante', 'boost post', 'ad budget',
+          'performance marketing', 'ppc', 'cpm', 'cpc', 'media buying', 'paid social',
+        ]
+      },
+      {
+        skill: 'outreach', kw: [
+          'cold dm', 'cold outreach', 'reach out to', 'prospect message', 'first contact',
+          'intro message', 'connect with potential', 'find new clients', 'new client message',
+          'cold message', 'outreach strategy', 'prospection', 'message de prospection',
+          'approach a brand', 'contact influencer', 'partnership message', 'collab message',
+        ]
+      },
+      {
+        skill: 'proposal', kw: [
+          'client proposal', 'write a proposal', 'service quote', 'business offer', 'pricing proposal',
+          'devis', 'offer for client', 'freelance contract', 'service agreement', 'deal structure',
+          'package offer', 'présentation offre', 'offre commerciale', 'scope of work', 'project offer',
+          'send a quote', 'prepare an offer', 'commercial proposal', 'investment proposal',
+        ]
+      },
+      {
+        skill: 'schedule', kw: [
+          'my schedule', 'weekly schedule', 'daily routine', 'time blocking', 'plan my week', 'time management',
+          'create a routine', 'morning routine', 'work schedule', 'agenda', 'productivity plan',
+          'weekly plan', 'semaine type', 'organisation journée', 'daily calendar', 'deep work blocks',
+          'balancing work and', 'optimise my time', 'best daily routine',
+        ]
+      },
+      {
+        skill: 'imgprompt', kw: [
+          'image prompt', 'midjourney', 'dall-e', 'dalle', 'stable diffusion', 'generate an image',
+          'ai image', 'photo prompt', 'visual prompt', 'create an image', 'image for my',
+          'photo for my', 'design prompt', 'ai art', 'image generation', 'realistic image prompt',
+          'professional photo ai', 'product photo ai', 'portrait prompt', 'background prompt',
+        ]
+      },
+      {
+        skill: 'present', kw: [
+          'presentation', 'slide deck', 'pitch deck', 'keynote', 'powerpoint', 'create slides',
+          'slides for', 'present to investors', 'investor pitch', 'demo day', 'company presentation',
+          'product presentation', 'présentation', 'pitch slides', 'slides about', 'board presentation',
+          'client presentation', 'deck', 'stakeholder presentation',
+        ]
+      },
+      {
+        skill: 'automate', kw: [
+          'automate', 'automation', 'workflow', 'zapier', 'make.com', 'n8n', 'no-code tool',
+          'repetitive task', 'save time with', 'automatic', 'integrate my apps', 'connect tools',
+          'trigger and action', 'automatiser', 'scénario automation', 'business automation',
+          'auto-send', 'crm automation', 'lead automation', 'airtable', 'notion automation',
+        ]
+      },
+      {
+        skill: 'search', kw: [
+          'what is the latest', 'recent news about', 'current data on', 'find stats on', 'find statistics',
+          'research on', 'market research', 'competitor analysis', 'industry report', 'latest trend',
+          'live information', 'real time data', 'fact check', 'verify information', 'look up data',
+        ]
+      },
+      {
+        skill: 'security', kw: [
+          'security audit', 'check my code for', 'find vulnerability', 'protect my app', 'penetration test',
+          'secure my api', 'code review security', 'xss', 'injection attack', 'cors issue',
+          'api security', 'data protection', 'environment variable leak', 'exposed key',
+          'audit sécurité', 'vérifier mon code', 'sécuriser',
+        ]
+      },
+    ];
+
+    // Phrase-length weighted scoring: "instagram caption" (2 words) = 2pts, "write a post" (3 words) = 3pts
+    // This means more specific phrases always win over generic single words
+    function smartRouteMsg(text) {
+      if (!text || text.trim().split(/\s+/).filter(Boolean).length < 2) return null; // min 2 words
+      if (/^\s*\/\w+/.test(text)) return null; // explicit /cmd — let it through unchanged
+      const lower = text.toLowerCase();
+      let best = null, bestScore = 0;
+      for (const { skill, kw } of SKILL_ROUTER) {
+        let score = 0;
+        for (const k of kw) {
+          if (lower.includes(k)) score += k.split(' ').length; // multi-word phrases score higher
+        }
+        if (score > bestScore) { bestScore = score; best = skill; }
+      }
+      if (!best || bestScore < 1) return null;
+      const prompt = PROMPTS[best] || '';
+      // Focused enhancement: activate skill context + keep user's exact intent
+      const enhanced = prompt
+        ? `${prompt}\n\n---\nUser's request: "${text}"\nApply the skill framework above directly to this specific request. Be immediate and concrete.`
+        : text;
+      return { skill: best, enhanced };
+    }
+
+    // ── SEND ──
+    async function send(forcedText) {
+      const el = document.getElementById('inp');
+      const text = (forcedText || el.value).trim();
+      if (!text || busy) return;
+      rmWelcome();
+      document.getElementById('smenu').classList.remove('show');
+      el.value = ''; el.style.height = 'auto';
+      addUserMsg(text);
+      msgs.push({ role: 'user', content: text });
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const short = forcedText ? text.slice(0, 42) + (text.length > 42 ? '…' : '') : (words.slice(0, 4).join(' ')) + (words.length > 4 ? '…' : '');
+      document.getElementById('tbtitle').textContent = short;
+      updTok(text.length / 3.5);
+      saveSession(short, msgs);
+      // Route by intent — FIX: wrap in try/finally so busy never stays stuck if a tool throws
+      const intent = detectIntent(text);
+      try {
+        if (pills.has('p-web') && !forcedText && !intent) {
+          busy = true; document.getElementById('sbtn').disabled = true;
+          await doSearch(text); return;
+        }
+        if (intent) {
+          busy = true; document.getElementById('sbtn').disabled = true;
+          if (intent.type === 'scrape') await doScrape(intent.url, text);
+          else if (intent.type === 'search') await doSearch(intent.query);
+          else if (intent.type === 'resume') await doSmartResume(intent.input);
+          else if (intent.type === 'pdf') await doPdf();
+          else if (intent.type === 'schedule') { await callAI(); const lastMsg = msgs.filter(m => m.role === 'assistant').pop()?.content || ''; await doScheduleExport(lastMsg, intent.view || 'weekly'); }
+          else await callAI(); // campaign, course, present, content, imgprompt, outreach, proposal, ai → all go to callAI
+          return;
+        }
+        // ── SMART ROUTER: auto-detect skill from natural language ──
+        const routed = smartRouteMsg(text);
+        if (routed) {
+          msgs[msgs.length - 1] = { role: 'user', content: routed.enhanced };
+          // Permanent chip visible in chat between user msg and AI response
+          const _ci = document.getElementById('ci');
+          const _chip = document.createElement('div');
+          _chip.style.cssText = 'padding:2px 12px 6px;text-align:center;';
+          _chip.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 11px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:20px;font-size:10px;font-family:var(--mono);color:#4ade80;letter-spacing:.4px;animation:routeBadge .3s ease forwards">🧠 Auto → <strong>/${routed.skill}</strong></span>`;
+          _ci.appendChild(_chip);
+          scrollBot();
+        }
+        await callAI();
+      } catch (e) {
+        console.error('send error', e);
+        appendAiText(`**Unexpected error:** ${e.message}`, null);
+        unlock();
+      }
+    }
+
+    function addUserMsg(text) {
+      const ci = document.getElementById('ci');
+      const row = document.createElement('div'); row.className = 'mrow user';
+      row.innerHTML = `<div class="av av-us">N</div><div class="mwrap"><div class="bubble b-us">${esc(text).replace(/\n/g, '<br>')}</div><div class="macts"><div class="mact" onclick="copyT(this,'${escA(text)}')">⎘ copy</div><div class="mact" onclick="deleteMsg(this)">✕ delete</div></div></div>`;
+      ci.appendChild(row); scrollBot();
+    }
+
+    function unlock() { busy = false; document.getElementById('sbtn').disabled = false; const tb = document.getElementById('toolbadge'); if (tb) tb.style.display = 'none'; }
+    function lockTool(label) { busy = true; document.getElementById('sbtn').disabled = true; const tb = document.getElementById('toolbadge'); if (tb) { tb.textContent = '⚡ ' + label; tb.style.display = 'flex'; } }
+
+    // ── SCRAPE ──
+    async function doScrape(url, originalMsg) {
+      lockTool('scraping…');
+      const rowId = 'tool-' + Date.now();
+      appendToolRow(rowId, '🌐', 'scrape', 'Scraping <code>' + esc(url) + '</code>…');
+      try {
+        const r = await fetch('/api/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+        const data = await r.json();
+        if (data.error) throw new Error(data.error);
+        updateToolRow(rowId, '🌐', 'scrape', `Scraped ${data.chars.toLocaleString()} chars from <a href="${esc(url)}" target="_blank" style="color:var(--pu2)">${esc(url)}</a>`);
+        // Now ask Claude to analyze
+        const analysisMsg = { role: 'user', content: `Here is the scraped content from ${url}:\n\n${data.content}\n\nOriginal request: ${originalMsg}\n\nPlease analyze and respond to the request.` };
+        msgs.push(analysisMsg);
+        await callAI(true);
+      } catch (err) {
+        updateToolRow(rowId, '🌐', 'scrape', 'Scrape failed: ' + err.message, true);
+        appendAiText(`**Scrape failed:** ${err.message}\n\nMake sure the URL is correct and publicly accessible.`, null);
+        unlock();
+      }
+    }
+
+    // ── WEB SEARCH ──
+    async function doSearch(query) {
+      lockTool('searching…');
+      const rowId = 'tool-' + Date.now();
+      appendToolRow(rowId, '🔍', 'search', `Searching: "<em>${esc(query)}</em>"…`);
+      try {
+        const r = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, count: 6 }) });
+        const data = await r.json();
+        if (data.error) throw new Error(data.error);
+        const results = data.results || [];
+        const answer = data.answer || '';
+        updateToolRow(rowId, '🔍', 'search', `Google search: "<em>${esc(query)}</em>" — ${results.length} sources`);
+        // Show source links preview
+        const preview = results.slice(0, 4).map(r2 => `<div style="padding:5px 0;border-bottom:1px solid var(--bd)"><a href="${esc(r2.url)}" target="_blank" style="color:var(--pu2);font-size:11px;text-decoration:none;font-family:var(--mono)">${esc(r2.title).slice(0, 80)}</a></div>`).join('');
+        if (preview) appendRawHtml(`<div style="margin-top:6px;padding:8px;background:var(--s2);border-radius:6px">${preview}</div>`, rowId);
+        // If Gemini already returned grounded answer, display it directly
+        if (answer) {
+          msgs.push({ role: 'assistant', content: answer });
+          appendAiText(answer, null);
+          updTok(answer.length / 3.5);
+          unlock();
+        } else {
+          const formatted = results.map((r2, i) => `${i + 1}. ${r2.title}\n   URL: ${r2.url}`).join('\n\n');
+          msgs.push({ role: 'user', content: `Web search results for "${query}":\n\n${formatted}\n\nSummarize key findings.` });
+          await callAI(true);
+        }
+      } catch (err) {
+        updateToolRow(rowId, '🔍', 'search', 'Search failed: ' + err.message, true);
+        appendAiText(`**Search failed:** ${err.message}\n\nMake sure \`GEMINI_KEY_2\` is set in your Vercel environment variables (used for web search grounding).`, null);
+        unlock();
+      }
+    }
+
+
+    // ── SMART RESUME BUILDER ──
+    async function doSmartResume(jobInput) {
+      // No job input — just send the help prompt
+      if (!jobInput) { await callAI(); return; }
+      const rowId = 'res-' + Date.now();
+      appendToolRow(rowId, '📄', 'scrape', 'Reading job posting…');
+      let jobContext = jobInput;
+      const urlMatch = jobInput.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        try {
+          const r = await fetch('/api/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlMatch[0] }) });
+          const d = await r.json();
+          if (d.content) { jobContext = d.content.slice(0, 4000); updateToolRow(rowId, '📄', 'scrape', 'Job posting analyzed ✓'); }
+          else updateToolRow(rowId, '📄', 'scrape', 'Could not read URL — using as text', true);
+        } catch (e) { updateToolRow(rowId, '📄', 'scrape', 'URL scrape failed — proceeding with text', true); }
+      } else {
+        updateToolRow(rowId, '📄', 'scrape', 'Job description received ✓');
+      }
+      // FIX: replace the last user message (the /resume command) instead of pushing a 2nd user message
+      // — consecutive user messages break some model APIs
+      const lastUserIdx = msgs.map(m => m.role).lastIndexOf('user');
+      const resumeMsg = { role: 'user', content: `Build me a perfectly tailored, ATS-optimized resume for this specific job. Extract every requirement, map it to my real background, use exact keywords from the posting:\n\n${jobContext}\n\nMake it impossible to ignore. [EXPORT:resume]` };
+      if (lastUserIdx >= 0) msgs[lastUserIdx] = resumeMsg; else msgs.push(resumeMsg);
+      await callAI();
+    }
+
+    // ── SCHEDULE CALENDAR BUILDER ──
+    function parseScheduleBlocks(text) {
+      const DAY_NAMES = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+      const result = {}; let cur = null;
+      // Strip markdown bold/italic around lines before parsing
+      const clean = s => s.replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '').trim();
+      for (const rawLine of text.split('\n')) {
+        const line = clean(rawLine);
+        // Match day header — flexible: === DAY ===, ## DAY, **DAY**, or just DAY: alone
+        const dm = line.match(/(?:===\s*)?(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)(?:\s*===|:|\s*$)/i);
+        if (dm) { cur = dm[1].toUpperCase(); if (!result[cur]) result[cur] = []; continue; }
+        if (cur) {
+          // Format 1 (primary): HH:MM - HH:MM | Activity | ZONE
+          const bm = line.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\s*[|–-]\s*(.+?)\s*[|–-]\s*(DEEP|ADMIN|RECOVERY)/i);
+          if (bm) { result[cur].push({ start: bm[1], end: bm[2], activity: bm[3].trim(), zone: bm[4].toUpperCase() }); continue; }
+          // Format 2 (fallback): HH:MM - HH:MM Activity (no zone — auto-assign by time)
+          const bm2 = line.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\s+(.+)/);
+          if (bm2) {
+            const h = parseInt(bm2[1]);
+            const zone = h < 12 ? 'DEEP' : h < 17 ? 'ADMIN' : 'RECOVERY';
+            result[cur].push({ start: bm2[1], end: bm2[2], activity: bm2[3].trim(), zone });
+          }
+        }
+      }
+      return result;
+    }
+
+    function buildScheduleHTML(blocks, view, rawText) {
+      const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+      const SHORT = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+      const ZC = { DEEP: '#ef4444', ADMIN: '#f59e0b', RECOVERY: '#22c55e' };
+      const ZB = { DEEP: '#fff0f0', ADMIN: '#fffbeb', RECOVERY: '#f0fdf4' };
+      const ZL = { DEEP: '🔴 Deep Work', ADMIN: '🟡 Admin', RECOVERY: '🟢 Recovery' };
+      const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const viewLabel = { weekly: 'Weekly', daily: 'Daily', biweekly: 'Bi-Weekly', monthly: 'Monthly' };
+
+      // For daily view, show only first day that has blocks (or Monday)
+      let showDays = DAYS;
+      if (view === 'daily') {
+        const dayWithBlocks = DAYS.find(d => blocks[d] && blocks[d].length) || 'MONDAY';
+        showDays = [dayWithBlocks];
+      }
+
+      // Build day columns
+      let cols = ``;
+      for (let i = 0; i < showDays.length; i++) {
+        const day = showDays[i];
+        const si = DAYS.indexOf(day);
+        const dayBlocks = blocks[day] || [];
+        const isWeekend = si >= 5;
+        cols += `<div class="day-col${isWeekend ? ' weekend' : ''}">
+      <div class="day-head">${view === 'daily' ? day : SHORT[si]}<br><span class="day-num">${isWeekend ? '🟢' : '⚡'}</span></div>`;
+        if (!dayBlocks.length) {
+          cols += `<div class="rest-block">Rest / Flex</div>`;
+        } else {
+          for (const b of dayBlocks) {
+            cols += `<div class="block" style="background:${ZB[b.zone] || '#f8f8ff'};border-left:3px solid ${ZC[b.zone] || '#7C5CFC'}">
+          <div class="bact">${b.activity}</div>
+          <div class="btime">${b.start}–${b.end}</div>
+          <div class="bzone" style="color:${ZC[b.zone] || '#7C5CFC'}">${ZL[b.zone] || b.zone}</div>
+        </div>`;
+          }
+        }
+        cols += `</div>`;
+      }
+
+      // Extract extras
+      const kpiM = rawText.match(/===\s*KPIs?\s*===([\s\S]*?)(?:===|$)/i);
+      const killM = rawText.match(/===\s*SCHEDULE KILLERS?\s*===([\s\S]*?)(?:===|$)/i);
+      const autoM = rawText.match(/===\s*AUTOMATION TIP\s*===([\s\S]*?)(?:===|\[EXPORT|$)/i);
+      let extras = '';
+      if (kpiM || killM || autoM) {
+        extras += `<div class="extras">`;
+        if (kpiM) extras += `<div class="extra-box"><div class="extra-title">📊 Weekly KPIs</div><div class="extra-body">${kpiM[1].trim().replace(/\n/g, '<br>')}</div></div>`;
+        if (killM) extras += `<div class="extra-box"><div class="extra-title">⚠️ Schedule Killers to Cut</div><div class="extra-body">${killM[1].trim().replace(/\n/g, '<br>')}</div></div>`;
+        if (autoM) extras += `<div class="extra-box"><div class="extra-title">⚡ Automation Tip</div><div class="extra-body">${autoM[1].trim()}</div></div>`;
+        extras += `</div>`;
+      }
+
+      const numCols = showDays.length;
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0eeff;padding:24px;}
+.wrap{max-width:${numCols <= 1 ? '500px' : '1100px'};margin:0 auto;}
+.hdr{background:linear-gradient(135deg,#7C5CFC,#9b7dff);color:white;border-radius:12px 12px 0 0;padding:24px 28px;}
+.hdr h1{font-size:22px;font-weight:700;letter-spacing:.5px;}
+.hdr p{font-size:12px;opacity:.8;margin-top:5px;}
+.leg{display:flex;gap:16px;padding:12px 28px;background:white;border-bottom:1px solid #ede9ff;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:#555;}
+.ld{width:10px;height:10px;border-radius:2px;}
+.grid{display:grid;grid-template-columns:repeat(${numCols},1fr);gap:1px;background:#ede9ff;border-radius:0 0 12px 12px;overflow:hidden;}
+.day-col{background:white;display:flex;flex-direction:column;}
+.day-col.weekend{background:#fafff9;}
+.day-head{padding:10px 8px;text-align:center;background:#f8f7ff;font-weight:700;font-size:11px;color:#7C5CFC;letter-spacing:.8px;border-bottom:2px solid #ede9ff;}
+.day-num{font-size:12px;}
+.block{margin:3px 5px;border-radius:5px;padding:5px 7px;}
+.bact{font-size:10px;font-weight:600;color:#1a1a2e;line-height:1.3;}
+.btime{font-size:9px;color:#888;margin-top:2px;}
+.bzone{font-size:8px;margin-top:2px;font-weight:500;}
+.rest-block{padding:16px 8px;text-align:center;color:#bbb;font-size:10px;font-style:italic;}
+.extras{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
+.extra-box{background:white;border-radius:8px;padding:16px;border-top:3px solid #7C5CFC;}
+.extra-title{font-size:12px;font-weight:700;color:#7C5CFC;margin-bottom:8px;}
+.extra-body{font-size:11px;color:#555;line-height:1.7;}
+.foot{text-align:center;font-size:10px;color:#aaa;margin-top:12px;}
+</style></head><body><div class="wrap">
+<div class="hdr"><h1>📅 BVMBINO ${viewLabel[view] || 'Weekly'} SCHEDULE</h1><p>Tiegbe Bamba · ${dateStr}</p></div>
+<div class="leg">
+  <div class="li"><div class="ld" style="background:#ef4444"></div>Deep Work — Peak Energy (Revenue / Creation)</div>
+  <div class="li"><div class="ld" style="background:#f59e0b"></div>Admin — Operations & Follow-up</div>
+  <div class="li"><div class="ld" style="background:#22c55e"></div>Recovery — Family / Rest / Learning</div>
+</div>
+<div class="grid">${cols}</div>
+${extras}
+<div class="foot">Generated by Bvmbino AI Agent</div>
+</div></body></html>`;
+    }
+
+    async function doScheduleExport(aiText, view) {
+      lockTool('building calendar…');
+      const ci = document.getElementById('ci');
+      const rowId = 'sched-' + Date.now();
+      const row = document.createElement('div'); row.id = rowId; row.className = 'mrow ai';
+      row.innerHTML = `<div class="av av-ai">B</div><div class="mwrap">
+    <div class="mmeta">Bvmbino Agent <span class="mmtag">Schedule</span> <span class="tool-tag" style="background:rgba(34,197,94,.1);color:#22c55e;border-color:rgba(34,197,94,.2)">📅 ${view} view</span></div>
+    <div class="bubble b-ai" id="${rowId}-b"><div style="padding:12px;font-size:12px;color:var(--t2)">Building visual calendar…</div></div>
+  </div>`;
+      ci.appendChild(row); scrollBot();
+      try {
+        const blocks = parseScheduleBlocks(aiText);
+        const calHtml = buildScheduleHTML(blocks, view, aiText);
+        const hasBlocks = Object.values(blocks).some(d => d.length > 0);
+        if (!hasBlocks) throw new Error('Could not parse schedule blocks from AI response. Ask again using /schedule.');
+        currentPdfFilename = `bvmbino-schedule-${view}.pdf`;
+        currentPdfOrientation = view !== 'daily' ? 'landscape' : 'portrait';
+        showPdfModal(calHtml);
+        const totalBlocks = Object.values(blocks).reduce((s, d) => s + d.length, 0);
+        const bub = document.getElementById(rowId + '-b');
+        if (bub) bub.innerHTML = `<div style="padding:14px">
+      <div style="color:var(--gn);font-weight:600;font-size:13px;margin-bottom:6px">📅 Visual schedule exported</div>
+      <div style="font-size:11px;color:var(--t2);line-height:1.8">View: <strong style="color:var(--t1)">${view}</strong> · ${totalBlocks} time blocks · Color-coded by energy zone<br>Download started automatically · Change view: <code>/schedule daily</code> · <code>/schedule biweekly</code> · <code>/schedule monthly</code></div>
+    </div>`;
+        toast('Schedule PDF downloaded ✓');
+      } catch (err) {
+        const bub = document.getElementById(rowId + '-b');
+        if (bub) bub.innerHTML = `<div style="padding:12px;color:var(--rd);font-size:12px">Export failed: ${esc(err.message)}</div>`;
+        toast('Export failed');
+      } finally { unlock(); }
+    }
+
+    // ── PER-MESSAGE EXPORTS ──
+    function mdToHtmlBody(text) {
+      return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/^[-•] (.+)$/gm, '<li class="ul">$1</li>')
+        .replace(/^(\d+)\. (.+)$/gm, '<li class="ol"><span>$1.</span> $2</li>')
+        .replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+    }
+
+    function buildExportHtml(text, xtype) {
+      const date = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const body = mdToHtmlBody(text);
+
+      // ── RESUME template ──
+      if (xtype === 'resume') return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resume — Boss Bvmbino</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Georgia',serif;background:#fff;color:#0a0800;padding:0}
+.page{max-width:820px;margin:0 auto;padding:48px 52px}
+.name{font-size:30px;font-weight:700;letter-spacing:1px;color:#0a0800;font-family:'Arial',sans-serif}
+.contact{font-size:11px;color:#666;margin-top:4px;letter-spacing:.5px}
+.divider{border:none;border-top:2px solid #e8a912;margin:16px 0}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#e8a912;font-family:'Arial',sans-serif;margin:20px 0 8px}
+h3{font-size:13px;font-weight:700;color:#0a0800;margin:12px 0 2px}
+p{font-size:12.5px;line-height:1.7;color:#333;margin:4px 0}
+li.ul{list-style:disc;margin-left:18px;font-size:12.5px;line-height:1.7;color:#333}
+li.ol{list-style:none;font-size:12.5px;line-height:1.7;color:#333}li.ol span{color:#e8a912;font-weight:700}
+code{background:#f0eeff;color:#e8a912;padding:1px 5px;border-radius:3px;font-size:11px}
+strong{color:#0a0800}.foot{margin-top:32px;font-size:9px;color:#ccc;text-align:center;border-top:1px solid #eee;padding-top:10px}
+</style></head><body><div class="page">
+<div class="name">Boss Bvmbino</div>
+<div class="contact">Pro Basketball Player/Coach · Strong Wave Service · Purgo Clean · bvmbino-ai-agent.vercel.app</div>
+<hr class="divider">
+<p>${body}</p>
+<div class="foot">Generated by Bvmbino AI Agent · ${date}</div>
+</div></body></html>`;
+
+      // ── COURSE template ──
+      if (xtype === 'course') return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Course Program</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#06080a;padding:40px 20px;color:#f0ece4}
+.wrap{max-width:860px;margin:0 auto}
+.hdr{background:linear-gradient(135deg,#e8a912,#c89008);color:#0a0800;border-radius:12px 12px 0 0;padding:32px 40px}
+.hdr h1{font-size:24px;font-weight:700}.hdr p{font-size:12px;opacity:.8;margin-top:5px}
+.body{background:#0b0e12;padding:36px 40px;border-radius:0 0 12px 12px}
+h1{font-size:22px;color:#e8a912;margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid #181c22}
+h2{font-size:16px;color:#e8a912;margin:20px 0 8px;background:#111419;padding:8px 14px;border-radius:6px;border-left:3px solid #e8a912}
+h3{font-size:13px;font-weight:700;color:#ffc842;margin:12px 0 4px}
+p{font-size:13px;line-height:1.8;color:#d1cabe;margin:6px 0}
+li.ul{list-style:none;padding:4px 0 4px 16px;font-size:13px;color:#d1cabe;border-left:2px solid #181c22;margin:3px 0}
+li.ol{font-size:13px;color:#d1cabe;margin:4px 0}li.ol span{color:#e8a912;font-weight:700;min-width:24px;display:inline-block}
+strong{color:#ffc842}code{background:#111419;color:#e8a912;padding:1px 6px;border-radius:4px;font-size:11px}
+.foot{text-align:center;font-size:10px;color:#5a5548;margin-top:20px}
+</style></head><body><div class="wrap">
+<div class="body"><p>${body}</p></div>
+</div><div class="foot">Generated by Bvmbino AI Agent · bvmbino-ai-agent.vercel.app</div></body></html>`;
+
+      // ── PROPOSAL / CAMPAIGN / ROADMAP / SALES (business doc) ──
+      if (['proposal', 'campaign', 'roadmap', 'sales', 'strategy', 'pitch'].includes(xtype)) return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${xtype.charAt(0).toUpperCase() + xtype.slice(1)} — Bvmbino</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#06080a;padding:0}
+.page{max-width:820px;margin:0 auto;padding:0}
+.hdr{background:#0b0e12;color:#f0ece4;padding:36px 48px;border-bottom:2px solid #e8a912}
+.hdr .label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#e8a912;margin-bottom:6px}
+.hdr h1{font-size:26px;font-weight:700;color:#ffc842}.hdr p{font-size:11px;opacity:.6;margin-top:6px}
+.body{padding:40px 48px;color:#d1cabe}
+h1{font-size:18px;color:#e8a912;font-weight:700;margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid #181c22}
+h2{font-size:15px;color:#ffc842;font-weight:700;margin:20px 0 8px}
+h3{font-size:13px;font-weight:600;color:#e8a912;margin:12px 0 4px}
+p{font-size:13px;line-height:1.8;color:#d1cabe;margin:6px 0}
+li.ul{list-style:disc;margin-left:20px;font-size:13px;line-height:1.7;color:#d1cabe}
+li.ol span{color:#e8a912;font-weight:700}
+strong{color:#f0ece4}code{background:#111419;color:#e8a912;padding:1px 5px;border-radius:3px;font-size:11px}
+.foot{margin:0 48px 32px;font-size:9px;color:#5a5548;border-top:1px solid #181c22;padding-top:10px}
+</style></head><body>
+<div class="body" style="padding-top: 20px;"><p>${body}</p></div>
+<div class="foot">Generated by Bvmbino AI Agent · bvmbino-ai-agent.vercel.app · Confidential</div>
+</body></html>`;
+
+      // ── DEFAULT template ──
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bvmbino Export</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#06080a;padding:40px 20px;color:#f0ece4}
+.wrap{max-width:800px;margin:0 auto;background:#0b0e12;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(232,169,18,.12);border:1px solid #181c22}
+.hdr{background:linear-gradient(135deg,#e8a912,#d4940a);color:#0a0800;padding:28px 36px}
+.hdr h1{font-size:18px;font-weight:700}.hdr p{font-size:11px;opacity:.75;margin-top:4px}
+.body{padding:32px 36px;font-size:13px;line-height:1.8;color:#d1cabe}
+h1,h2{font-size:15px;font-weight:700;color:#e8a912;margin:18px 0 7px;border-bottom:1px solid #181c22;padding-bottom:4px}
+h3{font-size:13px;font-weight:600;color:#ffc842;margin:12px 0 4px}
+p{margin:8px 0}li.ul{list-style:disc;margin-left:18px;line-height:1.7}
+li.ol span{color:#e8a912;font-weight:700}strong{color:#ffc842}
+code{background:#111419;color:#e8a912;padding:1px 5px;border-radius:4px;font-size:11px}
+.foot{text-align:center;font-size:10px;color:#5a5548;padding:14px;border-top:1px solid #181c22}
+</style></head><body><div class="wrap">
+<div class="body"><p>${body}</p></div>
+<div class="foot">Generated by Bvmbino AI Agent · bvmbino-ai-agent.vercel.app</div>
+</div></body></html>`;
+    }
+
+    function expMsgPdf(mid) {
+      const { text, xtype } = msgStore[mid] || {}; if (!text) { toast('No content to export'); return; }
+      const html = buildExportHtml(text, xtype);
+      currentPdfFilename = `bvmbino-${xtype || 'export'}-${Date.now()}.pdf`;
+      currentPdfOrientation = 'portrait';
+      showPdfModal(html);
+    }
+
+    function expMsgHtml(mid) {
+      const { text, xtype } = msgStore[mid] || {}; if (!text) return;
+      const html = buildExportHtml(text, xtype);
+      const fname = `bvmbino-${xtype || 'export'}.html`;
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click();
+      toast('HTML downloaded ✓');
+    }
+
+    function expMsgMd(mid) {
+      const { text } = msgStore[mid] || {}; if (!text) return;
+      const fname = `bvmbino-export-${Date.now()}.md`;
+      const blob = new Blob([text], { type: 'text/markdown' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click();
+      toast('Markdown downloaded ✓');
+    }
+
+    function copyMsg(mid) {
+      const { text } = msgStore[mid] || {}; if (!text) return;
+      navigator.clipboard.writeText(text).catch(() => { }); toast('Copied ✓');
+    }
+
+    // ── PDF EXPORT PREVIEW ──
+    let currentPdfFilename = '';
+    let currentPdfOrientation = 'portrait';
+
+    async function doPdf() {
+      lockTool('generating Preview…');
+      const last = msgs.filter(m => m.role === 'assistant').pop();
+      if (!last) { appendAiText('No content to export yet. Generate something first.', null); unlock(); return; }
+      try {
+        const baseHtml = mdToBasicHtml(last.content);
+        const date = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#06080a;padding:40px;color:#f0ece4}
+.hdr{border-bottom:2px solid #e8a912;padding-bottom:16px;margin-bottom:24px}
+.hdr h1{font-size:24px;color:#e8a912}
+.hdr p{font-size:12px;color:#9a9484}
+h1,h2{font-size:18px;color:#e8a912;margin:20px 0 10px}
+strong{color:#ffc842}
+p{font-size:13px;line-height:1.8;margin-bottom:12px;color:#d1cabe}
+li{font-size:13px;line-height:1.7;margin-bottom:6px;margin-left:20px;color:#d1cabe}
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:12px}
+th{background:#181c22;color:#e8a912;padding:12px 10px;text-transform:uppercase;font-weight:700;border:1px solid #e8a912;text-align:left}
+td{padding:12px 10px;border-bottom:1px solid #181c22;color:#f0ece4;border-left:1px solid #181c22;border-right:1px solid #181c22}
+.infograph{display:flex;gap:10px;background:#0b0e12;padding:15px;border-radius:8px;border-left:4px solid #e8a912;margin:15px 0}
+.sheet{background:#111419;padding:20px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);margin:15px 0}
+.foot{margin-top:40px;font-size:10px;color:#5a5548;border-top:1px solid #111419;padding-top:10px}
+</style></head><body>
+${baseHtml}
+<div class="foot">Generated by Bvmbino AI Agent</div></body></html>`;
+
+        currentPdfFilename = `bvmbino-export-${Date.now()}.pdf`;
+        currentPdfOrientation = 'portrait';
+        showPdfModal(html);
+      } catch (err) {
+        toast('Preview failed');
+      } finally { unlock(); }
+    }
+
+    // Store the raw HTML string globally so download + open-in-tab can access it without an iframe
+    let currentPdfHtml = '';
+
+    function showPdfModal(htmlStr) {
+      currentPdfHtml = htmlStr;
+      const modal = document.getElementById('pdfModal');
+      const wrap = document.getElementById('pdfDocWrap');
+      // Parse the HTML string and extract just the <body> content to render inline
+      // This avoids iframes entirely — iOS Safari PWA blocks/freezes on srcdoc iframes
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlStr, 'text/html');
+      const bodyContent = doc.body ? doc.body.innerHTML : htmlStr;
+      // Inject styles from the parsed doc so the preview looks correct
+      const styles = [...doc.querySelectorAll('style')].map(s => s.outerHTML).join('');
+      wrap.innerHTML = `<div id="pdfPreviewDiv" style="padding:24px;background:#06080a;min-height:70vh;font-family:'Segoe UI',Arial,sans-serif;color:#f0ece4">${styles}<div>${bodyContent}</div></div>`;
+      modal.classList.add('show');
+    }
+
+    function closePdfModal() {
+      // Re-show the conversation, not the home screen
+      document.getElementById('pdfModal').classList.remove('show');
+    }
+
+    async function triggerPdfDownload() {
+      const el = document.getElementById('pdfPreviewDiv');
+      if (!el) { toast('No content to save'); return; }
+      toast('Saving to device… Please wait.');
+      const opt = { margin: [10, 10, 10, 10], filename: currentPdfFilename || 'bvmbino-export.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#06080a' }, jsPDF: { unit: 'mm', format: 'a4', orientation: currentPdfOrientation || 'portrait' } };
+      html2pdf().set(opt).from(el).save().then(() => toast('Saved to device ✓')).catch(() => toast('Save failed — try Open in Browser'));
+    }
+
+    function openPdfInTab() {
+      if (!currentPdfHtml) { toast('No content to open'); return; }
+      // Use a Blob URL — this works in iOS Safari PWA standalone mode (window.open is blocked)
+      const blob = new Blob([currentPdfHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      // On iOS PWA standalone, navigate the current page to the blob URL temporarily
+      // On desktop, open a real new tab
+      const isIosPwa = window.navigator.standalone === true;
+      if (isIosPwa) {
+        // Open blob in same window — user can use Share > Print to save as PDF natively
+        window.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
+      toast('Opened in browser ✓');
+    }
+
+    // ── CLAUDE AI CALL ──
+    function showTyping() {
+      busy = true; document.getElementById('sbtn').disabled = true;
+      // FIX: prevent duplicate #typing elements — hideTyping first to clear any stale indicator
+      hideTyping();
+      const ci = document.getElementById('ci');
+      const d = document.createElement('div'); d.className = 'mrow ai'; d.id = 'typing';
+      d.innerHTML = `<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="tbub"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+      ci.appendChild(d); scrollBot();
+    }
+    function hideTyping() { const t = document.getElementById('typing'); if (t) t.remove(); }
+
+    function esc(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
+
+    function autoTitle(msgs) {
+      if (!msgs || !msgs.length) return;
+      const first = msgs.find(m => m.role === 'user');
+      if (!first) return;
+      const short = first.content.slice(0, 40) + (first.content.length > 40 ? '...' : '');
+      document.getElementById('tbtitle').textContent = short;
+      saveSession(short, msgs);
+    }
+
+    async function callAI(skipLock) {
+      if (!skipLock) showTyping();
+      else {
+        // For tool-augmented calls, show typing after tool row
+        showTyping();
+      }
+      const client = ALL_CLIENTS.find(c => c.id === activeClientId);
+      const clientNote = client ? `\n\n🎯 ACTIVE CLIENT CONTEXT: You are working for "${client.name}". context: ${client.desc}. Apply this to all recommendations.` : "";
+
+      // Conversational Training Context Injection
+      const kList = await loadKnowledge();
+      const kNote = kList.length ? `\n\n🧠 TRAINED KNOWLEDGE (Learned about Bvmbino):\n${kList.map(k => `- ${k.key}: ${k.val}`).join('\n')}` : "";
+
+      const sys = buildSys() + clientNote + kNote + (translationOn ? "\n\nCRITICAL: Instant Translation is ACTIVE. Provide your response in the language detected from the user message, or French if not specified. Keep all unique skill names (Purgo Clean, Keo Jus, Business Strategy, etc.) and [EXPORT:category] tags in English." : "");
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ system: sys, messages: msgs.slice(-5), model: selectedModel })
+        });
+        if (res.ok && res.headers.get('content-type')?.includes('text/event-stream')) {
+          await streamResponse(res);
+        } else {
+          const data = await res.json();
+          hideTyping();
+          // Show which provider fired + which keys are loaded
+          if (data.model) { const mb = document.getElementById('mbadge'); if (mb) mb.textContent = data.model; const ab = document.getElementById('ai-engine-badge'); if (ab) ab.innerHTML = `<span class="pulse"></span>${data.model}`; }
+          const providers = res.headers.get('x-providers');
+          if (providers) addMem('providers loaded', providers);
+          // Show error hint if all providers failed
+          if (data.hint && !data.content) {
+            const loaded = res.headers.get('x-providers') || 'none';
+            const actualErr = data.error || 'Unknown error';
+            const isQuota = data.quota_exhausted || actualErr.toLowerCase().includes('quota') || actualErr.includes('429');
+            const isNoKeys = loaded === 'none';
+            let title = isNoKeys ? '**No API keys configured**' : isQuota ? '**Daily quota exhausted on all providers**' : '**All AI providers failed**';
+            let body = `${title}\n\n> ${actualErr}\n\nKeys loaded: \`${loaded}\`\n\n`;
+            if (isNoKeys) {
+              body += `**Quick fix:**\n1. Go to [vercel.com](https://vercel.com) → project → **Settings → Environment Variables**\n2. Add \`GROQ_KEY\` → free at groq.com (14,400 req/day)\n3. Add \`CEREBRAS_KEY\` → free at cloud.cerebras.ai (1M tokens/day)\n4. Add \`OPENROUTER_KEY\` → free at openrouter.ai (28+ free models)\n5. Add \`MISTRAL_KEY\` → free at console.mistral.ai (1B tokens/month)`;
+            } else if (isQuota) {
+              body += `**Quota resets daily.** Add more providers to avoid downtime:\n- \`OPENROUTER_KEY\` → openrouter.ai (free, 28+ models)\n- \`MISTRAL_KEY\` → console.mistral.ai (1B tokens/month free)`;
+            } else {
+              body += `**Try again** — may be a temporary API issue.\nIf it keeps failing, check Vercel → Settings → Environment Variables.`;
+            }
+            appendAiText(body, null);
+            unlock(); return;
+          }
+          let reply = data.content?.[0]?.text || data.error || 'No response from AI';
+          let xtype = null; const m = reply.match(/\[EXPORT:(\w+)\]/);
+          if (m) { reply = reply.replace(/\[EXPORT:\w+\]/, '').trim(); xtype = m[1]; }
+          msgs.push({ role: 'assistant', content: reply });
+          // CRITICAL FIX: Save using curSessId and auto-title on first turn
+          if (!curSessId) autoTitle(msgs);
+          else saveSession(document.getElementById('tbtitle').textContent, msgs);
+          appendAiText(reply, xtype);
+          updTok(reply.length / 3.5); addMem('response', reply.slice(0, 90));
+        }
+      } catch (err) {
+        hideTyping();
+        // Do NOT push error messages into msgs — it corrupts conversation history on retry
+        appendAiText(`**Connection failed** — \`${err.message}\`\n\nCheck that \`GROQ_KEY\` is set in Vercel → Settings → Environment Variables.`, null);
+      } finally {
+        unlock();
+      }
+    }
+
+    async function streamResponse(res) {
+      const streamModel = res.headers.get('x-model') || MODELS[model] || 'AI';
+      const reader = res.body.getReader(), dec = new TextDecoder();
+      let full = '', streamEl = null, buf = '';
+      hideTyping();
+      const ci = document.getElementById('ci');
+      const stId = 'st-' + Date.now();
+      const row = document.createElement('div'); row.className = 'mrow ai';
+      row.innerHTML = `<div class="av av-ai">B</div><div class="mwrap"><div class="mmeta">Bvmbino Agent <span class="mmtag">${streamModel}</span></div><div class="bubble b-ai" id="${stId}"></div></div>`;
+      ci.appendChild(row);
+      streamEl = document.getElementById(stId);
+      scrollBot();
+      const mb = document.getElementById('mbadge'); if (mb) mb.textContent = streamModel;
+      const ab = document.getElementById('ai-engine-badge'); if (ab) ab.innerHTML = `<span class="pulse"></span>${streamModel}`;
+
+      // ── INCREMENTAL DELTA RENDERING ──
+      // Append only new delta chunks as raw text — zero DOM destruction during stream.
+      // One single mdHtml() render happens at the very end for proper markdown formatting.
+      const rawNode = document.createElement('span'); rawNode.style.cssText = 'white-space:pre-wrap;font-family:inherit;font-size:inherit;line-height:inherit;color:inherit';
+      const cursor = document.createElement('span'); cursor.className = 'sc';
+      streamEl.appendChild(rawNode);
+      streamEl.appendChild(cursor);
+
+      let scrollTimer = 0;
+      try {
+        while (true) {
+          const { done, value } = await reader.read(); if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const d = line.slice(6).trim(); if (d === '[DONE]') continue;
+            try {
+              const p = JSON.parse(d);
+              let chunk = '';
+              if (p.choices?.[0]?.delta?.content) chunk = p.choices[0].delta.content;
+              else if (p.type === 'content_block_delta' && p.delta?.text) chunk = p.delta.text;
+              else continue;
+              full += chunk;
+              // Append only the new chunk to the text node — no innerHTML rewrite, no DOM teardown
+              rawNode.textContent += chunk;
+              // Throttle scroll updates to avoid layout thrash on mobile
+              const now = Date.now();
+              if (now - scrollTimer > 150) { scrollBot(); scrollTimer = now; }
+            } catch { }
+          }
+        }
+      } catch (streamErr) { console.error('stream error', streamErr); }
+
+      finally {
+        let xtype = null; const m3 = full.match(/\[EXPORT:(\w+)\]/);
+        if (m3) { full = full.replace(/\[EXPORT:\w+\]/, '').trim(); xtype = m3[1]; }
+        // Only push to msgs if we actually got content — empty stream = error, don't corrupt history
+        if (full.trim()) {
+          msgs.push({ role: 'assistant', content: full });
+          // CRITICAL FIX: Save using curSessId and auto-title on first turn
+          if (!curSessId) autoTitle(msgs);
+          else saveSession(document.getElementById('tbtitle').textContent, msgs);
+        }
+        // Final render of complete response (no cursor)
+        if (streamEl) streamEl.innerHTML = full.trim() ? mdHtml(full) + (xtype ? xcard(xtype) : '') : '<span style="color:var(--rd);font-size:12px">No response received — check API keys</span>';
+        const mw = row.querySelector('.mwrap');
+        const mid = 'm' + Date.now(); msgStore[mid] = { text: full, xtype };
+        mw.appendChild(msgActions(mid));
+        unlock();
+        updTok(full.length / 3.5); addMem('response', full.slice(0, 90)); scrollBot();
+        // Auto-save session context after every AI response (silent, no toast)
+        try {
+          const userMsgs = msgs.filter(m => m.role === 'user');
+          const aiMsgs = msgs.filter(m => m.role === 'assistant');
+          if (userMsgs.length) {
+            const topic = userMsgs[0].content.slice(0, 80);
+            const requests = userMsgs.map(m => '• ' + m.content.slice(0, 80)).join('\n');
+            const lastAI = aiMsgs.length ? '\nLast answer: ' + aiMsgs[aiMsgs.length - 1].content.replace(/\*\*/g, '').slice(0, 200) : '';
+            const summary = `Topic: ${topic}\n${requests}${lastAI}`;
+            const entry = { date: new Date().toLocaleDateString('en-GB'), summary };
+            const log = loadSessionMemory();
+            // Update last entry if same date, else push new
+            if (log.length && log[log.length - 1].date === entry.date) { log[log.length - 1] = entry; }
+            else { log.push(entry); }
+            if (log.length > MEM_MAX) log.splice(0, log.length - MEM_MAX);
+            localStorage.setItem(MEM_KEY, JSON.stringify(log));
+          }
+        } catch { }
+      }
+    }
+
+    // ── SINGLE SOURCE: msg actions bar ──
+    function msgActions(mid) {
+      const acts = document.createElement('div'); acts.className = 'macts';
+      acts.innerHTML = `
+    <div class="mact" onclick="likeMsg(this)">♡ like</div>
+    <div class="mact" onclick="copyMsg('${mid}')">⎘ copy</div>
+    <div class="mact" onclick="regenLast()">↻ regen</div>
+    <div class="mact" onclick="deleteMsg(this)">✕ delete</div>
+    <div class="mact" onclick="expMsgPdf('${mid}')">📋 PDF</div>
+    <div class="mact" onclick="expMsgMd('${mid}')">📝 MD</div>
+    <div class="mact" onclick="expMsgHtml('${mid}')">🌐 HTML</div>`;
+      return acts;
+    }
+
+    function appendAiText(text, xtype) {
+      const ci = document.getElementById('ci');
+      const mid = 'm' + Date.now(); msgStore[mid] = { text, xtype };
+      const row = document.createElement('div'); row.className = 'mrow ai';
+      const wrap = document.createElement('div'); wrap.className = 'mwrap';
+
+      // Expert Suggestion Engine: Detect keywords and suggest skills
+      let suggestion = '';
+      const l = text.toLowerCase();
+      if (l.includes('sell') || l.includes('product')) suggestion = 'sales';
+      else if (l.includes('post') || l.includes('content') || l.includes('instagram')) suggestion = 'content';
+      else if (l.includes('legal') || l.includes('contract')) suggestion = 'lex';
+      else if (l.includes('money') || l.includes('expense')) suggestion = 'budget';
+      else if (l.includes('strategy') || l.includes('plan')) suggestion = 'strategy';
+
+      const suggHtml = suggestion ? `<div class="sugg-chip" onclick="slash('${suggestion}')">✨ Suggestion: /${suggestion}</div>` : '';
+
+      wrap.innerHTML = `<div class="mmeta">Bvmbino Agent <span class="mmtag">${MODELS[model]}</span></div><div class="bubble b-ai">${mdHtml(text)}${xtype ? xcard(xtype) : ''} ${suggHtml}</div>`;
+      wrap.appendChild(msgActions(mid));
+      row.innerHTML = '<div class="av av-ai">B</div>';
+      row.appendChild(wrap);
+      ci.appendChild(row); scrollBot();
+
+      // Live Memory Extraction (Super Machine Optimization)
+      extractMemory(text);
+    }
+
+    function extractMemory(text) {
+      const memes = {
+        'project': /project\s+called\s+([\w\s]+)/i,
+        'goal': /goal\s+is\s+to\s+([\w\s]+)/i,
+        'business': /business\s+named\s+([\w\s]+)/i,
+        'target': /target\s+audience\s+is\s+([\w\s]+)/i
+      };
+      for (const [k, v] of Object.entries(memes)) {
+        const m = text.match(v);
+        if (m) {
+          addMem(k, m[1]);
+          // Silently auto-save to persistent Knowledge store
+          saveToKnowledge(k, m[1]);
+        }
+      }
+    }
+
+    function appendToolRow(id, icon, type, msg) {
+      const ci = document.getElementById('ci');
+      const d = document.createElement('div'); d.id = id + '-banner';
+      d.className = `tool-banner tb-${type}`;
+      d.innerHTML = `<span>${icon}</span><span id="${id}-msg">${msg}</span>`;
+      ci.appendChild(d); scrollBot();
+    }
+
+    function updateToolRow(id, icon, type, msg, isErr) {
+      const el = document.getElementById(id + '-msg');
+      if (el) el.innerHTML = (isErr ? '⚠ ' : '') + msg;
+      const banner = document.getElementById(id + '-banner');
+      if (banner && isErr) banner.style.background = 'rgba(239,68,68,.06)';
+    }
+
+    function appendRawHtml(html, afterId) {
+      const ci = document.getElementById('ci');
+      const banner = document.getElementById(afterId + '-banner');
+      if (banner) banner.insertAdjacentHTML('afterend', html);
+      else ci.insertAdjacentHTML('beforeend', html);
+      scrollBot();
+    }
+
+    // ── SESSION MEMORY (localStorage) ──
+    const MEM_KEY = 'bvmbino_session_log';
+    const MEM_MAX = 20;
+
+    function loadSessionMemory() {
+      try { const d = JSON.parse(localStorage.getItem(MEM_KEY) || '[]'); return d.slice(-MEM_MAX); }
+      catch { return []; }
+    }
+
+    function saveSessionMemory() {
+      if (!msgs.length) return;
+      const userMsgs = msgs.filter(m => m.role === 'user');
+      if (!userMsgs.length) return;
+
+      const topic = userMsgs[0].content.slice(0, 80);
+
+      // Power Upgrade: Grab the last 4 interactions directly
+      const recentExchanges = msgs.slice(-4).map(m => {
+        // Cut off massive walls of text to prevent over-bloating the prompt, but keep enough for flawless memory context.
+        return `[${m.role.toUpperCase()}]: ${m.content.replace(/\[EXPORT:\w+\]/g, '').trim().slice(0, 1500)}`;
+      }).join('\n\n');
+
+      const summary = `Topic: ${topic}\n\nRecent Memory Transcript:\n${recentExchanges}`;
+      const entry = { date: new Date().toLocaleDateString('en-GB'), summary };
+
+      const log = loadSessionMemory();
+      if (log.length && log[log.length - 1].date === entry.date) { log[log.length - 1] = entry; }
+      else { log.push(entry); }
+      if (log.length > MEM_MAX) log.splice(0, log.length - MEM_MAX);
+
+      try { localStorage.setItem(MEM_KEY, JSON.stringify(log)); } catch { }
+      addMem('memory synced', 'Saved last 4 exchanges accurately ✓');
+    }
+
+    function getMemoryContext() {
+      const log = loadSessionMemory();
+      if (!log.length) return '';
+      // Load last 3 sessions only — compact, ~300 tokens max
+      const recent = log.slice(-3).map(e => `[${e.date}] ${e.summary.slice(0, 300)}`).join('\n---\n');
+      return `\n\n## MEMORY (previous sessions — read before answering, don't repeat this back):\n${recent}\n## END MEMORY`;
+    }
+
+    // ── BUILD DYNAMIC CONTEXT (Sent to backend) ──
+    function buildSys() {
+      const tools = [...pills].map(p => p.replace('p-', '')).join(', ');
+      const mem = getMemoryContext();
+      return `### DYNAMIC ENVIRONMENT:
+- Active Tools: ${tools}
+- ${mem}`;
+    }
+
+    // ── XCARD ──
+    function xcard(type) {
+      return `<div class="xcard"><div class="xhead"><span class="xtype">${type}</span><span class="xlabel">ready to export</span></div><div class="xbtns"><div class="xbtn" onclick="expDoc('txt','${type}')">↓ TXT</div><div class="xbtn" onclick="expDoc('md','${type}')">↓ MD</div><div class="xbtn" onclick="doPdf()">↓ PDF</div><div class="xbtn" onclick="copyLast()">⎘ Copy</div></div></div>`;
+    }
+
+    function doPdf() {
+      const lastBubble = Array.from(document.querySelectorAll('.bubble.b-ai')).pop();
+      if (!lastBubble) { toast('No document to preview'); return; }
+      const content = lastBubble.innerHTML.replace(/\[EXPORT:\w+\]/g, '').replace(/<div class="macts">.*?<\/div>/g, '');
+      document.getElementById('preview-content').innerHTML = content;
+      document.getElementById('preview-modal').style.display = 'flex';
+      toast('Opening Pro Preview... ✨');
+    }
+
+    function saveAsPdf() {
+      const element = document.getElementById('preview-content');
+      const opt = {
+        margin: 10,
+        filename: `bvmbino-export-${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      toast('Generating high-fidelity PDF... ⏳');
+      html2pdf().set(opt).from(element).save().then(() => {
+        toast('PDF Exported successfully ✓');
+      }).catch(err => {
+        console.error(err); toast('Export failed — try browser print');
+      });
+    }
+
+    function closePreview() {
+      document.getElementById('preview-modal').style.display = 'none';
+    }
+
+    // ── MARKDOWN ──
+    function mdHtml(text) {
+      if (!text) return '';
+      const lines = text.split('\n');
+      let html = '', inCode = false, codeBuf = '', lang = '', inTable = false, tableBuf = [];
+      for (let i = 0; i < lines.length; i++) {
+        const ln = lines[i];
+        if (ln.startsWith('```')) {
+          if (!inCode) { inCode = true; lang = ln.slice(3).trim(); codeBuf = ''; continue; }
+          else { inCode = false; html += `<pre><code class="lang-${esc(lang)}">${esc(codeBuf.trim())}</code></pre>`; codeBuf = ''; lang = ''; continue; }
+        }
+        if (inCode) { codeBuf += ln + '\n'; continue; }
+        if (ln.includes('|') && ln.trim().startsWith('|')) { if (!inTable) inTable = true; tableBuf.push(ln); continue; }
+        else if (inTable) { html += mkTable(tableBuf); tableBuf = []; inTable = false; }
+        if (/^#{1,3} /.test(ln)) { html += `<span class="bh">${inl(ln.replace(/^#{1,3} /, ''))}</span>`; continue; }
+        const nm = ln.match(/^(\d+)\. (.+)/); if (nm) { html += `<div class="bn"><span class="bnn">${nm[1]}.</span><span>${inl(nm[2])}</span></div>`; continue; }
+        const bm = ln.match(/^[-*•] (.+)/); if (bm) { html += `<div class="bl"><span class="bld">›</span><span>${inl(bm[1])}</span></div>`; continue; }
+        if (/^---+$/.test(ln.trim())) { html += `<hr style="border:none;border-top:1px solid var(--bd);margin:10px 0">`; continue; }
+        if (ln.trim() === '') { html += '<br>'; continue; }
+        html += `<span>${inl(ln)}</span><br>`;
+      }
+      if (inTable) html += mkTable(tableBuf);
+      return html;
+    }
+
+    function mkTable(lines) {
+      const rows = lines.filter(l => !/^[\s|:-]+$/.test(l)); if (!rows.length) return '';
+      let html = '<table>';
+      rows.forEach((row, i) => { const cells = row.split('|').filter(c => c.trim() !== ''); const t = i === 0 ? 'th' : 'td'; html += '<tr>' + cells.map(c => `<${t}>${inl(c.trim())}</${t}>`).join('') + '</tr>'; });
+      return html + '</table>';
+    }
+
+    function mdToBasicHtml(text) {
+      return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/^## (.+)$/gm, '<h2>$1</h2>').replace(/^# (.+)$/gm, '<h1 class="header">$1</h1>').replace(/^- (.+)$/gm, '<li>$1</li>').replace(/\n\n/g, '</p><p>').replace(/^/, '<p>').replace(/$/, '</p>');
+    }
+
+    function inl(t) { return t.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--pu2)">$1</a>'); }
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function escA(s) { return String(s).replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/</g, '').replace(/>/g, ''); }
+
+    // ── ACTIONS ──
+    function likeMsg(el) { el.classList.toggle('liked'); el.textContent = el.classList.contains('liked') ? '♥ liked' : '♡ like'; if (el.classList.contains('liked')) toast('Saved ✓'); }
+
+    function deleteMsg(el) {
+      const row = el.closest('.mrow');
+      if (!row) return;
+      // Find index: count all .mrow elements before this one
+      const allRows = [...document.querySelectorAll('#ci .mrow')];
+      const idx = allRows.indexOf(row);
+      // Remove from msgs array (user+assistant pairs share same index pattern)
+      if (idx >= 0 && idx < msgs.length) msgs.splice(idx, 1);
+      // Animate out then remove
+      row.style.transition = 'opacity .2s,transform .2s';
+      row.style.opacity = '0'; row.style.transform = 'translateX(20px)';
+      setTimeout(() => row.remove(), 200);
+      toast('Deleted');
+    }
+
+    function copyLast() {
+      const last = msgs.filter(m => m.role === 'assistant').pop();
+      if (last) { navigator.clipboard.writeText(last.content).catch(() => { }); toast('Copied ✓'); }
+    }
+
+    function copyT(el, text) {
+      navigator.clipboard.writeText(text.replace(/\\n/g, '\n')).catch(() => { }); toast('Copied ✓');
+    }
+
+    function regenLast() {
+      if (msgs.length < 2 || busy) return;
+      const aiRows = document.querySelectorAll('.mrow.ai');
+      if (aiRows.length) aiRows[aiRows.length - 1].remove();
+      const lastAiIdx = msgs.map(m => m.role).lastIndexOf('assistant');
+      if (lastAiIdx >= 0) msgs.splice(lastAiIdx, 1);
+      toast('Regenerating…'); callAI();
+    }
+
+    function expDoc(fmt, type) {
+      const last = msgs.filter(m => m.role === 'assistant').pop();
+      if (!last) return;
+      const fn = `bvmbino-${type}-${Date.now()}.${fmt}`;
+      const blob = new Blob([last.content], { type: 'text/plain' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click();
+      toast(`${fn} downloaded ✓`);
+    }
+
+    function addMem(key, val) {
+      const c = document.getElementById('mems');
+      if (!c) return;
+      const d = document.createElement('div'); d.className = 'me new';
+      d.innerHTML = `<div class="mek">${esc(key)}</div><div class="mev">${esc(String(val).slice(0, 120))}</div>`;
+      c.insertBefore(d, c.firstChild);
+      setTimeout(() => d.classList.remove('new'), 3000);
+      while (c.children.length > 8) c.removeChild(c.lastChild);
+    }
+
+    function updTok(add) {
+      tokens += Math.round(add);
+      const pct = Math.min(tokens / 1000, 100).toFixed(1);
+      const tc = document.getElementById('tok-count'); const tp = document.getElementById('tok-pct'); const tb = document.getElementById('tbar');
+      if (tc) tc.textContent = `${tokens.toLocaleString()} / 100k tokens`;
+      if (tp) tp.textContent = pct + '%';
+      if (tb) tb.style.width = pct + '%';
+    }
+
+    function toast(msg) {
+      const w = document.getElementById('toasts');
+      const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg;
+      w.appendChild(d); setTimeout(() => d.remove(), 2100);
+    }
+
+    function scrollBot() {
+      const c = document.getElementById('chat');
+      if (c) c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
+    }
+
+    // ── PERSIST ──
+    // Always start on home screen — old conversation is saved to sessions, not restored here
+
+    // ── VOICE INPUT ──
+    let recognition = null, manualStop = false, voiceLang = 'en-US';
+    function toggleVoiceLang() {
+      voiceLang = voiceLang === 'en-US' ? 'fr-FR' : 'en-US';
+      document.getElementById('langbtn').textContent = voiceLang === 'en-US' ? 'EN' : 'FR';
+      toast('Voice Language: ' + (voiceLang === 'en-US' ? 'English' : 'French'));
+      if (recognition) { manualStop = true; recognition.stop(); }
+    }
+    function toggleVoice() {
+      const btn = document.getElementById('micbtn');
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) { toast('Voice not supported in this browser'); return; }
+      if (!recognition) {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = voiceLang;
+        recognition.interimResults = true; recognition.continuous = false;
+        recognition.onstart = () => { manualStop = false; };
+        recognition.onresult = e => {
+          const t = [...e.results].map(r => r[0].transcript).join('');
+          document.getElementById('inp').value = t; onInp();
+        };
+        recognition.onend = () => {
+          btn.textContent = '🎙️'; btn.classList.remove('recording');
+          recognition = null;
+          if (!manualStop) {
+            const v = document.getElementById('inp').value.trim();
+            if (v) setTimeout(send, 100);
+          }
+        };
+        recognition.onerror = e => {
+          btn.textContent = '🎙️'; btn.classList.remove('recording');
+          if (e.error !== 'no-speech') toast('Voice error: ' + e.error);
+        };
+      }
+      if (btn.classList.contains('recording')) { manualStop = true; recognition.stop(); return; }
+      btn.textContent = '⏹️'; btn.classList.add('recording');
+      recognition.lang = voiceLang;
+      recognition.start(); toast('🎙️ Listening (' + (voiceLang === 'en-US' ? 'English' : 'French') + ')…');
+    }
+
+    // ── INFINITE LOCAL MEMORY (IndexedDB) ──
+    const DB_NAME = 'Bvmbino_Offline_Engine', DB_VER = 4, STORE = 'sessions';
+    let dbInstance = null;
+
+    function getDB() {
+      if (dbInstance) return Promise.resolve(dbInstance);
+      return new Promise((res, rej) => {
+        const req = indexedDB.open(DB_NAME, DB_VER);
+        req.onerror = () => rej(req.error);
+        req.onsuccess = () => { dbInstance = req.result; res(req.result); };
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+          if (!db.objectStoreNames.contains('clients')) db.createObjectStore('clients', { keyPath: 'id' });
+          if (!db.objectStoreNames.contains('knowledge')) db.createObjectStore('knowledge', { keyPath: 'key' });
+        };
+      });
+    }
+
+    async function saveSession(title, messages, forceNew) {
+      if (!title || !messages || !messages.length) return;
+      const clean = title.replace(/New conversation/i, '').trim() || title;
+      const today = new Date().toLocaleDateString('en-GB');
+      try {
+        const db = await getDB();
+        const sessions = await loadSessions();
+        const existIdx = curSessId ? sessions.findIndex(s => s.id === curSessId) : sessions.findIndex(s => s.title === clean && s.date === today);
+        const entry = {
+          id: existIdx >= 0 ? sessions[existIdx].id : Date.now(),
+          title: clean.slice(0, 60),
+          msgs: JSON.parse(JSON.stringify(messages)),
+          date: today,
+          updatedAt: Date.now()
+        };
+        curSessId = entry.id; // CRITICAL: Maintain session ID
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(entry);
+        tx.oncomplete = () => {
+          renderHistory();
+          pruneSessions(); // Enforce 10-conversation limit
+        };
+      } catch (err) { console.error('DB Save error', err); }
+    }
+
+    async function pruneSessions() {
+      const sessions = await loadSessions();
+      if (sessions.length > 10) {
+        const toDelete = sessions.slice(10);
+        const db = await getDB();
+        const tx = db.transaction(STORE, 'readwrite');
+        const store = tx.objectStore(STORE);
+        toDelete.forEach(s => store.delete(s.id));
+        tx.oncomplete = () => renderHistory();
+      }
+    }
+
+    async function loadSessions() {
+      try {
+        const db = await getDB();
+        return new Promise((res) => {
+          const tx = db.transaction(STORE, 'readonly');
+          const req = tx.objectStore(STORE).getAll();
+          req.onsuccess = () => res((req.result || []).sort((a, b) => b.updatedAt - a.updatedAt));
+          req.onerror = () => res([]);
+        });
+      } catch (e) { return []; }
+    }
+
+    async function deleteSession(id, e) {
+      e.stopPropagation();
+      try {
+        const db = await getDB();
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(id);
+        tx.oncomplete = () => { renderHistory(); toast('Deleted permanently ✓'); };
+      } catch { }
+    }
+
+    async function saveToKnowledge(key, val) {
+      if (!key || !val) return;
+      try {
+        const db = await getDB();
+        const tx = db.transaction('knowledge', 'readwrite');
+        tx.objectStore('knowledge').put({ key: key.toLowerCase(), val, updatedAt: Date.now() });
+        tx.oncomplete = () => { toast(`🧠 Learned: ${key}`); renderKnowledge(); };
+      } catch (e) { }
+    }
+
+    async function loadKnowledge() {
+      try {
+        const db = await getDB();
+        return new Promise(res => {
+          const tx = db.transaction('knowledge', 'readonly');
+          const req = tx.objectStore('knowledge').getAll();
+          req.onsuccess = () => res(req.result || []);
+          req.onerror = () => res([]);
+        });
+      } catch (e) { return []; }
+    }
+
+    function openTrain() {
+      const k = prompt('What should I remember? (e.g. "Target Audience", "Keo Jus Goal", "My Scaling Strategy")');
+      if (!k) return;
+      const v = prompt(`Enter the details for "${k}":`);
+      if (!v) return;
+      saveToKnowledge(k, v);
+    }
+
+    async function resumeSession(id) {
+      const sessions = await loadSessions();
+      const session = sessions.find(s => s.id === id);
+      if (!session) return;
+      msgs = [...session.msgs]; tokens = 1840; curSessId = id; // CRITICAL: Set curSessId
+      // Inject a hidden context note as a system-level assistant message so the agent knows where we left off
+      if (msgs.length && msgs[msgs.length - 1].role === 'assistant') {
+        const topicNote = `[CONTEXT: This is a resumed conversation titled "${session.title}". The full history above is loaded. Continue naturally as if no interruption occurred.]`;
+        msgs.push({ role: 'user', content: topicNote });
+        msgs.push({ role: 'assistant', content: `✓ Context reloaded — **"${session.title}"**. I have the full conversation above. Where would you like to continue?` });
+      }
+      document.getElementById('tbtitle').textContent = session.title;
+      document.getElementById('ci').innerHTML = '';
+      // Render all real messages (exclude the context injection ones at the end)
+      session.msgs.forEach(m => {
+        if (m.role === 'user') addUserMsg(m.content);
+        else { let x = null, t = m.content; const mx = t.match(/\[EXPORT:(\w+)\]/); if (mx) { t = t.replace(/\[EXPORT:\w+\]/, '').trim(); x = mx[1]; } appendAiText(t, x); }
+      });
+      // Show the resume confirmation
+      if (msgs.length > 2) {
+        const lastAI = session.msgs.filter(m => m.role === 'assistant').pop();
+        if (lastAI) appendAiText(`✓ Context reloaded — **"${session.title}"**. I have the full conversation. Continue below 👇`, null);
+      }
+      updTok(msgs.reduce((s, m) => s + (m.content.length / 3.5), 0));
+      closeSb(); toast(`📂 "${session.title}" resumed`);
+    }
+
+    async function renderHistory() {
+      const hist = document.getElementById('hist');
+      const sessions = await loadSessions();
+      if (!sessions.length) {
+        hist.innerHTML = '<div style="padding:8px 10px 4px;font-size:10px;font-family:var(--mono);color:var(--t4)">No saved conversations</div>';
+        return;
+      }
+      hist.innerHTML = sessions.map(s =>
+        `<div class="hi" style="display:flex;align-items:center;gap:6px;position:relative" id="hi-${s.id}">
+      <span class="hdot"></span>
+      <span class="hi-title" onclick="resumeSession(${s.id})" title="Click to resume" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer">${esc(s.title)}</span>
+      <button onclick="startEditTitle(${s.id},event)" title="Rename" style="opacity:0;font-size:11px;background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 4px;flex-shrink:0;transition:opacity .1s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">✏</button>
+      <button onclick="deleteSession(${s.id},event)" title="Delete" style="opacity:0;font-size:10px;background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 5px;flex-shrink:0;transition:opacity .1s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">✕</button>
+    </div>`
+      ).join('');
+    }
+
+    function startEditTitle(id, e) {
+      e.stopPropagation();
+      const row = document.getElementById('hi-' + id);
+      if (!row) return;
+      const titleEl = row.querySelector('.hi-title');
+      const current = titleEl.textContent;
+      titleEl.innerHTML = `<input id="edit-${id}" value="${esc(current)}" style="width:100%;background:#1a1e24;border:1px solid var(--pu);border-radius:4px;color:var(--t1);font-size:12px;font-family:var(--font);padding:2px 6px;outline:none" onblur="saveEditTitle(${id})" onkeydown="if(event.key==='Enter')this.blur()">`;
+      const input = document.getElementById('edit-' + id);
+      input.focus(); input.select();
+    }
+
+    async function saveEditTitle(id) {
+      const input = document.getElementById('edit-' + id);
+      if (!input) return;
+      const newTitle = input.value.trim() || 'Untitled';
+      try {
+        const db = await getDB();
+        const sessions = await loadSessions();
+        const s = sessions.find(x => x.id === id);
+        if (!s) return;
+        s.title = newTitle.slice(0, 60);
+        s.updatedAt = Date.now();
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(s);
+        tx.oncomplete = () => renderHistory();
+      } catch { renderHistory(); }
+    }
+
+    function toggleHistory() {
+      const h = document.getElementById('hist');
+      const a = document.getElementById('hist-arrow');
+      const isOpen = h.style.maxHeight !== '0px';
+      h.style.maxHeight = isOpen ? '0px' : '2000px';
+      a.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+      localStorage.setItem('hist_open', isOpen ? '0' : '1');
+    }
+    (function () {
+      const s = localStorage.getItem('hist_open');
+      if (s === '0') { const h = document.getElementById('hist'); const a = document.getElementById('hist-arrow'); if (h) { h.style.maxHeight = '0px'; if (a) a.style.transform = 'rotate(-90deg)'; } }
+    })();
+
+    // ── SWIPE GESTURES (mobile) ──
+    let touchStartX = 0, touchStartY = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) < Math.abs(dy) * 2 || Math.abs(dx) < 50) return;
+      if (dx > 0 && touchStartX < 40) openSb();
+      else if (dx < 0) closeSb();
+    }, { passive: true });
+
+    // ── CLIENT CONTEXT ENGINE ──
+    const LIVE_MODELS = [
+      { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', provider: 'Groq' },
+      { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash', provider: 'OpenRouter' },
+      { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3', provider: 'OpenRouter' },
+      { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Pro', provider: 'OpenRouter' }
+    ];
+    let selectedModel = 'llama-3.3-70b-versatile';
+
+    function setModel(id) {
+      selectedModel = id;
+      renderModels();
+      const m = LIVE_MODELS.find(x => x.id === id);
+      toast(`📡 Active Hub: ${m.name}`);
+    }
+
+    function renderModels() {
+      const c = document.getElementById('model-list'); if (!c) return;
+      c.innerHTML = LIVE_MODELS.map(m => `
+        <div class="mod-item ${selectedModel === m.id ? 'on' : ''}" onclick="setModel('${m.id}')">
+          <div style="display:flex;flex-direction:column">
+            <span style="font-weight:600">${m.name}</span>
+            <span style="opacity:.5;font-size:9px">${m.provider}</span>
+          </div>
+          ${selectedModel === m.id ? '<div class="live-sig"></div>' : ''}
+        </div>
+      `).join('');
+    }
+
+    let activeClientId = null;
+    const PRELOAD_CLIENTS = [
+      { id: 'c1', name: 'FormationPro', desc: 'Professional training organization (CPF, SST, Conflict Management, Mental Performance). Founder: Tiegbe Bamba. Elite 360° Sport & Corporate Consulting.' },
+      { id: 'c2', name: 'Strong Wave Service', desc: 'B2B Marketing & Growth Consultancy. Experts in communication strategy, brand positioning, and performance acquisition.' },
+      { id: 'c3', name: 'Purgo Clean', desc: 'Premium Commercial Cleaning services in Île-de-France. Focus on reliability, professional grade standards, and B2B contracts.' },
+      { id: 'c4', name: 'Keo Jus', desc: 'Natural Juice brand distribution in Ivory Coast. Strategic partner of Accor Hotels group.' },
+      { id: 'c5', name: 'Association Bonkeur', desc: 'Nonprofit organization dedicated to community support, social impact, and help for those in need.' },
+      { id: 'c6', name: 'Entreprise AI', desc: 'Entreprise AI system with 17 specialized modules for strategic planning and automation. Focus on high-performance scaling, secure access, and PWA system architecture.' }
+    ];
+    let ALL_CLIENTS = [...PRELOAD_CLIENTS];
+
+    async function initClients() {
+      try {
+        const db = await getDB();
+        const tx = db.transaction('clients', 'readwrite');
+        const store = tx.objectStore('clients');
+
+        // Robust Sync: Add each pre-loaded client only if it doesn't exist
+        for (const c of PRELOAD_CLIENTS) {
+          const exist = await new Promise(res => {
+            const req = store.get(c.id);
+            req.onsuccess = () => res(!!req.result);
+            req.onerror = () => res(false);
+          });
+          if (!exist) store.add(c);
+        }
+
+        tx.oncomplete = () => renderClients();
+      } catch (e) { }
+    }
+
+    async function loadClients() {
+      const db = await getDB();
+      return new Promise(res => {
+        const tx = db.transaction('clients', 'readonly');
+        const req = tx.objectStore('clients').getAll();
+        req.onsuccess = () => res(req.result || []);
+        req.onerror = () => res([]);
+      });
+    }
+
+    function setActiveClient(id) {
+      activeClientId = id === activeClientId ? null : id;
+      document.querySelectorAll('.cli').forEach(el => el.classList.toggle('active', el.id === 'cli-' + id));
+      const cname = activeClientId ? ALL_CLIENTS.find(c => c.id === id)?.name || 'Client' : 'None';
+      toast(activeClientId ? `🎯 Active Context: ${cname}` : `Context Cleared`);
+    }
+
+    async function addNewClient() {
+      const name = prompt('Business/Client Name:'); if (!name) return;
+      const desc = prompt('Brief Context/Description:'); if (!desc) return;
+      const id = 'c' + Date.now();
+      const c = { id, name, desc };
+      try {
+        const db = await getDB();
+        const tx = db.transaction('clients', 'readwrite');
+        tx.objectStore('clients').add(c);
+        tx.oncomplete = () => {
+          ALL_CLIENTS.push(c); // Sync local cache
+          renderClients();
+          toast('Client Profile Added ✓');
+        };
+      } catch (e) { toast('Error adding client'); }
+    }
+
+    async function deleteClient(id, e) {
+      e.stopPropagation();
+      if (!confirm('Delete this client profile?')) return;
+      try {
+        const db = await getDB();
+        const tx = db.transaction('clients', 'readwrite');
+        tx.objectStore('clients').delete(id);
+        tx.oncomplete = () => {
+          const idx = ALL_CLIENTS.findIndex(c => c.id === id);
+          if (idx >= 0) ALL_CLIENTS.splice(idx, 1);
+          if (activeClientId === id) activeClientId = null;
+          renderClients();
+          toast('Deleted ✓');
+        };
+      } catch (e) { toast('Error deleting'); }
+    }
+
+    async function renderClients() {
+      const ctn = document.getElementById('client-list'); if (!ctn) return;
+      const list = await loadClients();
+      ALL_CLIENTS = [...PRELOAD_CLIENTS];
+      list.forEach(u => { if (!ALL_CLIENTS.find(p => p.id === u.id)) ALL_CLIENTS.push(u); });
+
+      const svgs = [
+        `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
+        `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>`,
+        `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>`,
+        `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`,
+        `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-8 0h-4V4h4v2z"/></svg>`
+      ];
+
+      ctn.innerHTML = ALL_CLIENTS.map((c, i) => `
+    <div class="qbtn cli ${activeClientId === c.id ? 'active' : ''}" id="cli-${c.id}" onclick="setActiveClient('${c.id}')">
+      <span class="qi" style="background:rgba(232,169,18,.1);color:var(--pu)">${svgs[i % svgs.length]}</span>
+      <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name)}</span>
+        <span class="qsub" style="font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.desc.slice(0, 30))}...</span>
+      </div>
+      <span class="cli-del" onclick="deleteClient('${c.id}',event)">✕</span>
+    </div>`).join('');
+    }
+  </script>
+
+  <!-- 📄 PRO PDF PREVIEW MODAL -->
+  <div class="settings-modal" id="preview-modal" style="display:none;z-index:100;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px)" onclick="if(event.target===this)closePreview()">
+    <div class="set-card" style="width:90%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;border:1px solid var(--bd2);box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+      <div class="set-hdr" style="background:var(--s2);border-bottom:1px solid var(--bd);padding:14px 20px">
+        <div style="display:flex;flex-direction:column">
+          <div class="set-t" style="font-size:16px;letter-spacing:1px">PRO DOCUMENT PREVIEW</div>
+          <div style="font-size:9px;color:var(--pu2);font-family:var(--mono);text-transform:uppercase;margin-top:2px">Auteur Production Engine · High-Fidelity Export</div>
+        </div>
+        <button class="icobtn" onclick="closePreview()" style="background:var(--s3)">✕</button>
+      </div>
+      <div id="preview-content" class="bubble b-ai" style="flex:1;overflow-y:auto;padding:40px;background:white;color:#1a1a1a;margin:0;border:none;border-radius:0;font-size:12pt;line-height:1.6">
+        <!-- AI output injected here -->
+      </div>
+      <div class="set-foot" style="background:var(--s2);border-top:1px solid var(--bd);padding:14px 20px;display:flex;gap:12px">
+        <button class="nbtn" onclick="saveAsPdf()" style="flex:1;background:var(--pu);color:#0a0800;font-weight:700">↓ SAVE AS HIGH-STAKES PDF</button>
+        <button class="btn-save" style="background:var(--s3);color:var(--t2);border:1px solid var(--bd2)" onclick="closePreview()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚙️ SETTINGS MODAL -->
+  <div class="settings-modal" id="settings-modal" onclick="if(event.target===this)toggleSettings()">
+    <div class="set-card">
+      <div class="set-hdr">
+        <div class="set-t">System Settings</div>
+        <button class="icobtn" onclick="toggleSettings()">✕</button>
+      </div>
+      <div class="set-body">
+        <div class="set-sect">
+          <div class="set-st">🧠 AI Engine Status</div>
+          <div class="set-row"><span>Active Model</span><span class="badge b-pu" id="set-engine">Groq · Llama 3.3</span>
+          </div>
+          <div class="set-row"><span>Token Usage</span><span id="set-tok">1,840 / 100k</span></div>
+        </div>
+        <div class="set-sect">
+          <div class="set-st">📑 Export Preferences</div>
+          <div class="set-row"><span>PDF Style</span><span class="badge b-gn">High-Ticket Pro</span></div>
+          <div class="set-row"><span>Language Detection</span><span class="badge b-am">Automatic</span></div>
+        </div>
+      </div>
+      <div class="set-foot">
+        <button class="btn-save" style="width:100%" onclick="toggleSettings()">Close Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="twrap" id="toasts"></div>
+
+  <!-- Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha384-N89AnpX9SyrE6FE4u/KfHpx0YnoI6O0bI92RByP62i7fX0vQO5xrkI7Z8p6A+l5e" crossorigin="anonymous"></script>
+  
+  <!-- Auteur Production Engine Modules -->
+  <script type="module" src="/js/main.js"></script>
+</body>
+
+</html>

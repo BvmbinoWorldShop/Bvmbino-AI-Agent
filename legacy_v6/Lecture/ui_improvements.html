@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bvmbino AI — UI Improvement Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#080809;--s1:#0f0f11;--s2:#161619;--s3:#1e1e22;--s4:#26262b;
+  --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);
+  --t1:#ededf0;--t2:#8888a0;--t3:#4a4a60;
+  --pu:#7C5CFC;--pu2:#9b7dff;--pu3:rgba(124,92,252,.15);
+  --gn:#22c55e;--am:#f59e0b;--rd:#ef4444;
+  --r:10px;--rsm:6px;
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);line-height:1.6;padding:32px 20px;max-width:900px;margin:0 auto}
+
+h1{font-size:28px;font-weight:700;margin-bottom:6px}
+.subtitle{color:var(--t2);font-size:14px;margin-bottom:40px;font-family:var(--mono)}
+
+.section{margin-bottom:48px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.priority{font-size:10px;font-family:var(--mono);padding:3px 10px;border-radius:20px;font-weight:600;letter-spacing:.5px}
+.p-red{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.p-amber{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.p-green{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.18)}
+.section-title{font-size:20px;font-weight:700}
+
+.card{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card-desc{color:var(--t2);font-size:13px;line-height:1.65;margin-bottom:16px}
+
+.impact-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tag{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px}
+.tag-impact{background:rgba(124,92,252,.12);color:var(--pu2);border:1px solid rgba(124,92,252,.2)}
+.tag-effort{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
+.tag-broken{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+
+/* DEMO CHAT PREVIEW */
+.demo{background:var(--s3);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.demo-bar{background:var(--s4);padding:8px 14px;font-size:10px;font-family:var(--mono);color:var(--t3);border-bottom:1px solid var(--bd)}
+.demo-body{padding:16px}
+
+/* Streaming demo */
+.stream-demo{display:flex;flex-direction:column;gap:12px}
+.msg-row{display:flex;gap:10px;align-items:flex-start}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;margin-top:2px}
+.av-ai{background:var(--pu);color:#fff;font-family:var(--mono)}
+.av-us{background:var(--s4);color:var(--t2)}
+.bubble{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.6}
+.b-ai{background:var(--s2);border:1px solid var(--bd)}
+.b-us{background:var(--pu);color:#fff}
+
+/* Typing cursor */
+.cursor{display:inline-block;width:2px;height:14px;background:var(--pu);margin-left:2px;animation:blink .8s infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Progress bar for streaming */
+.stream-progress{height:2px;background:var(--s4);border-radius:1px;margin-bottom:8px;overflow:hidden}
+.stream-fill{height:100%;width:0;background:linear-gradient(90deg,var(--pu),var(--pu2));border-radius:1px;animation:stream 3s ease forwards}
+@keyframes stream{0%{width:0}100%{width:75%}}
+
+/* Voice demo */
+.voice-btn-demo{width:36px;height:36px;border-radius:7px;border:1px solid var(--bd2);background:none;color:var(--t2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .2s}
+.voice-btn-demo.recording{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#f87171;animation:pulse-ring 1.5s infinite}
+@keyframes pulse-ring{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+
+/* History demo */
+.hist-item{padding:7px 10px;border-radius:6px;font-size:11px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .1s}
+.hist-item:hover{background:var(--s2)}
+.hist-dot{width:4px;height:4px;background:var(--t3);border-radius:50%}
+.hist-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)}
+.hist-del{font-size:10px;color:var(--t3);opacity:0;transition:opacity .1s;background:none;border:none;cursor:pointer;padding:2px 5px}
+.hist-item:hover .hist-del{opacity:1}
+
+/* Search pill active state */
+.pill-demo{padding:3px 10px;border-radius:20px;background:var(--s3);border:1px solid var(--bd);color:var(--t3);font-size:10px;font-family:var(--mono);display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.pill-demo.on{background:var(--pu3);border-color:rgba(124,92,252,.35);color:var(--pu2)}
+.pill-demo.web-active{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:#4ade80}
+
+/* Code block */
+pre{background:var(--s4);border:1px solid var(--bd);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:1.7;color:#c9d1d9;overflow-x:auto;margin-top:12px}
+code{font-family:var(--mono);font-size:11px;background:var(--s4);padding:1px 5px;border-radius:3px;color:var(--pu2)}
+.code-label{font-size:9px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+
+/* Input row demo */
+.input-demo{background:var(--s2);border:1px solid var(--bd2);border-radius:10px;overflow:hidden}
+.input-top{display:flex;align-items:center;padding:10px 14px;gap:8px}
+.fake-input{flex:1;color:var(--t3);font-size:13px;font-family:var(--font)}
+.input-foot{display:flex;align-items:center;padding:6px 10px 10px;gap:6px}
+
+.divider{border:none;border-top:1px solid var(--bd);margin:32px 0}
+
+/* Summary table */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 12px;background:var(--s3);color:var(--t2);font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-family:var(--mono);border-bottom:1px solid var(--bd2)}
+td{padding:9px 12px;border-bottom:1px solid var(--bd);color:var(--t1)}
+tr:last-child td{border-bottom:none}
+
+.badge{font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:20px}
+.b-broken{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.b-fix{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.15)}
+.b-nice{background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.15)}
+</style>
+</head>
+<body>
+
+<div style="margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--t3)">BVMBINO 2.0 · UI IMPROVEMENT GUIDE</div>
+<h1>Interface & Auteur Engine Plan</h1>
+<div class="subtitle">24 Specialist Commands · High-Stakes PDF · Cinematic UI — April 2026</div>
+
+<!-- QUICK SUMMARY TABLE: THE 20 CORE PILLARS OF BVMBINO 2.0 -->
+<div class="card" style="margin-bottom:40px">
+<div class="card-title" style="margin-bottom:14px">📋 Production Status — Completed Upgrades</div>
+<table>
+  <thead><tr><th>#</th><th>Improvement</th><th>Status</th><th>Effort</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Council of 24 (Specialist Commands)</td><td><span class="badge b-fix">DONE</span></td><td>3h</td><td>🔥🔥🔥🔥🔥 High Intelligence</td></tr>
+    <tr><td>2</td><td>Cinematic Auteur PDF Engine</td><td><span class="badge b-fix">DONE</span></td><td>2h</td><td>🔥🔥🔥🔥🔥 Pro Branding</td></tr>
+    <tr><td>3</td><td>Auteur Routing Logic (Multi-Model)</td><td><span class="badge b-fix">DONE</span></td><td>2h</td><td>🔥🔥🔥🔥🔥 Precision</td></tr>
+    <tr><td>4</td><td>The Vault (AES-GCM Security)</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥🔥🔥 Protection</td></tr>
+    <tr><td>5</td><td>Zero-CDN Localized Architecture</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥🔥 Hardening</td></tr>
+    <tr><td>6</td><td>Streaming Text Architecture (Groq)</td><td><span class="badge b-fix">DONE</span></td><td>2h</td><td>🔥🔥🔥🔥 Speed</td></tr>
+    <tr><td>7</td><td>Dynamic Client Context Hub</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥🔥 Personalization</td></tr>
+    <tr><td>8</td><td>Bilingual Voice Integration (FR/EN)</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥 Interaction</td></tr>
+    <tr><td>9</td><td>Admin Command Center 2.0</td><td><span class="badge b-fix">DONE</span></td><td>2h</td><td>🔥🔥🔥 Management</td></tr>
+    <tr><td>10</td><td>IndexedDB Secure Encryption Sync</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥 Persistence</td></tr>
+    <tr><td>11</td><td>PWA Independence (Offline Mode)</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥 Reliability</td></tr>
+    <tr><td>12</td><td>Session Guard (10-Chat Limit)</td><td><span class="badge b-fix">DONE</span></td><td>30m</td><td>🔥🔥🔥 Memory</td></tr>
+    <tr><td>13</td><td>Intelligent Intent Router (/search)</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥 UX Logic</td></tr>
+    <tr><td>14</td><td>ATS Resume Engine v2.0</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥 Careers</td></tr>
+    <tr><td>15</td><td>Weekly Schedule Export Logic</td><td><span class="badge b-fix">DONE</span></td><td>1h</td><td>🔥🔥🔥 Workflow</td></tr>
+    <tr><td>16</td><td>Deep Orbital Cinematic Aesthetic</td><td><span class="badge b-fix">DONE</span></td><td>4h</td><td>🔥🔥🔥 Presence</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ===== 1. STREAMING ===== -->
+<div class="section">
+<div class="section-header">
+  <span class="priority p-red">🔴 DO FIRST</span>
+  <span class="section-title">1. Streaming Text Responses</span>
+</div>
+
+<div class="card">
+<div class="card-title">🔥 The Biggest UX Win Available</div>
+<div class="card-desc">
+  Right now, Boss types a message → waits 5-15 seconds → the full response appears at once. With streaming, text appears word-by-word as it's generated — the response feels instant. This is the single most impactful improvement you can make.
+</div>
+<div class="impact-row">
+  <span class="tag tag-impact">🔥🔥🔥 Highest impact</span>
+  <span class="tag tag-effort">~2 hours to implement</span>
+</div>
+
+<div class="demo">
+  <div class="demo-bar">BEFORE — Full response appears after 10 second wait</div>
+  <div class="demo-body">
+    <div style="height:40px;display:flex;align-items:center;gap:8px">
+      <div style="width:26px;height:26px;border-radius:50%;background:var(--pu);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-family:var(--mono)">B</div>
+      <div style="padding:10px 14px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;display:flex;gap:5px;align-items:center">
+        <div style="width:5px;height:5px;background:var(--t3);border-radius:50%;animation:tdance 1.2s .0s ease-in-out infinite"></div>
+        <div style="width:5px;height:5px;background:var(--t3);border-radius:50%;animation:tdance 1.2s .2s ease-in-out infinite"></div>
+        <div style="width:5px;height:5px;background:var(--t3);border-radius:50%;animation:tdance 1.2s .4s ease-in-out infinite"></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3);font-family:var(--mono)">waiting 10s...</div>
+    </div>
+    <style>@keyframes tdance{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}</style>
+  </div>
+</div>
+
+<div style="margin:12px 0;text-align:center;font-size:18px">↓</div>
+
+<div class="demo">
+  <div class="demo-bar">AFTER — Text appears word-by-word, zero wait feeling</div>
+  <div class="demo-body stream-demo">
+    <div class="stream-progress"><div class="stream-fill"></div></div>
+    <div class="msg-row">
+      <div class="av av-ai">B</div>
+      <div class="bubble b-ai" id="stream-bubble">Here's your 90-day B2B growth strategy for Purgo Clean<span class="cursor"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="code-label" style="margin-top:16px">How to implement — replace callAI() with streaming version</div>
+<pre>// In chat.js backend — add streaming support
+export default async function handler(req, res) {
+  // ... existing CORS headers ...
+
+  // Set streaming headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  // Groq supports streaming
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, stream: true, max_tokens: 8000 })
+  });
+
+  // Pipe SSE stream directly to client
+  for await (const chunk of r.body) {
+    res.write(chunk);
+  }
+  res.end();
+}
+
+// In index.html — replace appendAiText with streaming reader
+async function callAIStream() {
+  const response = await fetch('/api/chat', { method: 'POST', body: JSON.stringify({ messages }) });
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let aiText = '';
+
+  // Create the bubble first (empty)
+  const bubble = appendEmptyAiBubble();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const lines = decoder.decode(value).split('\n').filter(l => l.startsWith('data: '));
+    for (const line of lines) {
+      const data = line.slice(6);
+      if (data === '[DONE]') continue;
+      const delta = JSON.parse(data).choices?.[0]?.delta?.content || '';
+      aiText += delta;
+      bubble.innerHTML = renderMarkdown(aiText) + '&lt;span class="cursor"&gt;&lt;/span&gt;';
+      scrollBot();
+    }
+  }
+  bubble.innerHTML = renderMarkdown(aiText); // Remove cursor when done
+}</pre>
+</div>
+</div>
+
+<!-- ===== 2. VOICE INPUT ===== -->
+<div class="section">
+<div class="section-header">
+  <span class="priority p-red">🔴 QUICK WIN</span>
+  <span class="section-title">2. Voice Input (30 minutes)</span>
+</div>
+
+<div class="card">
+<div class="card-title">🎙️ Dictate Instead of Type</div>
+<div class="card-desc">
+  Add a microphone button next to the send button. Uses the browser's built-in Web Speech API — completely free, no external service needed. Click once to start recording, click again (or pause) to stop and auto-send. Game-changer when you're on mobile or hands-free.
+</div>
+<div class="impact-row">
+  <span class="tag tag-impact">🔥🔥 High impact on mobile</span>
+  <span class="tag tag-effort">30 min · Zero cost · Built into browsers</span>
+</div>
+
+<div class="demo">
+  <div class="demo-bar">New input area with voice button</div>
+  <div class="demo-body">
+    <div class="input-demo">
+      <div class="input-top">
+        <div class="fake-input">Ask anything…</div>
+      </div>
+      <div class="input-foot">
+        <div class="pill-demo on">● memory</div>
+        <div class="pill-demo">● web</div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+          <button class="voice-btn-demo" id="voiceBtn" onclick="toggleVoice(this)" title="Voice input">🎙️</button>
+          <button style="width:36px;height:36px;background:var(--pu);border:none;border-radius:7px;color:#fff;font-size:14px;cursor:pointer">↑</button>
+        </div>
+      </div>
+    </div>
+    <div id="voice-status" style="margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--t3)">Click 🎙️ to start voice input</div>
+  </div>
+</div>
+
+<script>
+function toggleVoice(btn){
+  btn.classList.toggle('recording');
+  const status = document.getElementById('voice-status');
+  if(btn.classList.contains('recording')){
+    btn.textContent='⏹️';
+    status.textContent='🔴 Recording... speak now';
+    status.style.color='#f87171';
+  } else {
+    btn.textContent='🎙️';
+    status.textContent='✓ Voice captured — would send to input';
+    status.style.color='#4ade80';
+    setTimeout(()=>{status.textContent='Click 🎙️ to start voice input';status.style.color='var(--t3)';},2000);
+  }
+}
+</script>
+
+<div class="code-label" style="margin-top:16px">Add this to index.html — 25 lines total</div>
+<pre>// Add microphone button next to .sbtn in HTML:
+// &lt;button class="icobtn" id="micbtn" onclick="toggleVoice()" title="Voice input"&gt;🎙️&lt;/button&gt;
+
+let recognition = null;
+function toggleVoice() {
+  const btn = document.getElementById('micbtn');
+  if (!recognition) {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      toast('Voice not supported in this browser'); return;
+    }
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'fr-FR'; // or 'en-US' — auto-detect from page language
+    recognition.interimResults = true;
+    recognition.onresult = e => {
+      const transcript = [...e.results].map(r => r[0].transcript).join('');
+      document.getElementById('inp').value = transcript;
+      onInp(); // trigger auto-resize
+    };
+    recognition.onend = () => {
+      btn.textContent = '🎙️'; btn.style.color = '';
+      // Auto-send when voice stops (optional — remove if prefer manual send)
+      if (document.getElementById('inp').value.trim()) send();
+    };
+  }
+  if (btn.textContent === '⏹️') {
+    recognition.stop(); return;
+  }
+  btn.textContent = '⏹️'; btn.style.color = '#ef4444';
+  recognition.start();
+}</pre>
+</div>
+</div>
+
+<!-- ===== 3. HISTORY PERSISTENCE ===== -->
+<div class="section">
+<div class="section-header">
+  <span class="priority p-amber">🟠 HIGH PRIORITY</span>
+  <span class="section-title">3. Persist Conversations to localStorage</span>
+</div>
+
+<div class="card">
+<div class="card-title">💾 History Doesn't Survive a Page Refresh</div>
+<div class="card-desc">
+  Right now, the 4 items in the "Recent" sidebar panel are hardcoded HTML — they never change. New conversations are added to the UI but lost on refresh. Saving to localStorage means history persists between sessions, with full conversation resumption.
+</div>
+<div class="impact-row">
+  <span class="tag tag-impact">🔥🔥 Major UX improvement</span>
+  <span class="tag tag-broken">Currently broken</span>
+  <span class="tag tag-effort">~1 hour</span>
+</div>
+
+<div class="demo">
+  <div class="demo-bar">Improved history panel — click to resume any conversation</div>
+  <div class="demo-body">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div class="hist-item"><div class="hist-dot" style="background:var(--pu)"></div><div class="hist-text">Keo Jus brand strategy Q2 2026</div><button class="hist-del">✕</button></div>
+      <div class="hist-item"><div class="hist-dot"></div><div class="hist-text">Purgo Clean B2B acquisition script</div><button class="hist-del">✕</button></div>
+      <div class="hist-item"><div class="hist-dot"></div><div class="hist-text">90-day revenue roadmap — coaching</div><button class="hist-del">✕</button></div>
+      <div class="hist-item"><div class="hist-dot"></div><div class="hist-text">LinkedIn content calendar April</div><button class="hist-del">✕</button></div>
+    </div>
+    <div style="margin-top:10px;padding:6px 10px;border-radius:6px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);font-size:10px;font-family:var(--mono);color:#4ade80">✓ Saved to localStorage — persists across sessions</div>
+  </div>
+</div>
+
+<div class="code-label" style="margin-top:16px">Replace the static history with localStorage-backed history</div>
+<pre>const STORAGE_KEY = 'bvmbino_sessions';
+const MAX_SESSIONS = 20;
+
+function saveSession(title, messages) {
+  const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const session = { id: Date.now(), title: title.slice(0, 60), messages, date: new Date().toISOString() };
+  sessions.unshift(session); // newest first
+  if (sessions.length > MAX_SESSIONS) sessions.pop(); // keep last 20
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  renderHistory();
+}
+
+function renderHistory() {
+  const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const hist = document.getElementById('hist');
+  hist.innerHTML = sessions.map(s =>
+    `&lt;div class="hi" onclick="loadSession(${s.id})"&gt;
+      &lt;span class="hdot"&gt;&lt;/span&gt;
+      &lt;span style="flex:1;overflow:hidden;text-overflow:ellipsis"&gt;${esc(s.title)}&lt;/span&gt;
+      &lt;button onclick="event.stopPropagation();deleteSession(${s.id})"
+        style="opacity:0;font-size:10px;background:none;border:none;color:var(--t3);cursor:pointer"
+        onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"&gt;✕&lt;/button&gt;
+    &lt;/div&gt;`
+  ).join('');
+}
+
+function loadSession(id) {
+  const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const session = sessions.find(s => s.id === id);
+  if (!session) return;
+  msgs = session.messages;
+  // Re-render all messages
+  document.getElementById('ci').innerHTML = '';
+  msgs.forEach(m => m.role === 'user' ? addUserMsg(m.content) : appendAiText(m.content, null));
+  document.getElementById('tbtitle').textContent = session.title;
+  closeSb();
+}
+
+// Call saveSession() in newChat() before resetting:
+// saveSession(document.getElementById('tbtitle').textContent, msgs);</pre>
+</div>
+</div>
+
+<!-- ===== 4. FIX WEB SEARCH PILL ===== -->
+<div class="section">
+<div class="section-header">
+  <span class="priority p-amber">🟠 BUG FIX</span>
+  <span class="section-title">4. Fix the "Web Search" Pill</span>
+</div>
+
+<div class="card">
+<div class="card-title">🔍 The Pill Shows But Does Nothing</div>
+<div class="card-desc">
+  The "web search" pill in the input area looks like it activates a feature — but toggling it on/off has zero effect on what actually gets sent. The <code>pills</code> Set is updated, but the <code>send()</code> function never reads it. Boss likely expects that with web search ON, every query automatically searches the web first.
+</div>
+<div class="impact-row">
+  <span class="tag tag-broken">Currently broken / misleading</span>
+  <span class="tag tag-effort">20 min fix</span>
+</div>
+
+<div class="demo">
+  <div class="demo-bar">How pills should look and behave</div>
+  <div class="demo-body">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <div class="pill-demo on">● memory</div>
+      <div class="pill-demo web-active" id="webPill" onclick="this.classList.toggle('web-active');this.classList.toggle('on');document.getElementById('wpill-desc').textContent=this.classList.contains('web-active')?'ON: Every message auto-searches web first':'OFF: Only /search command triggers web search'">🌐 web search</div>
+      <div class="pill-demo" id="pdfPill">📋 PDF export</div>
+    </div>
+    <div id="wpill-desc" style="font-size:11px;font-family:var(--mono);color:var(--t3)">Click web search pill above to toggle →</div>
+  </div>
+</div>
+
+<div class="code-label" style="margin-top:16px">Add this check at the top of send()</div>
+<pre>async function send(forcedText) {
+  const el = document.getElementById('inp');
+  const text = (forcedText || el.value).trim();
+  if (!text || busy) return;
+
+  // ✅ NEW: If web search pill is ON and no explicit intent, auto-search first
+  const webOn = pills.has('p-web');
+  const intent = detectIntent(text);
+
+  if (webOn && !intent && !forcedText) {
+    // Auto-route to web search
+    rmWelcome();
+    el.value = ''; el.style.height = 'auto';
+    addUserMsg(text);
+    msgs.push({ role: 'user', content: text });
+    busy = true; document.getElementById('sbtn').disabled = true;
+    await doSearch(text); // search first, then AI summarizes
+    return;
+  }
+
+  // ... rest of existing send() logic
+}</pre>
+</div>
+</div>
+
+<!-- ===== 5. CHARACTER COUNTER ===== -->
+<div class="section">
+<div class="section-header">
+  <span class="priority p-green">🟢 QUICK WIN</span>
+  <span class="section-title">5. Character Counter on Input</span>
+</div>
+
+<div class="card">
+<div class="card-title">📊 Show Prompt Length & Remaining Context</div>
+<div class="card-desc">
+  The context window tracker is in the memory panel on the right — which hides on mobile. Move a compact version directly into the input footer so Boss always knows how much context is being used. Also show character count to avoid accidentally writing giant prompts.
+</div>
+<div class="impact-row">
+  <span class="tag tag-impact">🔥 Useful awareness</span>
+  <span class="tag tag-effort">15 min · CSS + 3 lines JS</span>
+</div>
+
+<div class="demo">
+  <div class="demo-bar">Updated input footer with live counters</div>
+  <div class="demo-body">
+    <div class="input-demo">
+      <div class="input-foot">
+        <div class="pill-demo on">● memory</div>
+        <div class="pill-demo">● web</div>
+        <div class="pill-demo">● PDF</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <span style="font-size:9px;font-family:var(--mono);color:var(--t3)" id="char-counter">0 chars</span>
+          <span style="font-size:9px;font-family:var(--mono);color:var(--pu2)">4.2% ctx</span>
+          <span style="font-size:9px;font-family:var(--mono);color:var(--t4)">↵ send · ⇧↵ new line</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="code-label" style="margin-top:16px">Add to onInp() function (3 lines)</div>
+<pre>function onInp() {
+  const el = document.getElementById('inp');
+  el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+
+  // ✅ NEW: Update character counter
+  const chars = el.value.length;
+  const counter = document.getElementById('char-counter');
+  if (counter) {
+    counter.textContent = chars > 0 ? `${chars.toLocaleString()} chars` : '';
+    counter.style.color = chars > 2000 ? 'var(--am)' : chars > 3500 ? 'var(--rd)' : 'var(--t3)';
+  }
+
+  // ... existing slash menu code
+}</pre>
+</div>
+</div>
+
+<!-- ===== 6. MOBILE SWIPE ===== -->
+<div class="section">
+<div class="section-header">
+  <span class="priority p-green">🟢 POLISH</span>
+  <span class="section-title">6. Swipe Gestures on Mobile</span>
+</div>
+
+<div class="card">
+<div class="card-title">👆 Swipe Right to Open Sidebar</div>
+<div class="card-desc">
+  On mobile, the sidebar is hidden behind the ☰ hamburger button. Adding swipe gestures (swipe right → open sidebar, swipe left → close) makes navigation feel native. This is the standard mobile pattern users expect from modern apps.
+</div>
+<div class="impact-row">
+  <span class="tag tag-impact">🔥 Native mobile feel</span>
+  <span class="tag tag-effort">30 min · No libraries needed</span>
+</div>
+
+<div class="code-label">Add at the bottom of the script — works on any touch device</div>
+<pre>// ── SWIPE GESTURES (mobile) ──
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+
+  // Only register horizontal swipes (dx > 2× vertical movement)
+  if (Math.abs(dx) < Math.abs(dy) * 2) return;
+  if (Math.abs(dx) < 50) return; // minimum swipe distance
+
+  if (dx > 0 && touchStartX < 40) {
+    // ← Swipe RIGHT from left edge → open sidebar
+    openSb();
+  } else if (dx < 0) {
+    // ← Swipe LEFT anywhere → close sidebar
+    closeSb();
+  }
+}, { passive: true });</pre>
+</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- BONUS SECTION -->
+<div style="margin-bottom:32px">
+<div style="font-size:10px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px">BONUS — SMALL POLISH TOUCHES</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title" style="font-size:13px">⌨️ Keyboard Shortcut Panel</div>
+    <div style="font-size:12px;color:var(--t2)">Press <code>?</code> anywhere to show all shortcuts. Add a simple overlay listing: <code>Ctrl+K</code> = new chat, <code>/cmd</code> = skills, <code>↵</code> = send, <code>⇧↵</code> = newline. ~20 lines.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title" style="font-size:13px">🕐 Message Timestamps</div>
+    <div style="font-size:12px;color:var(--t2)">Add a small timestamp to each <code>.mmeta</code> element. Show as "2 min ago" using a simple relative time function. Especially useful when reviewing long conversations.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title" style="font-size:13px">🤖 Replace Emoji with SVG Logo</div>
+    <div style="font-size:12px;color:var(--t2)">The welcome screen uses <code>🤖</code> in a purple box. Replace with a custom SVG (basketball + brain, or stylized "B") for a more polished, branded feel.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title" style="font-size:13px">📡 Show Real Active Model</div>
+    <div style="font-size:12px;color:var(--t2)">The model badge hardcodes "Gemini Flash" but the actual provider changes (Groq → Cerebras → Gemini → OpenRouter). The API already returns <code>model</code> in the response — update the badge dynamically after each response.</div>
+  </div>
+
+</div>
+</div>
+
+<div style="padding:16px 20px;background:var(--pu3);border:1px solid rgba(124,92,252,.25);border-radius:var(--r);font-size:12px;color:var(--pu2);font-family:var(--mono)">
+  <strong>Next move →</strong> Start with #1 (streaming) — it's the biggest UX impact and makes everything feel faster. Then #2 (voice) which is a 30-minute add. These two alone transform the feel of the app.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVMBINO 2.0 · Master Case Study</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #06080a;
+            --s1: #0b0e12;
+            --s2: #111419;
+            --t1: #f0ece4;
+            --t2: #aba492;
+            --t3: #6d685b;
+            --pu: #e8a912;
+            --pu2: #ffc842;
+            --bd: rgba(232, 169, 18, 0.1);
+            --font: 'Syne', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--t1);
+            font-family: var(--font);
+            line-height: 1.7;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Presentation Sections */
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px 10%;
+            border-bottom: 1px solid var(--bd);
+            position: relative;
+        }
+
+        .cover {
+            text-align: center;
+            background: radial-gradient(circle at 50% 50%, #111419 0%, #06080a 100%);
+        }
+
+        .label {
+            font-family: var(--mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--pu);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(4rem, 15vw, 10rem);
+            line-height: 0.9;
+            color: var(--pu);
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+
+        h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            line-height: 1;
+            color: var(--pu2);
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            color: var(--t2);
+            margin-bottom: 30px;
+        }
+
+        .p-large {
+            font-size: 1.5rem;
+            color: var(--t1);
+            font-weight: 500;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: var(--s1);
+            border: 1px solid var(--bd);
+            padding: 40px;
+            border-radius: 24px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--pu);
+        }
+
+        .card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--pu);
+            margin-bottom: 15px;
+        }
+
+        .highlight {
+            color: var(--pu);
+            font-weight: 700;
+        }
+
+        .step-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 6rem;
+            opacity: 0.1;
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: var(--pu);
+        }
+
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 60px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--bd);
+        }
+
+        .t-item {
+            padding-left: 40px;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .t-item::after {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 10px;
+            width: 12px;
+            height: 12px;
+            background: var(--pu);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--pu);
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 10%;
+            text-align: center;
+            background: var(--s2);
+            color: var(--t3);
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .btn-scroll {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0) translateX(-50%);}
+            40% {transform: translateY(-10px) translateX(-50%);}
+            60% {transform: translateY(-5px) translateX(-50%);}
+        }
+
+        .tech-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border: 1px solid var(--pu);
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--pu);
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SECTION 1: COVER -->
+    <section class="cover">
+        <span class="label">CONFIDENTIEL · PROPRIÉTÉ DE L'AUTEUR</span>
+        <h1>BVMBINO 2.0</h1>
+        <p class="p-large" style="margin-left: auto; margin-right: auto;">L'Architecture de la Souveraineté Digitale.</p>
+        <p style="margin-left: auto; margin-right: auto; opacity: 0.7;">Une étude de cas sur la transformation d'une IA monolithique en un écosystème de production indépendant et ultra-sécurisé.</p>
+        <div class="btn-scroll">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+        </div>
+    </section>
+
+    <!-- SECTION 2: GENESIS -->
+    <section id="genesis">
+        <span class="step-num">01</span>
+        <span class="label">LA GÉNÈSE</span>
+        <h2>Origine & Vision</h2>
+        <p>Le projet BVMBINO a débuté avec une ambition simple : créer un agent IA capable d'orchestrer des stratégies business complexes sans la friction des interfaces génériques.</p>
+        <div class="grid">
+            <div class="card">
+                <h3>Le Problème</h3>
+                <p>La dépendance aux plateformes centralisées, le manque de confidentialité des données et les réponses trop génériques des modèles standards.</p>
+            </div>
+            <div class="card">
+                <h3>La Solution</h3>
+                <p>Un moteur "Auteur" propriétaire, modulaire par design, où chaque sous-système est optimisé pour une tâche spécifique du flux de travail exécutif.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: ARCHITECTURE -->
+    <section id="architecture">
+        <span class="step-num">02</span>
+        <span class="label">INGÉNIERIE</span>
+        <h2>L'Architecture Modulaire</h2>
+        <p>Contrairement aux applications classiques, BVMBINO 2.0 repose sur un découplage total de la logique pour garantir performance et évolutivité.</p>
+        <div class="timeline">
+            <div class="t-item">
+                <span class="highlight">Core Modules</span>
+                <p>Migration vers une structure <code>api.js</code>, <code>store.js</code>, et <code>render.js</code>. Cette séparation permet à l'intelligence de respirer indépendamment de l'interface.</p>
+            </div>
+            <div class="t-item">
+                <span class="highlight">The Auteur Engine</span>
+                <p>L'implémentation d'un routeur intelligent capable de diriger les intentions utilisateur vers les spécialistes appropriés.</p>
+            </div>
+            <div class="t-item">
+                <span class="highlight">State Persistence</span>
+                <p>Utilisation d'IndexedDB avec chiffrement en temps réel pour une mémoire locale infatigable.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: SECURITY -->
+    <section id="security">
+        <span class="step-num">03</span>
+        <span class="label">SÉCURITÉ</span>
+        <h2>La Forteresse (Le Coffre)</h2>
+        <p>Dans un monde où la donnée est un actif critique, BVMBINO 2.0 implémente des protocoles de sécurité de grade militaire.</p>
+        <div class="grid">
+            <div class="card" style="background: linear-gradient(135deg, #111419, #06080a);">
+                <div class="label" style="color: var(--pu2);">PROTOCOLE AES-GCM</div>
+                <h3>Chiffrement 256 bits</h3>
+                <p>Toutes les données stockées localement sont chiffrées. Même avec un accès physique au terminal, les données restent indéchiffrables sans la clé maîtresse.</p>
+            </div>
+            <div class="card">
+                <div class="label">HARDENING</div>
+                <h3>The Vault</h3>
+                <p>Un sas de sécurité à l'entrée de l'application protégeant le moteur "Alpha". Aucun accès n'est autorisé sans authentification passphrase.</p>
+            </div>
+        </div>
+        <p style="margin-top: 40px; font-style: italic; opacity: 0.6;">"La souveraineté commence là où la surveillance s'arrête."</p>
+    </section>
+
+    <!-- SECTION 5: INDEPENDENCE -->
+    <section id="independence">
+        <span class="step-num">04</span>
+        <span class="label">INFRASTRUCTURE</span>
+        <h2>Indépendance Totale (Zero-CDN)</h2>
+        <p>L'un des tournants majeurs du projet a été l'élimination systématique de toute dépendance Cloud externe pour le rendu et le fonctionnement de base.</p>
+        <div class="grid">
+            <div class="card">
+                <h3>100% Localized Stack</h3>
+                <p>Bibliothèques internes pour le PDF, les styles et les scripts. BVMBINO fonctionne sur un réseau privé (Air-Gapped) si nécessaire.</p>
+                <div class="tech-tag">LOCAL_PDF_CORE</div>
+                <div class="tech-tag">VANILLA_CSS</div>
+                <div class="tech-tag">NO_CDN</div>
+            </div>
+            <div class="card">
+                <h3>PWA Architecture</h3>
+                <p>Utilisation de Service Workers pour une installation native sur iOS et Android. Une expérience "App-First" sans passer par les Stores.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 6: THE COUNCIL -->
+    <section id="council">
+        <span class="step-num">05</span>
+        <span class="label">INTELLIGENCE</span>
+        <h2>Le Conseil des 24 Spécialistes</h2>
+        <p>BVMBINO 2.0 n'est pas un seul agent, c'est une équipe d'élite dirigée par un Orchestrateur central.</p>
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="card" style="padding: 20px;">
+                <span class="label">BUSINESS</span>
+                <h3>/strategy</h3>
+                <p style="font-size: 0.9rem;">Plans de croissance à 90 jours & SWOT.</p>
+            </div>
+            <div class="card" style="padding: 20px;">
+                <span class="label">MARKETING</span>
+                <h3>/campaign</h3>
+                <p style="font-size: 0.9rem;">Campagnes publicitaires multi-plateformes.</p>
+            </div>
+            <div class="card" style="padding: 20px;">
+                <span class="label">TECH</span>
+                <h3>/builder</h3>
+                <p style="font-size: 0.9rem;">Feuilles de route d'implémentation tech.</p>
+            </div>
+        </div>
+        <p style="margin-top: 30px; font-size: 1rem;">+ 21 autres spécialistes intégrés pour couvrir 100% des besoins d'une entreprise moderne.</p>
+    </section>
+
+    <!-- SECTION 7: PDF ENGINE -->
+    <section id="pdf">
+        <span class="step-num">06</span>
+        <span class="label">PRODUCTION</span>
+        <h2>Cinematic PDF Engine</h2>
+        <p>L'output final doit refléter la qualité du travail accompli. Le moteur PDF a été entièrement reconstruit pour une esthétique "High-Stakes".</p>
+        <div class="grid">
+            <div class="card">
+                <h3>Rendu 3.0x</h3>
+                <p>Exportations haute résolution pour impression professionnelle, utilisant des polices premium (Syne, Inter).</p>
+            </div>
+            <div class="card">
+                <h3>Template Auteur</h3>
+                <p>Mise en page automatique avec en-têtes cinématiques, gestion des sauts de page intelligents et typographie hiérarchisée.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 8: THE FUTURE -->
+    <section id="future">
+        <span class="step-num">07</span>
+        <span class="label">CONCLUSION</span>
+        <h2>Conclusion & Déploiement</h2>
+        <p>BVMBINO 2.0 est plus qu'un outil ; c'est un partenaire stratégique autonome. Le déploiement final marque la fin de la phase Alpha et l'entrée dans l'ère de la production réelle.</p>
+        <div class="card" style="border: 2px solid var(--pu); text-align: center;">
+            <h3 style="font-size: 3rem;">ÉTAT : OPÉRATIONNEL</h3>
+            <p style="margin: 0 auto 20px;">Le système est prêt pour le déploiement sur Vercel Edge.</p>
+            <div class="tech-tag">PRODUCTION_READY</div>
+            <div class="tech-tag">ELITE_TIER</div>
+        </div>
+    </section>
+
+    <footer>
+        BVMBINO 2.0 CASE STUDY · PRODUIT PAR ANTIGRAVITY ENGINE · © 2026
+    </footer>
+
+</body>
+</html>
