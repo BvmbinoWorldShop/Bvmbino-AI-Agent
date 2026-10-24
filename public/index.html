@@ -501,10 +501,39 @@ textarea.set-input{resize:vertical;min-height:80px;line-height:1.5;}
   transition:border-color .2s ease, box-shadow .2s ease;
 }
 
-/* AI bubble — premium gold left accent */
+/* AI bubble — premium gold left accent & pure white text */
 .b-ai{
   border-left:2px solid rgba(232,169,18,.35);
   background:linear-gradient(135deg,rgba(26,32,48,1) 0%,rgba(20,26,38,.95) 100%);
+  color:#ffffff !important;
+}
+.b-ai span,
+.b-ai p,
+.b-ai li,
+.b-ai td,
+.b-ai .stream-cursor {
+  color:#ffffff !important;
+}
+.b-ai pre code {
+  color:#ffffff !important;
+}
+.b-ai strong {
+  color:#e8a912 !important;
+}
+.b-ai .bh {
+  color:#e8a912 !important;
+}
+.b-ai .bld {
+  color:#e8a912 !important;
+}
+.b-ai a {
+  color:#e8a912 !important;
+}
+.b-ai em {
+  color:#e2e8f0 !important;
+}
+.b-ai .bq {
+  color:#f1f5f9 !important;
 }
 
 /* User bubble — deeper gradient */
@@ -1616,7 +1645,7 @@ function xcard(type) {
       <div class="xbtn" onclick="window.expLastPdf && window.expLastPdf()">↓ PDF</div>
       <div class="xbtn" onclick="window.expLastHtml && window.expLastHtml()">↓ HTML</div>
       <div class="xbtn" onclick="window.copyLast && window.copyLast()">⎘ Copy</div>
-      <div class="xbtn" style="background:rgba(34,197,94,.18);border-color:#22c55e;color:#4ade80;font-weight:700" onclick="window.sendAgentEmail && window.sendAgentEmail(this)">🚀 Send Real Email</div>
+      
       ${webhookBtns}
     </div>
   </div>`;
@@ -5273,58 +5302,6 @@ if (document.readyState === 'loading') {
 
 
 
-// ── REAL AGENT EMAIL DISPATCH ──
-window.sendAgentEmail = async function(btn) {
-  const card = btn.closest('.mrow') || btn.closest('.bubble') || document.body;
-  const text = card.textContent || '';
-  
-  const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-  const defaultTo = emailMatch ? emailMatch[1] : '';
-  const to = prompt('Send this email to:', defaultTo);
-  if (!to || !to.includes('@')) {
-    toast('Invalid recipient email');
-    return;
-  }
-
-  const subjMatch = text.match(/Subject:\s*([^\n\r]+)/i) || text.match(/Objet:\s*([^\n\r]+)/i);
-  const subject = subjMatch ? subjMatch[1].trim() : 'Strategic Update from Bvmbino AI';
-
-  let body = text;
-  if (subjMatch) {
-    body = text.slice(text.indexOf(subjMatch[0]) + subjMatch[0].length).trim();
-  }
-
-  const origTxt = btn.textContent;
-  btn.textContent = '⏳ Sending...';
-  btn.style.pointerEvents = 'none';
-
-  try {
-    const res = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, subject, body })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      if (data.mailtoUrl) {
-        window.open(data.mailtoUrl, '_blank');
-        toast('✉️ Opened draft in your email app');
-      } else {
-        toast('✅ ' + data.message);
-      }
-      btn.textContent = '✅ Email Dispatched';
-    } else {
-      toast('⚠️ ' + (data.error || 'Failed to dispatch'));
-      btn.textContent = '❌ Failed';
-    }
-  } catch (err) {
-    window.open('mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body.slice(0, 1500)), '_blank');
-    toast('✉️ Opened in Mail client');
-    btn.textContent = '✉️ Opened Mail';
-  } finally {
-    btn.style.pointerEvents = 'auto';
-  }
-};
 </script>
 </body>
 </html>
