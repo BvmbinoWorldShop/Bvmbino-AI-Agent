@@ -1,0 +1,445 @@
+/* ═══════════════════════════════════════════════════════════
+   BVMBINO AI ELITE — v3.2 MOBILE ENHANCEMENTS
+   Optimized for touch, gesture, and small screens
+   ═══════════════════════════════════════════════════════════ */
+
+/* Enhanced Mobile Viewport Meta (add to index.html) */
+/* <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"> */
+
+/* ═══ MOBILE-FIRST TOUCH OPTIMIZATIONS ═══ */
+
+/* Larger touch targets (minimum 44x44px per Apple/Google guidelines) */
+@media (max-width: 768px) {
+  /* Button minimum touch size */
+  button,
+  .btn,
+  .nbtn,
+  .send,
+  .regen,
+  .del,
+  .mbtn,
+  .skill-card,
+  .wcard,
+  .cmd-pill {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Input fields touch-friendly */
+  input[type="text"],
+  input[type="password"],
+  textarea,
+  .set-input,
+  #inp {
+    min-height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 12px 14px;
+  }
+
+  /* Tap highlight removal for custom elements */
+  button,
+  a,
+  .btn,
+  .skill-card,
+  .wcard {
+    -webkit-tap-highlight-color: rgba(232, 169, 18, 0.15);
+  }
+
+  /* Prevent text selection on tap (UI elements only) */
+  .btn,
+  .skill-card,
+  .wcard,
+  .cmd-pill,
+  .logo,
+  .sett-btn {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Better scrolling physics */
+  .chat,
+  .sb-threads,
+  .modal-body {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* ═══ ENHANCED SIDEBAR MOBILE BEHAVIOR ═══ */
+  .sb {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 85vw; /* More screen space on mobile */
+    max-width: 320px;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.5);
+    z-index: 200;
+  }
+
+  .sb.open {
+    transform: translateX(0);
+  }
+
+  /* Mobile menu button - always visible */
+  .mb-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 44px;
+    height: 44px;
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    z-index: 150;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mb-menu:active {
+    transform: scale(0.95);
+    background: var(--pu3);
+  }
+
+  /* ═══ CHAT INPUT ENHANCEMENTS ═══ */
+  .inzone {
+    padding: 10px 12px 14px;
+    /* Add safe area for iPhone notch */
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+
+  #inp {
+    max-height: 150px; /* Prevent textarea from taking full screen */
+    line-height: 1.5;
+  }
+
+  /* Send button optimization */
+  .send {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Voice button optimization */
+  .voice-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+
+  /* ═══ MESSAGE DISPLAY OPTIMIZATION ═══ */
+  .msg {
+    font-size: 14px; /* Readable on mobile */
+    line-height: 1.6;
+    padding: 12px 14px;
+  }
+
+  /* Code blocks mobile-friendly */
+  pre {
+    font-size: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: calc(100vw - 32px);
+  }
+
+  /* Tables responsive */
+  table {
+    font-size: 12px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ═══ MODAL OPTIMIZATION ═══ */
+  .modal {
+    width: 95vw;
+    max-width: 500px;
+    max-height: 90vh;
+    margin: 5vh auto;
+  }
+
+  .modal-body {
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ═══ SKILL CARDS GRID ═══ */
+  .matrix-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 8px;
+  }
+
+  .wcard {
+    min-height: 160px;
+    aspect-ratio: 3/4;
+  }
+
+  /* ═══ SETTINGS PANEL ═══ */
+  .mpanel {
+    position: fixed !important;
+    right: 0;
+    top: 0;
+    width: 90vw;
+    max-width: 400px;
+    height: 100vh;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.5);
+    z-index: 200;
+  }
+
+  .mpanel:not(.closed) {
+    transform: translateX(0);
+  }
+
+  /* ═══ LOADING STATES ═══ */
+  .load {
+    font-size: 13px;
+  }
+
+  /* Typing indicator */
+  .typing-dots {
+    padding: 12px;
+  }
+
+  /* ═══ IMAGE GENERATION MODAL ═══ */
+  .img-gen-modal {
+    width: 95vw;
+    max-width: 600px;
+  }
+
+  .img-gen-modal img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ═══ VOICE MODAL ═══ */
+  .voice-modal {
+    width: 90vw;
+    max-width: 400px;
+  }
+
+  .voice-pulse-wrap {
+    width: 100px;
+    height: 100px;
+  }
+
+  .v-core {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  /* ═══ THREAD SIDEBAR ═══ */
+  .sb-threads {
+    padding: 8px 10px;
+  }
+
+  .th {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  /* ═══ WELCOME SCREEN ═══ */
+  .wcuse {
+    display: none; /* Hide decorative elements on small screens */
+  }
+
+  .wtitle {
+    font-size: 24px;
+  }
+
+  .wsub {
+    font-size: 12px;
+  }
+
+  /* Command pills */
+  .cmd-strip {
+    gap: 6px;
+    padding: 0 12px;
+  }
+
+  .cmd-pill {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+}
+
+/* ═══ SMALL MOBILE (≤420px) ═══ */
+@media (max-width: 420px) {
+  /* Even more compact */
+  .chat {
+    padding: 10px;
+  }
+
+  .inzone {
+    padding: 8px 10px 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .msg {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  /* Single column grid */
+  .matrix-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wcard {
+    min-height: 200px;
+  }
+
+  /* Smaller modal */
+  .modal {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  /* Settings panel full width on tiny screens */
+  .mpanel {
+    width: 100vw;
+    max-width: none;
+  }
+
+  /* Compact sidebar */
+  .sb {
+    width: 90vw;
+    max-width: none;
+  }
+
+  /* Smaller command pills */
+  .cmd-pill {
+    font-size: 9px;
+    padding: 5px 10px;
+  }
+
+  /* Hide metadata in messages */
+  .in-meta {
+    display: none;
+  }
+}
+
+/* ═══ LANDSCAPE MOBILE ═══ */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Optimize for landscape mobile */
+  .modal {
+    max-height: 85vh;
+  }
+
+  .sb {
+    width: 70vw;
+  }
+
+  .matrix-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ═══ ACCESSIBILITY ENHANCEMENTS ═══ */
+
+/* Focus visible for keyboard navigation */
+@media (max-width: 768px) {
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  .btn:focus-visible {
+    outline: 2px solid var(--pu);
+    outline-offset: 2px;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .btn,
+    .skill-card,
+    .wcard {
+      border-width: 2px;
+    }
+  }
+}
+
+/* ═══ SAFE AREA INSETS (iOS notch/home indicator) ═══ */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .sb {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .mpanel {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .inzone {
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
+
+/* GPU acceleration for animations */
+@media (max-width: 768px) {
+  .sb,
+  .mpanel,
+  .modal,
+  .wcard {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Remove will-change after animation */
+  .sb:not(.open),
+  .mpanel.closed {
+    will-change: auto;
+  }
+}
+
+/* ═══ PULL-TO-REFRESH PREVENTION ═══ */
+body {
+  overscroll-behavior-y: contain;
+}
+
+.chat {
+  overscroll-behavior: contain;
+}
+
+/* ═══ MOBILE IMAGE OPTIMIZATION ═══ */
+@media (max-width: 768px) {
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Lazy loading hint */
+  img[loading="lazy"] {
+    content-visibility: auto;
+  }
+}
+
+/* ═══ END MOBILE ENHANCEMENTS ═══ */
