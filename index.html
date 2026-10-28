@@ -1867,25 +1867,20 @@ let typeInterval = null;
 
 function showTyping() {
   const ci = document.getElementById('ci');
-  if (!ci || document.getElementById('type-row')) return;
+  if (!ci || document.getElementById('billy-thinking-pill')) return;
   const d = document.createElement('div');
-  d.id = 'type-row'; d.className = 'mrow';
-  d.innerHTML = `
-    <div class="av av-ai">${skillAvatar()}</div>
-    <div class="mwrap">
-      <div class="mmeta ai-meta">Bvmbino AI Council</div>
-      <div class="bubble b-ai" style="font-style:italic;color:var(--t3);font-size:12px">
-        Thinking…
-        <div class="tots"><div class="tot"></div><div class="tot"></div><div class="tot"></div></div>
-      </div>
-    </div>`;
-  ci.appendChild(d); scrollBot();
+  d.id = 'billy-thinking-pill';
+  d.className = 'thinking-pill';
+  d.innerHTML = '<span class="thinking-dot"></span><span>Billy is thinking…</span>';
+  ci.appendChild(d);
+  scrollBot();
 }
 
 function hideTyping() {
-  if (typeInterval) { clearInterval(typeInterval); typeInterval = null; }
-  const r = document.getElementById('type-row');
-  if (r) r.remove();
+  const pill = document.getElementById('billy-thinking-pill');
+  if (pill) pill.remove();
+  const oldRow = document.getElementById('type-row');
+  if (oldRow) oldRow.remove();
 }
 
 // FIX: expose on window so api.js can call them without circular import issues
@@ -3388,17 +3383,6 @@ async function callAI() {
   // ── ATTEMPT 0: SERVERLESS BACKEND PROXY (/api/chat) ──
   // Ultra-Fast Sovereign Engine (Cerebras, Groq, Gemini, OpenRouter)
   if (!state._skipProxy) {
-    const ci = document.getElementById('ci');
-    let thinkPill = document.getElementById('billy-thinking-pill');
-    if (!thinkPill && ci) {
-      thinkPill = document.createElement('div');
-      thinkPill.id = 'billy-thinking-pill';
-      thinkPill.className = 'thinking-pill';
-      thinkPill.innerHTML = '<span class="thinking-dot"></span><span>Billy is thinking…</span>';
-      ci.appendChild(thinkPill);
-      scrollToMsgTop(thinkPill);
-    }
-
     try {
       const proxyRes = await fetch('/api/chat', {
         method: 'POST',
@@ -3424,7 +3408,6 @@ async function callAI() {
 
         if (reply) {
           hideTyping();
-          if (thinkPill) { thinkPill.remove(); thinkPill = null; }
           const clean = cleanAiOutput(reply);
           state.msgs.push({ role: 'assistant', content: clean });
           
@@ -3452,7 +3435,7 @@ async function callAI() {
         }
       }
     } catch (proxyErr) {
-      if (thinkPill) { thinkPill.remove(); thinkPill = null; }
+      hideTyping();
       if (proxyErr.name === 'AbortError') return;
       console.warn('Proxy /api/chat bypassed:', proxyErr.message);
     }
@@ -5257,6 +5240,27 @@ const App = {
 //  No logic here — logic lives in App above.
 // ─────────────────────────────────────────────────────────────────
 window.App = App;
+
+// Window Utilities
+window.clearKey = function(provider) {
+  const input = document.getElementById('key-' + provider);
+  if (input) input.value = '';
+  localStorage.removeItem('bv_key_' + provider);
+  localStorage.removeItem('bvmbino_key_' + provider);
+  const sig = document.getElementById('sig-' + provider);
+  if (sig) sig.textContent = '⚪';
+  if (typeof toast === 'function') toast('Cleared ' + provider + ' key');
+};
+
+window.toggleModal = function(id, force) {
+  if (window.App && typeof App.toggleModal === 'function') {
+    App.toggleModal(id, force);
+  } else {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open', force);
+  }
+};
+
 
 // Navigation
 window.newChat        = newChat;
