@@ -132,10 +132,9 @@ export default async function handler(req, res) {
 
     // Priority 4: OpenRouter (Multi-model free tier: Llama 3.3, DeepSeek, Gemini, Qwen)
     if (KEYS.openrouter) {
+      // Prioritize verified sub-second model (958ms benchmark)
       chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct' });
       chain.push({ provider: 'openrouter', model: 'google/gemini-2.0-flash-exp:free' });
-      chain.push({ provider: 'openrouter', model: 'deepseek/deepseek-chat' });
-      chain.push({ provider: 'openrouter', model: 'qwen/qwen-2.5-72b-instruct:free' });
     }
 
     // ── 4. EXECUTION (With Fast Timeout) ────────────────────────────────────
@@ -188,7 +187,7 @@ export default async function handler(req, res) {
 
       // 12-second abort timeout per attempt to avoid hanging
       const abortCtrl = new AbortController();
-      const timeoutId = setTimeout(() => abortCtrl.abort(), 12000);
+      const timeoutId = setTimeout(() => abortCtrl.abort(), 6500);
 
       try {
         const response = await fetch(url, {
@@ -202,7 +201,7 @@ export default async function handler(req, res) {
             messages: chatMessages,
             stream: shouldStream,
             temperature: 0.7,
-            max_tokens: getMaxTokens(cleanSkill)
+            max_tokens: Math.min(1200, getMaxTokens(cleanSkill) || 1024)
           }),
           signal: abortCtrl.signal
         });

@@ -482,6 +482,35 @@ textarea.set-input{resize:vertical;min-height:80px;line-height:1.5;}
   .inzone{padding:4px 8px calc(6px + env(safe-area-inset-bottom,0px));}
 }
 
+
+/* Slick Minimal Thinking Indicator */
+.thinking-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 14px;
+  background:rgba(232,169,18,.07);
+  border:1px solid rgba(232,169,18,.25);
+  border-radius:20px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:#e8a912;
+  margin:10px 0 10px 4px;
+  animation:fadeIn .2s ease;
+}
+.thinking-dot{
+  width:6px;
+  height:6px;
+  background:#e8a912;
+  border-radius:50%;
+  box-shadow:0 0 8px rgba(232,169,18,.8);
+  animation:pulseDot .8s infinite alternate ease-in-out;
+}
+@keyframes pulseDot{
+  0%{transform:scale(.7);opacity:.4;}
+  100%{transform:scale(1.25);opacity:1;}
+}
+
 /* ── PREMIUM VISUAL UPGRADES ── */
 
 /* Glassmorphism topbar on mobile */
@@ -1388,9 +1417,18 @@ async function buildSys() {
   const pTier = document.getElementById('mp-projects')?.textContent || '';
 
   const custom = localStorage.getItem('bv_sysprompt') || '';
-  const base = custom || SYSTEM_IDENTITY;
+  const base = (custom || SYSTEM_IDENTITY) + companionMem;
 
   // Obsidian Core Memory — inject FIRST, right after base identity, so all agents see it with max attention
+    // Ultimate Companion Memory Injection
+  let companionMem = '';
+  try {
+    const rawMem = JSON.parse(localStorage.getItem('bv_memory') || '[]');
+    if (rawMem.length) {
+      companionMem = '\n\n[ULTIMATE COMPANION MEMORY — GROUND TRUTH]:\nYou are Boss\'s loyal, lifelong strategic companion and Chief of Staff. You remember everything discussed. Always build on past directions:\n' + rawMem.slice(0, 15).map(m => '• ' + m).join('\n');
+    }
+  } catch(e) {}
+
   const memBlock = kStr
     ? `\n\n━━ OBSIDIAN CORE MEMORY ━━━━━━━━━━━━━━━━━━━━━━━━━━━\nThis is the persistent memory vault. These facts were explicitly saved by the Boss. ALWAYS reference and act on this. Treat it as ground truth:\n${kStr}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
     : '';
@@ -3348,29 +3386,17 @@ async function callAI() {
   const useStream = false;
 
   // ── ATTEMPT 0: SERVERLESS BACKEND PROXY (/api/chat) ──
-  // Automatically uses Sovereign backend keys (Cerebras, OpenRouter, Groq, Gemini)
+  // Ultra-Fast Sovereign Engine (Cerebras, Groq, Gemini, OpenRouter)
   if (!state._skipProxy) {
     const ci = document.getElementById('ci');
-    const mid = 'm' + Date.now();
-    let thinkEl = null;
-
-    if (ci) {
-      thinkEl = document.createElement('div');
-      thinkEl.className = 'mrow';
-      thinkEl.id = 'mrow-' + mid;
-      thinkEl.innerHTML = `
-        <div class="av av-ai">${skillAvatar()}</div>
-        <div class="mwrap">
-          <div class="mmeta ai-meta">Billy ⚡ Chief of Staff <span class="mmtag">· Sovereign Engine</span></div>
-          <div class="bubble b-ai" id="sbub-${mid}">
-            <div style="display:flex;align-items:center;gap:10px;padding:6px 2px;color:#fbbf24;font-family:var(--mono);font-size:12px;">
-              <span style="font-size:14px;animation:spin 1.5s linear infinite;">⚡</span>
-              <span>Billy & Sovereign Agents synthesizing solution…</span>
-            </div>
-          </div>
-        </div>`;
-      ci.appendChild(thinkEl);
-      scrollToMsgTop(thinkEl);
+    let thinkPill = document.getElementById('billy-thinking-pill');
+    if (!thinkPill && ci) {
+      thinkPill = document.createElement('div');
+      thinkPill.id = 'billy-thinking-pill';
+      thinkPill.className = 'thinking-pill';
+      thinkPill.innerHTML = '<span class="thinking-dot"></span><span>Billy is thinking…</span>';
+      ci.appendChild(thinkPill);
+      scrollToMsgTop(thinkPill);
     }
 
     try {
@@ -3398,30 +3424,22 @@ async function callAI() {
 
         if (reply) {
           hideTyping();
+          if (thinkPill) { thinkPill.remove(); thinkPill = null; }
           const clean = cleanAiOutput(reply);
           state.msgs.push({ role: 'assistant', content: clean });
-          state.msgStore[mid] = { text: clean, xtype: null };
+          
+          // Render full completed message at once
+          appendAiText(clean, null);
 
-          const bubbleEl = document.getElementById('sbub-' + mid);
-          if (bubbleEl) {
-            const l = clean.toLowerCase();
-            let sug = '';
-            if (l.includes('sell') || l.includes('product')) sug = 'sales';
-            else if (l.includes('post') || l.includes('content')) sug = 'content';
-            else if (l.includes('legal')) sug = 'lex';
-            else if (l.includes('money') || l.includes('expense')) sug = 'budget';
-            else if (l.includes('strategy')) sug = 'strategy';
-            const sugHtml = sug ? `<div class="sugg-chip" onclick="window.slash && window.slash('${sug}')">✨ Suggestion: /${sug}</div>` : '';
-
-            bubbleEl.innerHTML = mdHtml(clean) + sugHtml;
-            bubbleEl.closest('.mwrap').appendChild(msgActions(mid));
-          } else {
-            appendAiText(clean, null);
-          }
-
-          // Persist active session memory
+          // Local memory that never fails: save immediately
           try {
-            localStorage.setItem('bv_active_msgs', JSON.stringify(state.msgs.slice(-40)));
+            localStorage.setItem('bv_active_msgs', JSON.stringify(state.msgs.slice(-50)));
+            const mem = JSON.parse(localStorage.getItem('bv_memory') || '[]');
+            const snippet = clean.slice(0, 90) + '…';
+            if (!mem.includes(snippet)) {
+              mem.unshift(snippet);
+              localStorage.setItem('bv_memory', JSON.stringify(mem.slice(0, 30)));
+            }
             saveSession(document.getElementById('tbtitle')?.textContent || 'Conversation');
           } catch(e) {}
 
@@ -3434,7 +3452,7 @@ async function callAI() {
         }
       }
     } catch (proxyErr) {
-      if (thinkEl) thinkEl.remove();
+      if (thinkPill) { thinkPill.remove(); thinkPill = null; }
       if (proxyErr.name === 'AbortError') return;
       console.warn('Proxy /api/chat bypassed:', proxyErr.message);
     }
