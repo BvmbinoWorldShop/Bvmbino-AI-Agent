@@ -32,7 +32,18 @@
   --shadow:0 4px 24px rgba(0,0,0,.6);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{height:100%;}body{height:100%;overflow:hidden;}
+html,body{
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:hidden !important;
+  overscroll-behavior:none !important;
+  touch-action:manipulation;
+}
 body{
   background:var(--bg);
   color:var(--t1);font-family:var(--mono);font-size:13px;display:flex;position:relative;
@@ -1145,6 +1156,9 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
   function _setAppH(){
     var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
     document.documentElement.style.setProperty('--app-height', h + 'px');
+    if (window.scrollY !== 0 || window.scrollX !== 0) {
+      window.scrollTo(0, 0);
+    }
   }
   function _setInzoneH(){
     var iz=document.querySelector('.inzone');
@@ -2316,7 +2330,6 @@ function detectIntent(text) {
   const t = text.toLowerCase().trim();
 
   if (t === '/builder' || t.startsWith('/builder ')) {
-    // Toggle builder mode — state is imported directly
     state.isBuilderMode = !state.isBuilderMode;
     document.body.classList.toggle('builder-mode', state.isBuilderMode);
     return { type: 'builder', active: state.isBuilderMode };
@@ -2336,6 +2349,15 @@ function detectIntent(text) {
   // Any message containing a URL → auto-read that page
   const urlMatch = text.match(/https?:\/\/[^\s)>]+/);
   if (urlMatch) return { type: 'scrape', url: urlMatch[0] };
+
+  // Autonomous Live Search Detection — activates whenever Boss asks for contact info, phone numbers,
+  // real-world people, sports teams, companies, or live internet data
+  const hasContactIntent = /\b(phone|number|numéro|téléphone|contact|email|mail|call|appeler|who is|qui est|coach|manager|player|joueur|roster|effectif|address|adresse|headquarters|siège|real madrid|barcelona|lakers|warriors|asvel|monaco|nba|euroleague|lnb|fibb)\b/i.test(t);
+  const hasLiveLookupIntent = /\b(search|find|trouve|cherche|lookup|latest|current|actuel|dernier|prix|price|cost|website|site web)\b/i.test(t);
+
+  if ((hasContactIntent || hasLiveLookupIntent) && !t.startsWith('/') && t.split(/\s+/).length >= 2) {
+    return { type: 'search', query: text.trim() };
+  }
 
   return null;
 }
@@ -3172,6 +3194,7 @@ function safeKey(v) { return String(v || '').replace(/[^\x00-\xFF]/g, '').trim()
 
 // ── SEND ──
 async function send() {
+  document.getElementById('inp')?.blur();
   const inp = document.getElementById('inp');
   const hasFiles = state.attachedFiles && state.attachedFiles.length > 0;
   // Allow send if there's text OR attached files
@@ -4542,7 +4565,7 @@ const App = {
     this._on('edit-projects-btn',  'click', () => editMemoryTier('projects'));
 
     // ─ § SEND & INPUT ────────────────────────────────────────────
-    this._on('sbtn',       'click', () => send());
+    this._on('sbtn',       'click', () => { this.dom.inp?.blur(); send(); });
     this._on('cancel-btn', 'click', () => this.cancelGeneration());
     this._on('close-train-2', 'click', () => this.toggleModal('train-modal', false));
 
@@ -4552,9 +4575,20 @@ const App = {
     });
 
     this.dom.inp?.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); return; }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.dom.inp?.blur(); // Dismiss virtual keyboard on phone immediately
+        send();
+        return;
+      }
       if (e.key === 'Escape')               { this._closeSlashMenu(); return; }
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); newChat(); }
+    });
+
+    this.dom.inp?.addEventListener('focus', () => {
+      // Prevent browser from auto-scrolling the outer window away from top
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
     });
 
     // ─ § SLASH COMMAND MENU ──────────────────────────────────────
