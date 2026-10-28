@@ -1557,6 +1557,15 @@ function mkTable(lines) {
   return html + '</table>';
 }
 
+function cleanAiOutput(text) {
+  if (!text) return '';
+  let clean = text.trim();
+  clean = clean.replace(/^(Specialist Domain:|Domain:|ACT AS AN ELITE|ACT AS|Act as an elite)[^\n]*\n+/gi, '');
+  clean = clean.replace(/^## ACTIVE SPECIALIST:[^\n]*\n+/gi, '');
+  clean = clean.replace(/^\[SYSTEM DIRECTIVE:[^\n]*\n+/gi, '');
+  return clean.trim();
+}
+
 function mdHtml(text) {
   if (!text) return '';
   const lines = text.split('\n');
@@ -2262,12 +2271,8 @@ function smartRouteMsg(text) {
 
   if (!best || bestScore < 1) return null;
 
-  const prompt = PROMPTS[best] || '';
-  const enhanced = prompt
-    ? `${prompt}\n\n---\nUser's request: "${text}"\nApply the skill framework above directly. Be immediate and concrete.`
-    : text;
-
-  return { skill: best, enhanced };
+  // Return clean skill tag — NEVER corrupt user chat history with prompt strings
+  return { skill: best };
 }
 
 /**
@@ -3204,15 +3209,15 @@ async function send() {
       if (intent.type === 'builder') toast(state.isBuilderMode ? '🛠️ Builder Mode ON' : 'Builder Mode OFF');
     }
 
-    // NL skill routing
+    // NL skill routing — sets active skill WITHOUT corrupting the user's message history
     const routing = smartRouteMsg(raw);
     if (routing) {
-      state.msgs[state.msgs.length - 1].content = routing.enhanced;
+      state.activeSkill = routing.skill;
       const ci = document.getElementById('ci');
       if (ci) {
         const chip = document.createElement('div');
         chip.style.cssText = 'padding:2px 12px 6px;text-align:center;';
-        chip.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 11px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:20px;font-size:10px;font-family:var(--mono);color:#4ade80">🧠 Auto → <strong>/${routing.skill}</strong></span>`;
+        chip.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 11px;background:rgba(232,169,18,.12);border:1px solid rgba(232,169,18,.3);border-radius:20px;font-size:10px;font-family:var(--mono);color:#fbbf24">⚡ Billy coordinating → <strong>/${routing.skill}</strong></span>`;
         ci.appendChild(chip);
       }
     }
@@ -3300,7 +3305,7 @@ async function callAI() {
   }
 
   // Build clean messages; if images pending, last user msg becomes multipart
-  const rawMsgs = state.msgs.slice(-15);
+  const rawMsgs = state.msgs.slice(-25);
   const cleanMsgs = rawMsgs.map((m, idx) => {
     const isLast = idx === rawMsgs.length - 1;
     if (isLast && m.role === 'user' && pendingImages.length) {
@@ -3339,12 +3344,35 @@ async function callAI() {
     });
   }
 
-  // Streaming ON for chat mode; OFF for voice (needs full text to speak) and Anthropic/Gemini
-  const useStream = !isVoice;
+  // Instant complete delivery (all at once) as requested by Boss — no jittery letter-by-letter streaming
+  const useStream = false;
 
   // ── ATTEMPT 0: SERVERLESS BACKEND PROXY (/api/chat) ──
   // Automatically uses Sovereign backend keys (Cerebras, OpenRouter, Groq, Gemini)
   if (!state._skipProxy) {
+    const ci = document.getElementById('ci');
+    const mid = 'm' + Date.now();
+    let thinkEl = null;
+
+    if (ci) {
+      thinkEl = document.createElement('div');
+      thinkEl.className = 'mrow';
+      thinkEl.id = 'mrow-' + mid;
+      thinkEl.innerHTML = `
+        <div class="av av-ai">${skillAvatar()}</div>
+        <div class="mwrap">
+          <div class="mmeta ai-meta">Billy ⚡ Chief of Staff <span class="mmtag">· Sovereign Engine</span></div>
+          <div class="bubble b-ai" id="sbub-${mid}">
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 2px;color:#fbbf24;font-family:var(--mono);font-size:12px;">
+              <span style="font-size:14px;animation:spin 1.5s linear infinite;">⚡</span>
+              <span>Billy & Sovereign Agents synthesizing solution…</span>
+            </div>
+          </div>
+        </div>`;
+      ci.appendChild(thinkEl);
+      scrollToMsgTop(thinkEl);
+    }
+
     try {
       const proxyRes = await fetch('/api/chat', {
         method: 'POST',
@@ -3352,21 +3380,17 @@ async function callAI() {
         body: JSON.stringify({
           messages: toOAIMsgs(cleanMsgs),
           system: sys,
-          model: chosen
+          model: chosen,
+          stream: false,
+          activeSkill: state.activeSkill
         }),
         signal
       });
 
       if (proxyRes.ok) {
         let reply = '';
-        let streamBubble = null;
-        if (useStream && proxyRes.headers.get('content-type')?.includes('text/event-stream')) {
-          let firstChunk = true;
-          reply = await _streamOpenAI(proxyRes, (accumulated) => {
-            if (firstChunk) { hideTyping(); streamBubble = createStreamingBubble(); firstChunk = false; }
-            streamBubble?.update(accumulated);
-          });
-          if (!reply && streamBubble) { streamBubble.destroy(); streamBubble = null; }
+        if (proxyRes.headers.get('content-type')?.includes('text/event-stream')) {
+          reply = await _streamOpenAI(proxyRes, () => {});
         } else {
           const data = await proxyRes.json();
           reply = data.choices?.[0]?.message?.content || data.content?.[0]?.text;
@@ -3374,27 +3398,44 @@ async function callAI() {
 
         if (reply) {
           hideTyping();
-          const clean = reply.trim();
+          const clean = cleanAiOutput(reply);
           state.msgs.push({ role: 'assistant', content: clean });
-          
-          // SINGLE RESPONSE FIX: If streamBubble was active, finalize it in place.
-          // Never call appendAiText() afterwards, which caused the duplicate answer bug!
-          if (streamBubble) {
-            streamBubble.finalize(clean, null);
+          state.msgStore[mid] = { text: clean, xtype: null };
+
+          const bubbleEl = document.getElementById('sbub-' + mid);
+          if (bubbleEl) {
+            const l = clean.toLowerCase();
+            let sug = '';
+            if (l.includes('sell') || l.includes('product')) sug = 'sales';
+            else if (l.includes('post') || l.includes('content')) sug = 'content';
+            else if (l.includes('legal')) sug = 'lex';
+            else if (l.includes('money') || l.includes('expense')) sug = 'budget';
+            else if (l.includes('strategy')) sug = 'strategy';
+            const sugHtml = sug ? `<div class="sugg-chip" onclick="window.slash && window.slash('${sug}')">✨ Suggestion: /${sug}</div>` : '';
+
+            bubbleEl.innerHTML = mdHtml(clean) + sugHtml;
+            bubbleEl.closest('.mwrap').appendChild(msgActions(mid));
           } else {
             appendAiText(clean, null);
           }
+
+          // Persist active session memory
+          try {
+            localStorage.setItem('bv_active_msgs', JSON.stringify(state.msgs.slice(-40)));
+            saveSession(document.getElementById('tbtitle')?.textContent || 'Conversation');
+          } catch(e) {}
 
           window.logFeed && window.logFeed('billy', clean.slice(0, 90) + (clean.length > 90 ? '…' : ''));
           updTok(clean.length / 3.5);
           state.abortController = null;
           window.__unlockUI?.();
-          saveSession(document.getElementById('tbtitle')?.textContent || 'Conversation');
           haptic([10, 30]);
           return;
         }
       }
     } catch (proxyErr) {
+      if (thinkEl) thinkEl.remove();
+      if (proxyErr.name === 'AbortError') return;
       console.warn('Proxy /api/chat bypassed:', proxyErr.message);
     }
   }
@@ -4382,8 +4423,24 @@ async function boot() {
   // IndexedDB — non-fatal, app works without it (falls back to LS)
   try { await initDB(); } catch(e) { console.warn('IndexedDB unavailable, using localStorage fallback'); }
 
+  // Restore active conversation memory seamlessly if available
+  try {
+    const cachedMsgs = JSON.parse(localStorage.getItem('bv_active_msgs') || '[]');
+    if (cachedMsgs.length && (!state.msgs || !state.msgs.length)) {
+      state.msgs = cachedMsgs;
+      const ci = document.getElementById('ci');
+      if (ci) {
+        ci.innerHTML = '';
+        cachedMsgs.forEach(m => {
+          if (m.role === 'user') addUserMsg(m.content);
+          else appendAiText(m.content);
+        });
+      }
+    }
+  } catch(e) {}
+
   // UI render — each wrapped so one failure doesn't kill the rest
-  try { renderWelcome(); window.__SKILLS__ = GRID_SKILLS; } catch(e) { console.warn('renderWelcome:', e); }
+  try { if (!state.msgs.length) renderWelcome(); window.__SKILLS__ = GRID_SKILLS; } catch(e) { console.warn('renderWelcome:', e); }
   try { renderHistory(); } catch(e) {}
   try { renderClients(); } catch(e) {}
   try { renderModels(); } catch(e) {}
