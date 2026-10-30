@@ -1,30 +1,41 @@
-const CACHE_NAME = 'bvmbino-auteur-v1';
+const CACHE_NAME = 'bvmbino-sovereign-v6.2';
 const ASSETS = [
   '/',
   '/index.html',
-  '/js/main.js',
-  '/js/core.js',
-  '/js/api.js',
-  '/js/render.js',
-  '/js/store.js',
-  '/js/router.js',
-  '/js/ui.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+  '/mobile-enhancements.css',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', e => {
+  self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).catch(() => {})
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
-  // Only cache GET requests (don't cache API POST calls)
   if (e.request.method !== 'GET') return;
-  
+  const url = new URL(e.request.url);
+  if (url.pathname.startsWith('/api/')) return;
+
+  // Network-first strategy so live updates and sidebar/layout fixes are always served fresh
   e.respondWith(
-    caches.match(e.request).then(res => {
-      return res || fetch(e.request);
-    })
+    fetch(e.request)
+      .then(res => {
+        if (res && res.status === 200 && url.origin === self.location.origin) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone)).catch(() => {});
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });

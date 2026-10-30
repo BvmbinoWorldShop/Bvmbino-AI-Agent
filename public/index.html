@@ -67,7 +67,8 @@ body::before{
 #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;backdrop-filter:blur(2px);}
 #ov.open{display:block;}
 
-.sb{width:272px;height:100dvh;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;}
+.sb{width:272px;height:100dvh;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s cubic-bezier(.4,0,.2,1), margin .3s cubic-bezier(.4,0,.2,1);z-index:200;}
+.sb.closed{transform:translateX(-100%);margin-left:-272px;}
 .sb-top{padding:14px 12px 10px;border-bottom:1px solid var(--bd);flex-shrink:0;}
 .logo{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rsm);cursor:pointer;margin-bottom:12px;transition:background .2s;}
 .logo:hover{background:var(--pu3);}
@@ -99,7 +100,7 @@ body::before{
 .topbar{height:calc(var(--top-h) + env(safe-area-inset-top,0px));background:var(--bg2);border-bottom:1px solid var(--bd);display:flex;align-items:flex-end;justify-content:space-between;padding:0 14px 6px;padding-top:env(safe-area-inset-top,0px);flex-shrink:0;gap:8px;}
 .tb-left{display:flex;align-items:center;gap:10px;min-width:0;}
 .tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.mb-menu{display:none;background:none;border:1px solid var(--bd);color:var(--t2);width:32px;height:32px;border-radius:var(--rsm);cursor:pointer;font-size:14px;align-items:center;justify-content:center;transition:all .2s;}
+.mb-menu{display:flex;background:none;border:1px solid var(--bd);color:var(--t2);width:32px;height:32px;border-radius:var(--rsm);cursor:pointer;font-size:14px;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
 .mb-menu:hover{border-color:var(--bd2);color:var(--pu2);}
 .tb-title{font-family:var(--head);font-weight:700;font-size:13px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .icobtn{background:var(--bg3);border:1px solid var(--bd);color:var(--t2);width:32px;height:32px;border-radius:var(--rsm);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
@@ -452,15 +453,16 @@ textarea.set-input{resize:vertical;min-height:80px;line-height:1.5;}
 
 @media(max-width:768px){
   /* Left sidebar — below topbar so settings always accessible */
-  .sb{position:fixed;left:0;top:calc(var(--top-h) + env(safe-area-inset-top,0px));height:calc(100dvh - var(--top-h) - env(safe-area-inset-top,0px));transform:translateX(-100%);z-index:200;}
-  .sb.open{transform:translateX(0);}
+  .sb{position:fixed !important;left:0 !important;top:calc(var(--top-h) + env(safe-area-inset-top,0px)) !important;height:calc(var(--app-height,100dvh) - var(--top-h) - env(safe-area-inset-top,0px)) !important;width:280px !important;max-width:85vw !important;margin-left:0 !important;transform:translateX(-105%) !important;z-index:200 !important;}
+  .sb.closed{transform:translateX(-105%) !important;margin-left:0 !important;}
+  .sb.open{transform:translateX(0) !important;margin-left:0 !important;}
   /* Right memory panel — same: below topbar */
-  .mpanel{position:fixed !important;right:0;top:calc(var(--top-h) + env(safe-area-inset-top,0px));height:calc(100dvh - var(--top-h) - env(safe-area-inset-top,0px));z-index:200;transform:translateX(100%);}
-  .mpanel.closed{transform:translateX(100%);}
-  .mpanel:not(.closed){transform:translateX(0);}
+  .mpanel{position:fixed !important;right:0 !important;top:calc(var(--top-h) + env(safe-area-inset-top,0px)) !important;height:calc(var(--app-height,100dvh) - var(--top-h) - env(safe-area-inset-top,0px)) !important;width:280px !important;max-width:88vw !important;margin-right:0 !important;z-index:200 !important;transform:translateX(105%) !important;}
+  .mpanel.closed{transform:translateX(105%) !important;margin-right:0 !important;}
+  .mpanel:not(.closed){transform:translateX(0) !important;margin-right:0 !important;}
   /* Overlay only dims below topbar */
   #ov{top:calc(var(--top-h) + env(safe-area-inset-top,0px));}
-  .mb-menu{display:flex;}
+  .mb-menu{display:flex !important;}
   .in-meta{display:none;}
   /* Original 2-column grid */
   .matrix-grid{grid-template-columns:repeat(2,1fr);}
@@ -862,9 +864,9 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
     <div class="ssect">
       <button id="toggle-clients-btn" style="display:flex;align-items:center;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:8px">
         <span class="sbl" style="margin-bottom:0">🏰 Empire Pillars</span>
-        <span id="client-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);transition:transform .25s;transform:rotate(-90deg)">▲</span>
+        <span id="client-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);transition:transform .25s">▼</span>
       </button>
-      <div id="client-panel" style="overflow:hidden;max-height:0px;transition:max-height .35s ease;">
+      <div id="client-panel" style="overflow:hidden;max-height:420px;transition:max-height .35s ease;">
         <div id="client-list" class="qacts"></div>
         <button class="qbtn" id="add-client-btn" style="margin-top:4px;border:1px dashed var(--bd2);background:none;justify-content:center;opacity:.7">
           <span>+ Add Entity</span>
@@ -884,7 +886,7 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
         <span class="sbl" style="margin-bottom:0">📂 Recent Chats</span>
         <span id="hist-arrow" style="margin-left:auto;font-size:9px;color:var(--t3);transition:transform .25s">▼</span>
       </button>
-      <div id="hist" class="qacts" style="overflow:hidden;max-height:0"></div>
+      <div id="hist" class="qacts" style="overflow:hidden;max-height:360px"></div>
     </div>
     <div class="ssect">
       <span class="sbl">Model Selection</span>
@@ -2384,22 +2386,48 @@ function detectIntent(text) {
 
 // ── SIDEBAR ──
 function openSb() {
-  document.getElementById('sb')?.classList.add('open');
-  const ov = document.getElementById('sb-overlay') || document.getElementById('ov');
-  ov?.classList.add('open');
+  const sb = document.getElementById('sb');
+  sb?.classList.remove('closed');
+  sb?.classList.add('open');
+  if (window.innerWidth <= 768) {
+    document.getElementById('mpanel')?.classList.add('closed');
+    const ov = document.getElementById('sb-overlay') || document.getElementById('ov');
+    ov?.classList.add('open');
+  }
 }
 function closeSb() {
-  document.getElementById('sb')?.classList.remove('open');
+  const sb = document.getElementById('sb');
+  sb?.classList.remove('open');
+  if (window.innerWidth > 768) {
+    // On desktop, keep left sidebar visible unless explicitly toggled via toggleSidebar
+  }
   const ov = document.getElementById('sb-overlay') || document.getElementById('ov');
-  ov?.classList.remove('open');
+  if (document.getElementById('mpanel')?.classList.contains('closed')) {
+    ov?.classList.remove('open');
+  }
 }
 
 // FIX: openMpanel/closeMpanel defined (were on window bridge but never existed)
 function openMpanel() {
   document.getElementById('mpanel')?.classList.remove('closed');
+  if (window.innerWidth <= 768) {
+    document.getElementById('sb')?.classList.remove('open');
+    const ov = document.getElementById('sb-overlay') || document.getElementById('ov');
+    ov?.classList.add('open');
+  }
 }
 function closeMpanel() {
   document.getElementById('mpanel')?.classList.add('closed');
+  const ov = document.getElementById('sb-overlay') || document.getElementById('ov');
+  if (!document.getElementById('sb')?.classList.contains('open')) {
+    ov?.classList.remove('open');
+  }
+}
+function toggleMpanel() {
+  const mp = document.getElementById('mpanel');
+  if (!mp) return;
+  if (mp.classList.contains('closed')) openMpanel();
+  else closeMpanel();
 }
 
 function togglePortfolio() {
@@ -3416,7 +3444,8 @@ async function callAI() {
           system: sys,
           model: chosen,
           stream: false,
-          activeSkill: state.activeSkill
+          activeSkill: state.activeSkill,
+          clientKeys: keys
         }),
         signal
       });
@@ -4473,6 +4502,22 @@ async function boot() {
   try { if (typeof updateModelBadge === 'function') updateModelBadge(state.model); } catch(e) {}
   try { if (typeof initMemoryHub === 'function') initMemoryHub(); } catch(e) {}
 
+  // Ensure Left and Right sidebars are properly initialized for Desktop vs Mobile
+  try {
+    const sbEl = document.getElementById('sb');
+    const mpEl = document.getElementById('mpanel');
+    const ovEl = document.getElementById('ov');
+    if (window.innerWidth > 768) {
+      sbEl?.classList.remove('closed', 'open');
+      mpEl?.classList.remove('closed');
+      ovEl?.classList.remove('open');
+    } else {
+      sbEl?.classList.remove('open', 'closed');
+      mpEl?.classList.add('closed');
+      ovEl?.classList.remove('open');
+    }
+  } catch(e) {}
+
   // App.init() ALWAYS runs — this is what wires every button and event
   try {
     App.init();
@@ -4540,15 +4585,14 @@ const App = {
   bindEvents() {
 
     // ─ § NAVIGATION ──────────────────────────────────────────────
-    this._on('mb-menu',      'click', () => this.toggleSidebar(true));
-    this._on('new-chat-btn', 'click', () => { newChat(); this.toggleSidebar(false); });
-    this._on('logo-btn',     'click', () => { newChat(); this.toggleSidebar(false); });
-    this.dom.ov?.addEventListener('click', () => this.toggleSidebar(false));
+    this._on('mb-menu',      'click', () => this.toggleSidebar());
+    this._on('new-chat-btn', 'click', () => { newChat(); if (window.innerWidth <= 768) this.toggleSidebar(false); });
+    this._on('logo-btn',     'click', () => { newChat(); if (window.innerWidth <= 768) this.toggleSidebar(false); });
+    this.dom.ov?.addEventListener('click', () => { this.toggleSidebar(false); closeMpanel(); });
 
 
     // ─ § NEW VERSION BUTTON IDs (uploaded shell) ─────────────────
-    this._on('new-chat-btn',       'click', () => { newChat(); this.toggleSidebar(false); });
-    this._on('mb-menu-btn',        'click', () => this.toggleSidebar(true));
+    this._on('mb-menu-btn',        'click', () => this.toggleSidebar());
     this._on('toggle-clients-btn', 'click', () => this._toggleCollapsible('client-panel','client-arrow'));
     this._on('toggle-history-btn', 'click', () => this._toggleCollapsible('hist','hist-arrow'));
     this._on('add-client-btn',     'click', () => addNewClient());
@@ -4556,7 +4600,7 @@ const App = {
     this._on('gen-image-nav-btn',  'click', () => { closeSb(); this.toggleModal('image-modal', true); });
     this._on('attach-file-nav-btn','click', () => this.dom.fileInput?.click());
     this._on('tb-gen-img-btn',     'click', () => this.toggleModal('image-modal', true));
-    this._on('tb-mem-hub-btn',     'click', () => openMpanel());
+    this._on('tb-mem-hub-btn',     'click', () => toggleMpanel());
     this._on('tb-settings-btn',    'click', () => { this._reloadKeyFields(); this.toggleModal('settings-modal', true); });
     this._on('close-mpanel-btn',   'click', () => closeMpanel());
     this._on('close-voice-btn',    'click', () => { window.BillyLive && BillyLive.close(); window.logFeed && window.logFeed('system', 'Voice session ended'); });
@@ -4837,9 +4881,21 @@ const App = {
 
   // ── Modal / Sidebar ───────────────────────────────────────────
   toggleSidebar(force) {
-    const show = force !== undefined ? force : !this.dom.sb?.classList.contains('open');
-    this.dom.sb?.classList.toggle('open', show);
-    this.dom.ov?.classList.toggle('open', show);
+    const sb = this.dom.sb || document.getElementById('sb');
+    if (!sb) return;
+    if (window.innerWidth <= 768) {
+      const show = force !== undefined ? force : !sb.classList.contains('open');
+      sb.classList.toggle('open', show);
+      sb.classList.remove('closed');
+      if (show) document.getElementById('mpanel')?.classList.add('closed');
+      this.dom.ov?.classList.toggle('open', show);
+    } else {
+      const isClosed = sb.classList.contains('closed');
+      const show = force !== undefined ? force : isClosed;
+      sb.classList.toggle('closed', !show);
+      sb.classList.remove('open');
+      this.dom.ov?.classList.remove('open');
+    }
   },
 
   toggleModal(id, force) {
