@@ -19,11 +19,29 @@ function cleanAiOutput(text) {
 }
 
 async function serverWebSearch(query) {
-  // Primary: DuckDuckGo Lite via Jina Reader (Zero bot challenges, high-density live text & URLs)
+  // Primary: Swisscows via Jina Reader (Zero bot challenges, 100% clean live markdown snippets, scores, finance & news)
+  try {
+    const scUrl = 'https://swisscows.com/en/web?query=' + encodeURIComponent(query);
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6500);
+    const res = await fetch('https://r.jina.ai/' + scUrl, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+    if (res.ok) {
+      let text = (await res.text()).trim().slice(0, 7000);
+      if (text.length > 100 && !text.includes('confirm') && !text.includes('challenge')) return text;
+    }
+  } catch (e) {
+    console.warn('[serverWebSearch] Swisscows via Jina failed:', e.message);
+  }
+
+  // Fallback 1: DuckDuckGo Lite via Jina Reader
   try {
     const liteUrl = 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query);
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const tid = setTimeout(() => ctrl.abort(), 5500);
     const res = await fetch('https://r.jina.ai/' + liteUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
       signal: ctrl.signal
@@ -34,35 +52,11 @@ async function serverWebSearch(query) {
       text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
         try { return decodeURIComponent(enc); } catch { return enc; }
       });
-      text = text.trim().slice(0, 7000);
-      if (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) return text;
-    }
-  } catch (e) {
-    console.warn('[serverWebSearch] DuckDuckGo Lite failed:', e.message);
-  }
-
-  // Fallback 1: DuckDuckGo HTML via Jina Reader
-  try {
-    const ddgUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 5500);
-    const res = await fetch('https://r.jina.ai/' + ddgUrl, {
-      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
-      signal: ctrl.signal
-    });
-    clearTimeout(tid);
-    if (res.ok) {
-      let text = await res.text();
-      const markerIdx = text.indexOf('Past Year');
-      if (markerIdx !== -1) text = text.slice(markerIdx + 9);
-      text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
-        try { return decodeURIComponent(enc); } catch { return enc; }
-      });
       text = text.trim().slice(0, 6500);
       if (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) return text;
     }
   } catch (e) {
-    console.warn('[serverWebSearch] DuckDuckGo HTML failed:', e.message);
+    console.warn('[serverWebSearch] DuckDuckGo Lite failed:', e.message);
   }
 
   // Fallback 2: DuckDuckGo Instant Answer API

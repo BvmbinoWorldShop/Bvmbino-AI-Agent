@@ -3796,53 +3796,33 @@ async function readUrl(url) {
   return '';
 }
 
-// Web search — multi-backend with fallback chain (100% keyless via r.jina.ai + optional s.jina.ai)
+// Web search — multi-backend with fallback chain (Swisscows via Jina + DuckDuckGo Lite)
 async function webSearch(query) {
   const _jinaKey = localStorage.getItem('bv_key_jina') || '';
   const _jinaAuth = _jinaKey ? { 'Authorization': 'Bearer ' + _jinaKey } : {};
 
-  // Primary (when Jina API key is configured): Jina Search API (s.jina.ai)
-  if (_jinaKey) {
-    try {
-      const res = await fetch('https://s.jina.ai/' + encodeURIComponent(query), {
-        headers: { 'Accept': 'text/plain', 'X-Respond-With': 'no-references', 'X-Return-Format': 'text', ..._jinaAuth },
-        signal: _abortIn(5000),
-      });
-      if (res.ok) {
-        const text = (await res.text()).slice(0, 7000).trim();
-        if (text.length > 100 && !text.includes('AuthenticationRequiredError')) return text;
-      }
-    } catch(e) { console.warn('s.jina.ai failed:', e.message); }
-  }
+  // Primary: Swisscows via Jina Reader (Zero bot challenges, 100% clean live markdown snippets, scores, finance & news)
+  try {
+    const scUrl = 'https://swisscows.com/en/web?query=' + encodeURIComponent(query);
+    const res = await fetch('https://r.jina.ai/' + scUrl, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text', ..._jinaAuth },
+      signal: _abortIn(6500),
+    });
+    if (res.ok) {
+      let text = (await res.text()).trim().slice(0, 7000);
+      if (text.length > 100 && !text.includes('confirm') && !text.includes('challenge')) return text;
+    }
+  } catch(e) { console.warn('Swisscows via Jina failed:', e.message); }
 
-  // Primary Keyless Engine: Jina Reader on DuckDuckGo Lite (Ultra-fast, zero challenge, high-density live text & URLs)
+  // Fallback 1: DuckDuckGo Lite via Jina Reader
   try {
     const liteUrl = 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query);
     const res = await fetch('https://r.jina.ai/' + liteUrl, {
-      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text', ..._jinaAuth },
-      signal: _abortIn(6000),
-    });
-    if (res.ok) {
-      let text = await res.text();
-      text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
-        try { return decodeURIComponent(enc); } catch { return enc; }
-      });
-      text = text.trim().slice(0, 7000);
-      if (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) return text;
-    }
-  } catch {}
-
-  // Fallback 1: Jina Reader on DuckDuckGo HTML
-  try {
-    const ddgUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
-    const res = await fetch('https://r.jina.ai/' + ddgUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text', ..._jinaAuth },
       signal: _abortIn(5500),
     });
     if (res.ok) {
       let text = await res.text();
-      const markerIdx = text.indexOf('Past Year');
-      if (markerIdx !== -1) text = text.slice(markerIdx + 9);
       text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
         try { return decodeURIComponent(enc); } catch { return enc; }
       });
