@@ -1134,12 +1134,39 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
         <div class="api-notice" style="margin-top:8px">Stored in localStorage only. Sent directly to each provider — never proxied or logged.</div>
       </div>
       <div>
-        <span class="lbl">🔗 Automation Hub</span>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
-          <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">n8n Webhook URL</div><input class="set-input" type="text" id="set-n8n-url" placeholder="https://…n8n.cloud/webhook/…" autocomplete="off"></div>
-          <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Gmail App Password</div><input class="set-input" type="password" id="set-gmail-pass" placeholder="xxxx xxxx xxxx xxxx" autocomplete="off"></div>
-          <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Slack Webhook URL</div><input class="set-input" type="text" id="set-slack-url" placeholder="https://hooks.slack.com/…" autocomplete="off"></div>
-          <button id="save-automation-btn" class="nbtn">💾 Save Automation Config</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span class="lbl">🔗 Automation Hub (Active Connectors)</span>
+          <span class="badge b-gn" id="hub-overall-status">Live Connectors</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <div style="background:var(--s2);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600;color:var(--pu2)">⚡ n8n Webhook Connector</span>
+              <span id="stat-n8n" style="font-size:10px;color:var(--t3)">Not tested</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <input class="set-input" type="text" id="set-n8n-url" placeholder="https://…n8n.cloud/webhook/…" autocomplete="off" style="flex:1">
+              <button class="nbtn" style="width:auto;padding:0 14px;font-size:11px" onclick="window.testConnector && window.testConnector('n8n')">⚡ Ping</button>
+            </div>
+          </div>
+          <div style="background:var(--s2);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600;color:var(--t1)">💬 Slack Webhook Connector</span>
+              <span id="stat-slack" style="font-size:10px;color:var(--t3)">Not tested</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <input class="set-input" type="text" id="set-slack-url" placeholder="https://hooks.slack.com/services/…" autocomplete="off" style="flex:1">
+              <button class="nbtn" style="width:auto;padding:0 14px;font-size:11px;background:var(--s1);color:var(--t1)" onclick="window.testConnector && window.testConnector('slack')">💬 Ping</button>
+            </div>
+          </div>
+          <div style="background:var(--s2);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600;color:var(--t1)">📧 Gmail Automation Credentials</span>
+              <span id="stat-gmail" style="font-size:10px;color:var(--t3)">App Password</span>
+            </div>
+            <input class="set-input" type="password" id="set-gmail-pass" placeholder="xxxx xxxx xxxx xxxx" autocomplete="off">
+          </div>
+          <button id="save-automation-btn" class="nbtn" style="margin-top:2px">💾 Save Automation Config</button>
         </div>
       </div>
       <div>
@@ -3952,26 +3979,26 @@ async function handleScrape(url) {
   }
 }
 
-// ── 100% IN-APP IMAGE GENERATION (ZERO REDIRECTS · NANO BANANA GEMINI) ──
+// ── 100% IN-APP IMAGE GENERATION (NANO BANANA GEMINI ENGINE) ──
 let _imgGenActive = false;
 async function generateImage(prompt, size = '768x768', quality = 'standard') {
-  if (_imgGenActive) throw new Error('Already generating an image — please wait');
   _imgGenActive = true;
   try {
     const [w, h] = size.split('x').map(x => parseInt(x, 10) || 768);
-    const geminiKey = safeKey(
+    const rawGemini = (
       localStorage.getItem('bv_key_gemini') ||
       localStorage.getItem('bvmbino_key_gemini') ||
       localStorage.getItem('gemini_key') ||
       localStorage.getItem('google_api_key') || ''
     );
+    const geminiKey = String(rawGemini).replace(/[^\x20-\x7E]/g, '').trim();
     const openaiKey = safeKey(localStorage.getItem('bv_key_openai') || localStorage.getItem('bvmbino_key_openai') || '');
     const hfKey     = safeKey(localStorage.getItem('bv_key_huggingface') || '');
 
-    // 1. Primary: Sovereign /api/image Serverless Multi-Engine (Gemini Nano Banana + base64)
+    // 1. Primary: Serverless /api/image Multi-Engine Cascade
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 24000);
+      const timer = setTimeout(() => ctrl.abort(), 26000);
       const res = await fetch('/api/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3979,27 +4006,36 @@ async function generateImage(prompt, size = '768x768', quality = 'standard') {
         signal: ctrl.signal
       });
       clearTimeout(timer);
-      if (res.ok) {
-        const d = await res.json();
-        if (d.url) return d.url;
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) {
+        return data.url;
+      }
+      if (!res.ok && data.error && !geminiKey) {
+        throw new Error(data.error);
       }
     } catch (e) {
-      console.warn('/api/image endpoint unreachable, attempting browser direct engines:', e.message);
+      if (e.message && e.message.includes('No image engine key') || e.message.includes('Google Gemini')) {
+        throw e;
+      }
+      console.warn('/api/image error, trying direct browser engine:', e.message);
     }
 
-    // 2. Direct Gemini Multimodal Engine (client-side fallback if serverless unreachable)
+    // 2. Direct Gemini Multimodal Engine (client-side fallback with user's key)
     if (geminiKey) {
       const directEndpoints = [
         {
           model: 'gemini-2.5-flash-image',
           url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiKey}`,
-          body: { contents: [{ parts: [{ text: `Generate a detailed, high quality image of: ${prompt}` }] }] }
+          body: {
+            contents: [{ role: 'user', parts: [{ text: `Generate a detailed, high-resolution photorealistic image: ${prompt}` }] }],
+            generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+          }
         },
         {
           model: 'gemini-2.0-flash-exp',
           url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`,
           body: {
-            contents: [{ parts: [{ text: `Generate a detailed, high quality image of: ${prompt}` }] }],
+            contents: [{ role: 'user', parts: [{ text: `Generate a photorealistic image: ${prompt}` }] }],
             generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
           }
         },
@@ -4007,7 +4043,7 @@ async function generateImage(prompt, size = '768x768', quality = 'standard') {
           model: 'gemini-2.0-flash',
           url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
           body: {
-            contents: [{ parts: [{ text: `Generate a detailed, high quality image of: ${prompt}` }] }],
+            contents: [{ role: 'user', parts: [{ text: `Generate an image: ${prompt}` }] }],
             generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
           }
         }
@@ -4016,7 +4052,7 @@ async function generateImage(prompt, size = '768x768', quality = 'standard') {
       for (const ep of directEndpoints) {
         try {
           const ctrl = new AbortController();
-          const timer = setTimeout(() => ctrl.abort(), 18000);
+          const timer = setTimeout(() => ctrl.abort(), 20000);
           const gRes = await fetch(ep.url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
@@ -4030,9 +4066,10 @@ async function generateImage(prompt, size = '768x768', quality = 'standard') {
             for (const cand of candidates) {
               const parts = cand.content?.parts || [];
               for (const p of parts) {
-                if (p.inlineData && p.inlineData.data) {
-                  const mime = p.inlineData.mimeType || 'image/jpeg';
-                  return `data:${mime};base64,${p.inlineData.data}`;
+                const inline = p.inlineData || p.inline_data;
+                if (inline && inline.data) {
+                  const mime = inline.mimeType || inline.mime_type || 'image/png';
+                  return `data:${mime};base64,${inline.data}`;
                 }
               }
             }
@@ -4043,32 +4080,7 @@ async function generateImage(prompt, size = '768x768', quality = 'standard') {
       }
     }
 
-    // 3. Procedural In-App Visual Art (Guaranteed 100% In-App Base64 Canvas)
-    const safeP = prompt.replace(/[<>&"']/g, '').slice(0, 100);
-    const hash = Array.from(safeP).reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xffffff, 0);
-    const h1 = hash % 360;
-    const h2 = (h1 + 60) % 360;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="hsl(${h1}, 70%, 12%)"/>
-      <stop offset="50%" stop-color="#0a0800"/>
-      <stop offset="100%" stop-color="hsl(${h2}, 80%, 10%)"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#f59e0b"/>
-      <stop offset="50%" stop-color="#e8a912"/>
-      <stop offset="100%" stop-color="#fbbf24"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="800" fill="url(#bg)"/>
-  <circle cx="400" cy="380" r="160" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.7"/>
-  <circle cx="400" cy="380" r="110" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="6,6" opacity="0.8"/>
-  <rect x="60" y="640" width="680" height="100" rx="10" fill="#0f0c02" stroke="#e8a912" stroke-opacity="0.3"/>
-  <text x="400" y="680" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" fill="#e8a912" text-anchor="middle">BVMBINO AI · IN-APP ART</text>
-  <text x="400" y="715" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" fill="#ffffff" text-anchor="middle">"${safeP}"</text>
-</svg>`;
-    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+    throw new Error('Image generation could not complete. Please verify your free Google AI Studio key in ⚙️ Settings (aistudio.google.com/apikey).');
   } finally {
     _imgGenActive = false;
   }
@@ -4112,6 +4124,62 @@ async function copyImgToClipboard(url) {
 }
 window.copyImgToClipboard = copyImgToClipboard;
 
+window.testConnector = async function(type) {
+  if (type === 'n8n') {
+    const url = document.getElementById('set-n8n-url')?.value.trim() || localStorage.getItem('bv_n8n_url') || '';
+    const stat = document.getElementById('stat-n8n');
+    if (!url) { toast('Please enter an n8n webhook URL first'); return; }
+    if (stat) stat.innerHTML = '<span class="pulse" style="color:var(--pu2)"></span> Pinging…';
+    const start = Date.now();
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'ping_test',
+          source: 'bvmbino_command_hub',
+          timestamp: new Date().toISOString(),
+          message: 'Bvmbino AI Connector Hub ping verified.'
+        })
+      });
+      const latency = Date.now() - start;
+      if (res.ok || res.status < 500) {
+        if (stat) stat.innerHTML = `<span style="color:var(--gn)">● Connected (${latency}ms)</span>`;
+        toast(`n8n Connected ✓ (${latency}ms)`);
+      } else {
+        if (stat) stat.innerHTML = `<span style="color:var(--rd)">● HTTP ${res.status}</span>`;
+        toast(`n8n returned HTTP ${res.status}`);
+      }
+    } catch(e) {
+      if (stat) stat.innerHTML = `<span style="color:var(--rd)">● Error (${e.message})</span>`;
+      toast(`n8n ping failed: ${e.message}`);
+    }
+  }
+  if (type === 'slack') {
+    const url = document.getElementById('set-slack-url')?.value.trim() || localStorage.getItem('bv_slack_url') || '';
+    const stat = document.getElementById('stat-slack');
+    if (!url) { toast('Please enter a Slack webhook URL first'); return; }
+    if (stat) stat.innerHTML = '<span class="pulse" style="color:var(--pu2)"></span> Pinging…';
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: '⚡ Bvmbino AI Agent Automation Hub: Connector test successful!' })
+      });
+      if (res.ok) {
+        if (stat) stat.innerHTML = '<span style="color:var(--gn)">● Connected ✓</span>';
+        toast('Slack Connected ✓');
+      } else {
+        if (stat) stat.innerHTML = `<span style="color:var(--rd)">● Error ${res.status}</span>`;
+        toast(`Slack returned ${res.status}`);
+      }
+    } catch(e) {
+      if (stat) stat.innerHTML = `<span style="color:var(--rd)">● Error (${e.message})</span>`;
+      toast(`Slack ping failed: ${e.message}`);
+    }
+  }
+};
+
 async function generateAndDeliverImage(prompt, size = '768x768', quality = 'standard') {
   const ci = document.getElementById('ci');
   if (!ci) return;
@@ -4129,11 +4197,11 @@ async function generateAndDeliverImage(prompt, size = '768x768', quality = 'stan
   row.innerHTML = `
     <div class="av av-ai">🎨</div>
     <div class="mwrap">
-      <div class="mmeta ai-meta">AI ART ENGINE · GENERATING</div>
-      <p style="color:var(--t2);font-size:12px;margin-bottom:8px">Creating visual for: <strong>${esc(prompt)}</strong>…</p>
+      <div class="mmeta ai-meta">NANO BANANA AI ENGINE · RENDERING</div>
+      <p style="color:var(--t2);font-size:12px;margin-bottom:8px">Creating photorealistic visual for: <strong>${esc(prompt)}</strong>…</p>
       <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(232,169,18,.06);border:1px solid var(--bd2);border-radius:8px">
         <span class="pulse" style="color:var(--pu2)"></span>
-        <span style="font-size:11px;color:var(--t3);font-family:var(--mono)">Rendering visual inside chat · 100% in-app · zero redirect…</span>
+        <span style="font-size:11px;color:var(--t3);font-family:var(--mono)">Generating 100% in-app visual · Zero external redirect…</span>
       </div>
     </div>`;
   ci.appendChild(row);
@@ -4141,7 +4209,7 @@ async function generateAndDeliverImage(prompt, size = '768x768', quality = 'stan
 
   try {
     const url = await generateImage(prompt, size, quality);
-    if (!url) throw new Error('No image URL returned');
+    if (!url) throw new Error('No image returned');
 
     row.innerHTML = `
       <div class="av av-ai">🎨</div>
@@ -4170,7 +4238,11 @@ async function generateAndDeliverImage(prompt, size = '768x768', quality = 'stan
       <div class="av av-ai">⚠️</div>
       <div class="mwrap">
         <div class="mmeta ai-meta" style="color:var(--rd)">IMAGE GENERATION ERROR</div>
-        <p style="color:var(--rd);font-size:12px">${esc(err.message)}</p>
+        <p style="color:var(--rd);font-size:12px;margin-bottom:10px">${esc(err.message)}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="mact" onclick="window.toggleSettings && window.toggleSettings(true)" style="color:var(--pu2);border-color:var(--pu2)">⚙️ Open Settings to Add Gemini Key</button>
+          <button class="mact" onclick="window.generateAndDeliverImage && window.generateAndDeliverImage('${esc(prompt)}')">🔄 Retry</button>
+        </div>
       </div>`;
     toast('Image generation failed: ' + err.message);
   }
