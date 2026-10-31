@@ -1,8 +1,7 @@
-const CACHE_NAME = 'bvmbino-sovereign-v6.2';
+const CACHE_NAME = 'bvmbino-sovereign-v6.3';
 const ASSETS = [
   '/',
   '/index.html',
-  '/mobile-enhancements.css',
   '/manifest.json'
 ];
 
