@@ -10,10 +10,81 @@ export default async function handler(req, res) {
     const { prompt, width = 768, height = 768, quality = 'standard', keys = {} } = body;
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
+    const geminiKey = keys.gemini || req.headers['x-gemini-key'] || process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
     const openaiKey = keys.openai || req.headers['x-openai-key'] || process.env.OPENAI_API_KEY || '';
     const hfKey = keys.huggingface || req.headers['x-hf-key'] || process.env.HUGGINGFACE_API_KEY || '';
 
-    // 1. OpenAI DALL-E 3 (if key provided)
+    // ── 1. GOOGLE GEMINI NANO BANANA (IMAGEN 3) ENGINE (100% Free of Charge) ──
+    if (geminiKey) {
+      // Primary: Google Imagen 3 (imagen-3.0-generate-002)
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 22000);
+        const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`;
+        const gRes = await fetch(gUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [{ prompt }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: '1:1',
+              outputMimeType: 'image/jpeg'
+            }
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          const b64 = gData.predictions?.[0]?.bytesBase64Encoded;
+          if (b64) {
+            return res.status(200).json({
+              success: true,
+              url: `data:image/jpeg;base64,${b64}`,
+              model: 'gemini-imagen-3-nano-banana'
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[image] Gemini Imagen 3 error:', e.message);
+      }
+
+      // Secondary: Gemini 2.0 Flash Multimodal Image Generation
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 20000);
+        const flashUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${geminiKey}`;
+        const flashRes = await fetch(flashUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `Generate an image: ${prompt}` }] }],
+            generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+        if (flashRes.ok) {
+          const fData = await flashRes.json();
+          const parts = fData.candidates?.[0]?.content?.parts || [];
+          for (const p of parts) {
+            if (p.inlineData && p.inlineData.data) {
+              const mime = p.inlineData.mimeType || 'image/png';
+              return res.status(200).json({
+                success: true,
+                url: `data:${mime};base64,${p.inlineData.data}`,
+                model: 'gemini-2.0-flash-nano-banana'
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[image] Gemini 2.0 Flash error:', e.message);
+      }
+    }
+
+    // ── 2. OPENAI DALL-E 3 (if key provided) ──
     if (openaiKey) {
       try {
         const ctrl = new AbortController();
@@ -36,7 +107,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 2. Hugging Face Inference FLUX.1-schnell (if key provided)
+    // ── 3. HUGGING FACE FLUX.1-SCHNELL (if key provided) ──
     if (hfKey) {
       try {
         const ctrl = new AbortController();
@@ -62,13 +133,17 @@ export default async function handler(req, res) {
       }
     }
 
-    // 3. Free Tier Engine: Pollinations Turbo (Ultra-fast, SDXL Turbo, verified working)
+    // ── 4. FREE TIER DIFFUSION ENGINE: Pollinations Turbo ──
+    // Fetched server-side with browser User-Agent
     try {
       const ctrl = new AbortController();
       const tid = setTimeout(() => ctrl.abort(), 12000);
       const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true&seed=${Date.now()}&model=turbo`;
       const pRes = await fetch(pollUrl, {
-        headers: { 'User-Agent': 'Bvmbino-Agent/6.2' },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+        },
         signal: ctrl.signal
       });
       clearTimeout(tid);
@@ -88,16 +163,15 @@ export default async function handler(req, res) {
       console.warn('[image] Pollinations Turbo error:', e.message);
     }
 
-    // 4. Free Tier Fallback: Curated Visual Stream
-    const cleanKw = encodeURIComponent(prompt.replace(/[^\w\s]/g, '').slice(0, 60));
-    const fallbackUrl = `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
+    // Direct URL fallback from Pollinations Turbo (client-side render)
+    const directUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true&seed=${Date.now()}&model=turbo`;
     return res.status(200).json({
       success: true,
-      url: fallbackUrl,
-      model: 'curated-visual-fallback'
+      url: directUrl,
+      model: 'pollinations-turbo-direct'
     });
 
   } catch (err) {
-    return res.status(500).json({ error: err.message || 'Internal server error' });
+    return res.status(500).json({ error: err.message || 'Image generation failed' });
   }
 }
