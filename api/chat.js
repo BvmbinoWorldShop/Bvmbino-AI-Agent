@@ -19,6 +19,29 @@ function cleanAiOutput(text) {
 }
 
 async function serverWebSearch(query) {
+  // Primary: DuckDuckGo Lite via Jina Reader (Zero bot challenges, high-density live text & URLs)
+  try {
+    const liteUrl = 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query);
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch('https://r.jina.ai/' + liteUrl, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+    if (res.ok) {
+      let text = await res.text();
+      text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
+        try { return decodeURIComponent(enc); } catch { return enc; }
+      });
+      text = text.trim().slice(0, 7000);
+      if (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) return text;
+    }
+  } catch (e) {
+    console.warn('[serverWebSearch] DuckDuckGo Lite failed:', e.message);
+  }
+
+  // Fallback 1: DuckDuckGo HTML via Jina Reader
   try {
     const ddgUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
     const ctrl = new AbortController();
@@ -36,11 +59,30 @@ async function serverWebSearch(query) {
         try { return decodeURIComponent(enc); } catch { return enc; }
       });
       text = text.trim().slice(0, 6500);
-      if (text.length > 80) return text;
+      if (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) return text;
     }
   } catch (e) {
-    console.warn('[serverWebSearch] DuckDuckGo via Jina failed:', e.message);
+    console.warn('[serverWebSearch] DuckDuckGo HTML failed:', e.message);
   }
+
+  // Fallback 2: DuckDuckGo Instant Answer API
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 3500);
+    const ddg = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (ddg.ok) {
+      const d = await ddg.json();
+      let r = '';
+      if (d.AbstractText) r += d.AbstractText + '\n';
+      if (d.Answer)       r += 'Answer: ' + d.Answer + '\n';
+      if (d.Definition)   r += 'Definition: ' + d.Definition + '\n';
+      const tops = (d.RelatedTopics || []).slice(0, 5).map(t => t.Text || '').filter(Boolean);
+      if (tops.length) r += tops.join('\n');
+      if (r.trim().length > 50) return r.trim();
+    }
+  } catch {}
+
   return '';
 }
 

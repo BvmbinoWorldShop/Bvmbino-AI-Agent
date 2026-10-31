@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bvmbino-sovereign-v6.4';
+const CACHE_NAME = 'bvmbino-sovereign-v6.5';
 const ASSETS = [
   '/',
   '/index.html',
