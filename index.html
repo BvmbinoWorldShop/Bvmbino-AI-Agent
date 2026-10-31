@@ -97,8 +97,6 @@ body::before{
 
 .main{flex:1;display:flex;flex-direction:column;height:var(--app-height,100dvh);min-height:0;overflow:hidden;}
 .topbar{height:calc(var(--top-h) + env(safe-area-inset-top,0px));background:var(--bg2);border-bottom:1px solid var(--bd);display:flex;align-items:flex-end;justify-content:space-between;padding:0 14px 6px;padding-top:env(safe-area-inset-top,0px);flex-shrink:0;gap:8px;}
-.tb-new-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;font-size:11px;font-weight:700;font-family:var(--mono);background:rgba(232,169,18,.12);border:1px solid var(--bd2);color:var(--pu2);border-radius:6px;cursor:pointer;white-space:nowrap;margin-right:6px;transition:background .2s,border-color .2s;}
-.tb-new-btn:hover{background:rgba(232,169,18,.25);border-color:var(--pu);}
 .tb-left{display:flex;align-items:center;gap:10px;min-width:0;}
 .tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .mb-menu{display:none;background:none;border:1px solid var(--bd);color:var(--t2);width:32px;height:32px;border-radius:var(--rsm);cursor:pointer;font-size:14px;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
@@ -899,7 +897,6 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
   <div class="topbar">
     <div class="tb-left">
       <button class="mb-menu" id="mb-menu-btn">☰</button>
-      <button class="tb-new-btn" id="tb-new-chat-btn" title="Start New Conversation">➕ New</button>
       <div class="tb-title" id="tbtitle">Bvmbino Pro · Command Hub</div>
     </div>
     <div class="tb-right">
@@ -4769,7 +4766,6 @@ const App = {
     // ─ § NAVIGATION ──────────────────────────────────────────────
     this._on('mb-menu',      'click', () => this.toggleSidebar(true));
     this._on('new-chat-btn', 'click', () => { newChat(); this.toggleSidebar(false); });
-    this._on('tb-new-chat-btn', 'click', () => newChat());
     this._on('logo-btn',     'click', () => { newChat(); this.toggleSidebar(false); });
     this.dom.ov?.addEventListener('click', () => { this.toggleSidebar(false); closeMpanel(); });
 
