@@ -1704,6 +1704,46 @@ function mdHtml(text) {
   let html = '', inCode = false, codeBuf = '', lang = '', inTable = false, tableBuf = [];
   for (let i = 0; i < lines.length; i++) {
     const ln = lines[i];
+    // Google Calendar 1-Click Action Card
+    if (ln.startsWith('[CALENDAR_EVENT:')) {
+      const match = ln.match(/\[CALENDAR_EVENT:\s*([^|\]]+)\|\s*([^|\]]+)\|\s*([^|\]]+)\|\s*([^|\]]+)\|\s*([^\]]+)\]/);
+      if (match) {
+        const [_, title, start, end, loc, desc] = match;
+        const calUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title.trim())}&dates=${encodeURIComponent(start.trim())}/${encodeURIComponent(end.trim())}&location=${encodeURIComponent(loc.trim())}&details=${encodeURIComponent(desc.trim())}`;
+        html += `<div style="margin:12px 0;padding:12px 14px;background:rgba(232,169,18,.07);border:1px solid rgba(232,169,18,.25);border-radius:10px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--pu2);font-weight:700;letter-spacing:1px;margin-bottom:4px">📅 GOOGLE CALENDAR SYNC</div>
+          <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:2px">${esc(title.trim())}</div>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:6px">📍 ${esc(loc.trim())} · 🕒 ${esc(start.trim())}</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:10px;line-height:1.4">${esc(desc.trim())}</div>
+          <a href="${calUrl}" target="_blank" rel="noopener" class="nbtn" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;font-size:11px;width:auto;text-decoration:none">📅 Add to Google Calendar (1-Click)</a>
+        </div>`;
+        continue;
+      }
+    }
+
+    // Gmail Direct Outreach Card
+    if (ln.startsWith('[GMAIL_DRAFT:')) {
+      const gMatch = ln.match(/\[GMAIL_DRAFT:\s*([^|\]]+)\|\s*([^|\]]+)\|\s*([^\]]+)\]/);
+      if (gMatch) {
+        const [_, to, subject, body] = gMatch;
+        const cleanTo = to.trim();
+        const cleanSub = subject.trim();
+        const cleanBody = body.trim();
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(cleanTo)}&su=${encodeURIComponent(cleanSub)}&body=${encodeURIComponent(cleanBody)}`;
+        html += `<div style="margin:12px 0;padding:12px 14px;background:rgba(232,169,18,.07);border:1px solid rgba(232,169,18,.25);border-radius:10px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--pu2);font-weight:700;letter-spacing:1px;margin-bottom:4px">📧 GMAIL CLIENT OUTREACH</div>
+          <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px">To: <span style="font-family:var(--mono);color:var(--pu2)">${esc(cleanTo)}</span></div>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:6px">Subject: <strong>${esc(cleanSub)}</strong></div>
+          <div style="font-size:11px;color:var(--t2);background:rgba(0,0,0,.3);padding:8px;border-radius:6px;margin-bottom:10px;white-space:pre-wrap;line-height:1.4">${esc(cleanBody.slice(0, 300))}${cleanBody.length > 300 ? '…' : ''}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a href="${gmailUrl}" target="_blank" rel="noopener" class="nbtn" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;font-size:11px;width:auto;text-decoration:none">📧 Open in Gmail (1-Click Send)</a>
+            <button onclick="window.sendDirectEmail && window.sendDirectEmail('${esc(cleanTo)}', '${esc(cleanSub)}', '${esc(cleanBody)}', this)" class="nbtn" style="padding:6px 14px;font-size:11px;width:auto;background:var(--s1);color:var(--t1)">🚀 Dispatch via Connected Google Account</button>
+          </div>
+        </div>`;
+        continue;
+      }
+    }
+
     if (ln.startsWith('[IMAGE GENERATED:')) {
       const pMatch = ln.match(/\[IMAGE GENERATED:\s*([^\]]+)\]/);
       const prompt = pMatch ? pMatch[1] : 'AI Generated Image';
@@ -3503,6 +3543,16 @@ async function callAI() {
     tryOrder = [...new Set([...visionFirst, ...tryOrder])];
   }
 
+  // When PDFs / Documents attached, put multimodal document models at absolute front
+  const pendingPdfs = state._pendingPdfs || [];
+  if (pendingPdfs.length > 0) {
+    const pdfFirst = [];
+    if (keys.gemini)     pdfFirst.push('gemini-2.0-flash');
+    if (keys.anthropic)  pdfFirst.push('claude-haiku-4-5-20251001');
+    pdfFirst.push('google/gemini-2.0-flash-exp:free', 'deepseek/deepseek-chat-v3-0324:free');
+    tryOrder = [...new Set([...pdfFirst, ...tryOrder])];
+  }
+
   // Build clean messages; if images pending, last user msg becomes multipart
   const rawMsgs = state.msgs.slice(-25);
   const cleanMsgs = rawMsgs.map((m, idx) => {
@@ -4223,6 +4273,75 @@ async function copyImgToClipboard(url) {
   }
 }
 window.copyImgToClipboard = copyImgToClipboard;
+
+
+window.sendDirectEmail = async function(to, subject, body, btn) {
+  const user = localStorage.getItem('bv_google_email') || localStorage.getItem('bv_gmail_user') || document.getElementById('set-google-email')?.value.trim() || '';
+  const pass = localStorage.getItem('bv_gmail_pass') || document.getElementById('set-gmail-pass')?.value.trim() || '';
+  if (!user || !pass) {
+    toast('Please enter your Gmail and App Password in ⚙️ Settings first');
+    window.toggleSettings && window.toggleSettings(true);
+    return;
+  }
+  const oldText = btn ? btn.textContent : '';
+  if (btn) btn.textContent = '⏳ Dispatching…';
+  try {
+    const res = await fetch('/api/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, body, from: user, appPass: pass })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (btn) btn.textContent = '✅ Dispatched!';
+      toast('Email sent successfully via Gmail SMTP ✓');
+    } else {
+      throw new Error(data.error || 'Failed to dispatch email');
+    }
+  } catch(e) {
+    if (btn) btn.textContent = '❌ Failed';
+    toast('Error: ' + e.message);
+  } finally {
+    if (btn) setTimeout(() => { btn.textContent = oldText; }, 4000);
+  }
+};
+
+window.testGoogleConnection = async function() {
+  const user = document.getElementById('set-google-email')?.value.trim() || localStorage.getItem('bv_google_email') || '';
+  const pass = document.getElementById('set-gmail-pass')?.value.trim() || localStorage.getItem('bv_gmail_pass') || '';
+  const stat = document.getElementById('stat-google');
+  if (!user || !pass) {
+    toast('Enter your Gmail address and 16-character App Password');
+    return;
+  }
+  if (stat) stat.innerHTML = '<span class="pulse" style="color:var(--pu2)"></span> Connecting…';
+  try {
+    const res = await fetch('/api/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: user,
+        subject: '⚡ Bvmbino Sovereign Agent: Google Connection Verified',
+        body: 'Your Google Account is successfully connected to Bvmbino Sovereign Command Hub. Calendar and Email automation are 100% active.',
+        from: user,
+        appPass: pass
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (stat) stat.innerHTML = '<span style="color:var(--gn)">● Connected ✓</span>';
+      localStorage.setItem('bv_google_email', user);
+      localStorage.setItem('bv_gmail_pass', pass);
+      toast('Google Account Connected & Verified ✓');
+    } else {
+      if (stat) stat.innerHTML = '<span style="color:var(--rd)">● Auth Error</span>';
+      toast(data.error || 'Google connection failed');
+    }
+  } catch(e) {
+    if (stat) stat.innerHTML = '<span style="color:var(--rd)">● Connection Error</span>';
+    toast('Error: ' + e.message);
+  }
+};
 
 window.testConnector = async function(type) {
   if (type === 'n8n') {
@@ -5091,6 +5210,8 @@ const App = {
     // ─ § AUTOMATION HUB ───────────────────────────────────────────
     this._on('save-automation-btn', 'click', () => {
       const n8n   = document.getElementById('set-n8n-url')?.value.trim();
+      const gEmail = document.getElementById('set-google-email')?.value.trim();
+      if (gEmail) localStorage.setItem('bv_google_email', gEmail);
       const gmail = document.getElementById('set-gmail-pass')?.value.trim();
       const slack = document.getElementById('set-slack-url')?.value.trim();
       if (n8n)   localStorage.setItem('bv_n8n_url',    n8n);

@@ -80,9 +80,47 @@ async function serverSingleSearch(query) {
   return '';
 }
 
+function isLeadGenQuery(text) {
+  return /\b(client|clients|leint|leints|prospect|prospects|lead|leads|customer|customers|trouve.*client|trouver.*client|trouve.*prospect|trouver.*prospect|find.*client|find.*prospect)\b/i.test(text);
+}
+
 async function serverWebSearch(query) {
   const clean = query.trim();
   const words = clean.split(/\s+/);
+
+  // High-Yield B2B Lead Generation Expansion for Boss's Empire (Purgo Clean, FormationPro, Entreprise AI)
+  if (isLeadGenQuery(clean)) {
+    const isCleaning = /\b(clean|cleaning|nettoyage|locaux|bureau|bureaux|facility|maintenance)\b/i.test(clean);
+    const isSports   = /\b(sport|basket|basketball|workout|athletic|coach|club|formation)\b/i.test(clean);
+    const isTech     = /\b(ai|tech|agency|agence|software|automation)\b/i.test(clean);
+
+    let q1 = 'commercial property management syndic coworking bureaux Paris contact telephone email';
+    let q2 = 'centres formation basketball clubs academies directeurs entraineurs contact email telephone';
+    let q3 = 'agences immobilieres cabinets pme directeurs fondateurs contact email telephone';
+
+    if (isCleaning) {
+      q1 = 'entreprises nettoyage commercial b2b directeurs facility managers Paris telephone email';
+      q2 = 'societes gestion immobiliere syndic bureaux coworking contact telephone email';
+    } else if (isSports) {
+      q1 = 'clubs basketball centres formation academies France directeurs techniques entraineurs telephone email';
+      q2 = 'agences sportives agents joueurs basketball contact directeurs annuaire';
+    } else if (isTech) {
+      q1 = 'agences immobilieres cabinets conseil pme directeurs fondateurs contact email telephone';
+      q2 = 'startups b2b directeurs ceo fondateurs contact telephone email annuaire';
+    }
+
+    const [r1, r2, r3] = await Promise.allSettled([
+      serverSingleSearch(q1),
+      serverSingleSearch(q2),
+      serverSingleSearch(q3)
+    ]);
+
+    const res1 = r1.status === 'fulfilled' ? r1.value : '';
+    const res2 = r2.status === 'fulfilled' ? r2.value : '';
+    const res3 = r3.status === 'fulfilled' ? r3.value : '';
+
+    return `[B2B LEAD RESEARCH DIRECTORY - INTEL]:\n${res1}\n\n${res2}\n\n${res3}`;
+  }
 
   // Formulate a secondary angle if complex query for broader research
   let secondaryQuery = '';
@@ -135,7 +173,7 @@ function needsLiveWebSearch(text) {
   if (text.includes('[WEB SEARCH') || text.includes('[PAGE CONTENT FROM')) return false;
   const t = text.trim().toLowerCase();
   if (t.startsWith('/') || t.split(/\s+/).length < 2) return false;
-  const hasContactIntent = /\b(phone|number|numéro|numero|téléphone|telephone|tel|contact|contacts|email|mail|call|appeler|joindre|who is|qui est|coach|manager|player|joueur|roster|effectif|agent|agency|agence|club|team|équipe|equipe|address|adresse|headquarters|siège|siege|ceo|founder|president|président|director|directeur|owner|propriétaire|real madrid|barcelona|lakers|warriors|celtics|bulls|knicks|heat|spurs|bucks|suns|asvel|monaco|paris basketball|olympiacos|panathinaikos|fenerbahce|efes|partizan|zvezda|baskonia|maccabi|bayern|milan|virtus|alba|zalgiris|nba|euroleague|lnb|fiba|fibb|ncaa|acb|gleague|betclic|fifa|uefa|premier league|ligue 1|serie a|la liga|bundesliga)\b/i.test(t);
+  const hasContactIntent = /\b(client|clients|leint|leints|prospect|prospects|lead|leads|phone|number|numéro|numero|téléphone|telephone|tel|contact|contacts|email|mail|call|appeler|joindre|who is|qui est|coach|manager|player|joueur|roster|effectif|agent|agency|agence|club|team|équipe|equipe|address|adresse|headquarters|siège|siege|ceo|founder|president|président|director|directeur|owner|propriétaire|real madrid|barcelona|lakers|warriors|celtics|bulls|knicks|heat|spurs|bucks|suns|asvel|monaco|paris basketball|olympiacos|panathinaikos|fenerbahce|efes|partizan|zvezda|baskonia|maccabi|bayern|milan|virtus|alba|zalgiris|nba|euroleague|lnb|fiba|fibb|ncaa|acb|gleague|betclic|fifa|uefa|premier league|ligue 1|serie a|la liga|bundesliga)\b/i.test(t);
   const hasLiveLookupIntent = /\b(search|find|trouve|trouver|cherche|chercher|recherche|rechercher|lookup|look up|google|scrape|scraping|scraper|online|en ligne|internet|web|website|site|url|link|lien|latest|current|today|now|recent|actuel|aujourd'hui|dernier|dernière|news|world news|actualité|actualités|actualite|actualites|infos|info|breaking|headline|politics|politique|finance|financial|financier|bourse|stock|stocks|actions|market|markets|marché|marchés|crypto|bitcoin|btc|eth|ethereum|solana|rates|taux|inflation|revenue|chiffre d'affaires|valuation|price|prix|cost|coût|cout|tarif|score|scores|standings|classement|stats|statistiques|schedule|calendrier|weather|météo|meteo|give me|donne moi|donne-moi|fournis|list|liste|directory|annuaire|whatsapp|linkedin|instagram|twitter|tiktok)\b/i.test(t);
   return hasContactIntent || hasLiveLookupIntent;
 }
@@ -155,7 +193,7 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { messages, system, model: requestedModel, stream: clientWantsStream, activeSkill: explicitSkill, clientKeys = {} } = body;
+    const { messages, system, model: requestedModel, stream: clientWantsStream, activeSkill: explicitSkill, clientKeys = {}, pdfDocuments = [] } = body;
 
     // ── KEY REGISTRY (Merges client-supplied keys with Vercel Env Keys) ─────
     const KEYS = {
@@ -221,7 +259,11 @@ export default async function handler(req, res) {
       if (needsLiveWebSearch(lastUserText)) {
         const liveResults = await serverWebSearch(lastUserText);
         if (liveResults) {
-          enrichedMessages[lastUserIdx].content = `[WEB SEARCH RESULTS FOR: "${lastUserText}"]\n${liveResults}\n\n[MANDATORY EXECUTION DIRECTIVE]:\nYou have just executed a live web search for Boss. Answer Boss's command directly, completely, and without any refusal. Extract and present all relevant phone numbers, emails, addresses, names, rosters, websites, and strategic facts found above.\n\nBoss's command: ${lastUserText}`;
+          const isLead = isLeadGenQuery(lastUserText);
+          const leadDirective = isLead
+            ? `\n\n[MANDATORY B2B CLIENT PROSPECT HUNTING PROTOCOL]:\nBoss commanded you to FIND CLIENTS ONLINE for his business.\n- NEVER give generic tips, guides, or checklists on how to get clients.\n- Deliver an ACTIONABLE B2B PROSPECT CALL-SHEET with REAL TARGET COMPANIES/ORGANIZATIONS extracted from the live intel above.\n- For each target provide: 1. Company/Club Name, 2. Decision Maker Role, 3. Direct Contact Channels (Verified Phone, Email, Website, Address), 4. Pain Point & Value Hook, 5. Ready-to-Send Cold Outreach Pitch.\n- Include the interactive Gmail action tag: [GMAIL_DRAFT: contact@company.com | Subject Line | Pitch Body] so Boss can send outreach with 1-click!`
+            : '';
+          enrichedMessages[lastUserIdx].content = `[WEB SEARCH RESULTS FOR: "${lastUserText}"]\n${liveResults}\n\n[MANDATORY EXECUTION DIRECTIVE]:\nYou have just executed a live web search for Boss. Answer Boss's command directly, completely, and without any refusal. Extract and present all relevant phone numbers, emails, addresses, names, rosters, websites, and strategic facts found above.${leadDirective}\n\nBoss's command: ${lastUserText}`;
         }
       }
     }
@@ -249,6 +291,12 @@ export default async function handler(req, res) {
       } else if ((requestedModel === 'llama-3.3-70b' || requestedModel.startsWith('llama3.1-') || requestedModel.startsWith('cerebras/')) && KEYS.cerebras) {
         chain.push({ provider: 'cerebras', model: requestedModel.replace('cerebras/', '') });
       }
+    }
+
+    // Priority 0: Native Multimodal PDF Document Engines (Gemini 2.0 Flash has 1M context + native OCR)
+    if (pdfDocuments && pdfDocuments.length > 0) {
+      if (KEYS.gemini)    chain.push({ provider: 'gemini', model: 'gemini-2.0-flash' });
+      if (KEYS.anthropic) chain.push({ provider: 'anthropic', model: 'claude-3-5-sonnet-latest' });
     }
 
     // Priority 1: Direct Frontier APIs if configured (Claude / GPT-4o / Gemini 2.0 Flash)
@@ -306,6 +354,40 @@ export default async function handler(req, res) {
           if (reqModel.endsWith(':free')) reqModel = reqModel.replace(':free', '');
           break;
         case 'gemini': 
+          if (pdfDocuments && pdfDocuments.length > 0) {
+            // Use native Generative Language API endpoint to pass binary PDF inlineData
+            url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+            headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
+            const inlinePdfs = pdfDocuments.map(p => ({
+              inlineData: { mimeType: p.mimeType || 'application/pdf', data: p.data }
+            }));
+            const gRes = await fetch(url, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                contents: [{
+                  role: 'user',
+                  parts: [
+                    { text: fullSystem + '\n\n[INSTRUCTION]: Read and analyze this attached PDF document completely. Extract all workout splits, exercises, sets, reps, tables, or contract details directly without asking for confirmation.\n\n' + (lastUserText || 'Analyze attached document.') },
+                    ...inlinePdfs
+                  ]
+                }],
+                generationConfig: { maxOutputTokens: 3000, temperature: 0.7 }
+              }),
+              signal: ctrl.signal
+            });
+            clearTimeout(tid);
+            if (!gRes.ok) {
+              const errT = await gRes.text();
+              throw new Error(`Gemini PDF Error ${gRes.status}: ${errT.slice(0, 150)}`);
+            }
+            const gData = await gRes.json();
+            const replyText = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (replyText) {
+              return { choices: [{ message: { content: replyText } }] };
+            }
+            throw new Error('Gemini returned empty candidate');
+          }
           url = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
           headers = { 'Authorization': `Bearer ${key}` };
           if (!reqModel.includes('gemini')) reqModel = 'gemini-2.0-flash';
