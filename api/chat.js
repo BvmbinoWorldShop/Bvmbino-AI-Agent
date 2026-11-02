@@ -241,8 +241,8 @@ export default async function handler(req, res) {
         chain.push({ provider: 'mistral', model: requestedModel });
       } else if (requestedModel.includes('/') && KEYS.openrouter) {
         chain.push({ provider: 'openrouter', model: requestedModel.replace(':free', '') });
-      } else if (requestedModel.startsWith('llama3.1-') && KEYS.cerebras) {
-        chain.push({ provider: 'cerebras', model: 'llama3.1-8b' });
+      } else if ((requestedModel === 'llama-3.3-70b' || requestedModel.startsWith('llama3.1-') || requestedModel.startsWith('cerebras/')) && KEYS.cerebras) {
+        chain.push({ provider: 'cerebras', model: requestedModel.replace('cerebras/', '') });
       }
     }
 

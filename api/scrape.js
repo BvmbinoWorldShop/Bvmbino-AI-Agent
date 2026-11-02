@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
   // Strict Rate Limit for Scrape: 5 req/min (high resource cost)
-  if (isRateLimited(req, 5)) return res.status(429).json({ error: 'Rate limit exceeded (5 req/min)' });
+  if (isRateLimited(req, 30)) return res.status(429).json({ error: 'Rate limit exceeded (5 req/min)' });
 
   // App Token Security
   const { validateAppToken, trackAbuse } = await import('./_cors.js');

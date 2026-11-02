@@ -13,7 +13,7 @@ export function setCors(req, res) {
   if (isAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-app-token');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-app-token, x-gemini-key');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 }
@@ -55,7 +55,7 @@ export function validateAppToken(req) {
 // ── 3. ABUSE PROTECTION ────────────────────────────────────────────────────
 const abuseStorage = new Map();
 export async function trackAbuse(req) {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const ip = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
   const now = Date.now();
   const userData = abuseStorage.get(ip) || { count: 0, last: 0 };
   
@@ -71,7 +71,7 @@ export async function trackAbuse(req) {
 // ── 4. RATE LIMITING ───────────────────────────────────────────────────────
 const rateLimitMap = new Map();
 export function isRateLimited(req, limit = 10) {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const ip = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
   const now = Math.floor(Date.now() / 60000);
   
   const currentKey = `${ip}:${now}`;
