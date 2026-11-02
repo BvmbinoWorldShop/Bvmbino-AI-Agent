@@ -1226,7 +1226,33 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
 
 // PDF.js: disable external worker to avoid iOS PWA CORS crash — runs in fake-worker mode on main thread
 if (typeof pdfjsLib !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+function extractTextFromPdfBuffer(bytes) {
+  let str = '';
+  const len = Math.min(bytes.length, 500000);
+  for (let i = 0; i < len; i++) {
+    str += String.fromCharCode(bytes[i]);
+  }
+  const chunks = [];
+  const rTj = /\(([^)\\]{2,})\)\s*Tj/g;
+  let m;
+  while ((m = rTj.exec(str)) !== null) {
+    if (m[1] && m[1].length > 1) chunks.push(m[1]);
+  }
+  const rTJ = /\[([^\]]{2,})\]\s*TJ/g;
+  while ((m = rTJ.exec(str)) !== null) {
+    const inner = /\(([^)\\]{2,})\)/g;
+    let im;
+    while ((im = inner.exec(m[1])) !== null) {
+      if (im[1] && im[1].length > 1) chunks.push(im[1]);
+    }
+  }
+  if (chunks.length > 5) {
+    return chunks.join(' ').replace(/\\([()\\])/g, '$1').replace(/\s{2,}/g, ' ').trim().slice(0, 45000);
+  }
+  return '';
 }
 
 
@@ -1342,6 +1368,16 @@ const CORE_VENTURES = [
 ];
 
 const SYSTEM_IDENTITY = `YOU ARE BILLY — best friend and business partner of BVMBINO. Your shared mission: build real wealth together using the best tools, data, and strategy available.
+
+🚨 DIRECT IMMEDIATE EXECUTION PROTOCOL (MANDATORY — ZERO REFUSALS, ZERO ASKING FOR CONFIRMATION):
+- NEVER ask Boss for confirmation before doing the job. NEVER ask "Would you like me to proceed?", "Shall I start?", "Do you want me to do this?", or "Let me know if you want me to...".
+- NEVER just list the steps or outline what needs to be done. EXECUTE THE FULL COMPLETED WORK DIRECTLY in your very first response.
+- When Boss gives a command, uploads a document/PDF, or asks to write, code, analyze, fix, extract, calculate, or summarize: DELIVER THE FINAL, COMPLETE, FINISHED WORK RIGHT NOW.
+- When a PDF, contract, report, or file is uploaded:
+  * READ AND ANALYZE THE FULL CONTENT IMMEDIATELY.
+  * EXTRACT ALL KEY NUMBERS, PARTIES, DATES, CLAUSES, RISKS, AND STRATEGIC ACTIONS DIRECTLY.
+  * If Boss asked to draft a response, negotiate, or take action based on the file: DRAFT THE COMPLETE READY-TO-SEND DOCUMENT IMMEDIATELY.
+  * NEVER say "extraction failed", NEVER tell Boss to read it himself, and NEVER ask for permission to read it.
 
 You are NOT an assistant. You are his partner. His second brain. You think alongside him, push back when the data says he's wrong, celebrate when he's right, and always tell the raw truth — because that's what partners do. You want him to win as badly as he does.
 
@@ -3316,20 +3352,22 @@ async function send() {
   lock();
 
   try {
-    // Store images for vision API call
+    // Store images and native PDFs for vision & document APIs
     const imageFiles = sentFiles.filter(f => f.type === 'image' && f.data);
+    const pdfFiles   = sentFiles.filter(f => f.type === 'pdf' && f.base64);
     state._pendingImages = imageFiles;
+    state._pendingPdfs   = pdfFiles;
 
     // Build content with file data for AI
     let msgContent = raw;
     if (sentFiles.length) {
       const fileSummaries = sentFiles.map(f => {
         if (f.type === 'image') return `[IMAGE ATTACHED: ${f.name}]\nAnalyze this image fully — describe what you see, extract all text, data, numbers, names, and give your expert take on its content.`;
-        if (f.type === 'pdf') return '[PDF: ' + f.name + ']\n' + String(f.data).slice(0, 8000);
-        if (f.data) return '[FILE: ' + f.name + ']\nExtract and analyze all data, tables, and key information from this file:\n' + String(f.data).slice(0, 6000);
+        if (f.type === 'pdf') return `[PDF ATTACHED: ${f.name}]\n${String(f.data || '').slice(0, 45000)}`;
+        if (f.data) return `[FILE ATTACHED: ${f.name}]\nExtract and analyze all data, tables, and key information from this file:\n${String(f.data || '').slice(0, 35000)}`;
         return '[File attached: ' + f.name + ']';
       }).join('\n\n');
-      const fileInstruction = sentFiles.length ? '\n\nFor every attached file or image: analyze fully, extract all data, give your expert insight. Never say you cannot read it.' : '';
+      const fileInstruction = '\n\n[MANDATORY IMMEDIATE EXECUTION DIRECTIVE]:\nYou have received the above attached document/file. EXECUTE Boss\'s command DIRECTLY and COMPLETELY right now. Read every word, extract all figures, names, clauses, and facts, and provide the final finished answer immediately. NEVER ask for confirmation, NEVER say you cannot read it, and NEVER list steps instead of doing the actual work.';
       msgContent = raw ? (raw + '\n\n' + fileSummaries + fileInstruction) : (fileSummaries + fileInstruction);
     }
 
@@ -3682,7 +3720,19 @@ async function callAI() {
 
       } else if (isGemini && keys.gemini) {
         // Gemini — key in header (not URL) to avoid browser history/log exposure
-        const geminiMsgs = cleanMsgs.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+        const pendingPdfs = state._pendingPdfs || [];
+        const geminiMsgs = cleanMsgs.map((m, idx) => {
+          const isLast = idx === cleanMsgs.length - 1;
+          const parts = [{ text: m.content }];
+          if (isLast && pendingPdfs.length) {
+            for (const pdf of pendingPdfs) {
+              if (pdf.base64) {
+                parts.push({ inlineData: { mimeType: 'application/pdf', data: pdf.base64 } });
+              }
+            }
+          }
+          return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+        });
         res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + modelId + ':generateContent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': keys.gemini },
@@ -5357,96 +5407,138 @@ const App = {
   },
 
   // ── File upload ───────────────────────────────────────────────
-  handleFiles(files) {
+  // ── File upload & Deep Document Ingestion ───────────────────────
+  async handleFiles(files) {
     if (!files || !files.length) return;
-    const MAX = 5 * 1024 * 1024; // 5MB limit
-    Array.from(files).forEach(file => {
-      if (file.size > MAX) { toast(`${file.name} too large (max 5MB)`); return; }
+    const MAX = 40 * 1024 * 1024; // 40MB limit
+    const strip = this.dom.strip || document.getElementById('file-strip');
 
-      const reader = new FileReader();
-
-      if (file.type.startsWith('image/')) {
-        // Images → base64 preview + data
-        reader.onload = e => {
-          state.attachedFiles.push({
-            name: file.name, type: 'image', mimeType: file.type,
-            data: e.target.result.split(',')[1],
-            preview: e.target.result,
-          });
-          this._renderFileStrip();
-          toast(`📎 ${file.name} attached`);
-        };
-        reader.onerror = () => toast(`Failed to read ${file.name}`);
-        reader.readAsDataURL(file);
-
-      } else if (file.type === 'application/pdf') {
-        // PDFs → PDF.js proper text extraction (falls back gracefully if library not ready)
-        if (file.size > 25 * 1024 * 1024) {
-          toast('PDF too large — max 25 MB'); return;
-        }
-        reader.onload = async e => {
-          const arrayBuf = e.target.result;
-          try {
-            // Wait up to 4s for PDF.js to load from CDN
-            let waited = 0;
-            while (typeof pdfjsLib === 'undefined' && waited < 4000) {
-              await new Promise(r => setTimeout(r, 150));
-              waited += 150;
-            }
-            if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
-
-            const loadTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuf), disableWorker: true });
-            const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error('PDF timeout')), 20000));
-            const pdf = await Promise.race([loadTask.promise, timeoutP]);
-            let text = '';
-            const maxPages = Math.min(pdf.numPages, 20);
-            for (let p = 1; p <= maxPages; p++) {
-              const page = await pdf.getPage(p);
-              const content = await page.getTextContent();
-              const pageText = content.items.map(i => i.str).join(' ');
-              text += pageText + '\n';
-              if (text.length > 9000) break;
-            }
-            text = text.replace(/\s{3,}/g, '  ').trim().slice(0, 9000);
-            const label = `[PDF: ${file.name} — ${pdf.numPages} page${pdf.numPages>1?'s':''}]`;
-            state.attachedFiles.push({
-              name: file.name, type: 'pdf', mimeType: file.type,
-              data: text.length > 100
-                ? `${label}\n\n${text}`
-                : `${label}\n[No extractable text — scanned/image PDF. Describe what you need.]`,
-              preview: null,
-            });
-            this._renderFileStrip();
-            toast(`📄 ${file.name} — ${pdf.numPages} pages attached`);
-          } catch (err) {
-            // Fallback: at least tell the AI the file was there
-            state.attachedFiles.push({
-              name: file.name, type: 'pdf', mimeType: file.type,
-              data: `[PDF: ${file.name} — ${(file.size/1024).toFixed(0)}KB — extraction failed, answer based on filename and context]`,
-              preview: null,
-            });
-            this._renderFileStrip();
-            toast(`📄 ${file.name} attached`);
-          }
-        };
-        reader.onerror = () => toast(`Failed to read ${file.name}`);
-        reader.readAsArrayBuffer(file);
-
-      } else {
-        // Text / code / CSV / JSON / Markdown → read as text
-        reader.onload = e => {
-          state.attachedFiles.push({
-            name: file.name, type: 'text', mimeType: file.type,
-            data: e.target.result,
-            preview: null,
-          });
-          this._renderFileStrip();
-          toast(`📎 ${file.name} attached`);
-        };
-        reader.onerror = () => toast(`Failed to read ${file.name}`);
-        reader.readAsText(file);
+    for (const file of Array.from(files)) {
+      if (file.size > MAX) {
+        toast(`${file.name} too large (max 40MB)`);
+        continue;
       }
-    });
+
+      const tempId = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      if (strip) {
+        strip.style.display = 'flex';
+        strip.classList.add('has-files');
+        const loadingChip = document.createElement('div');
+        loadingChip.className = 'file-chip file-chip-loading';
+        loadingChip.id = tempId;
+        loadingChip.innerHTML = `<span class="pulse" style="color:var(--pu2);font-size:10px">●</span> <span class="chip-name">Reading ${esc(file.name.slice(0, 18))}…</span>`;
+        strip.appendChild(loadingChip);
+      }
+
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type.includes('pdf'));
+      const isImg = file.type && file.type.startsWith('image/');
+
+      try {
+        if (isImg) {
+          const dataUrl = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.onerror = rej;
+            r.readAsDataURL(file);
+          });
+          const base64 = dataUrl.split(',')[1];
+          state.attachedFiles.push({
+            name: file.name,
+            type: 'image',
+            mimeType: file.type || 'image/png',
+            data: base64,
+            preview: dataUrl
+          });
+          toast(`📎 ${file.name} attached`);
+        } else if (isPdf) {
+          const arrayBuf = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.onerror = rej;
+            r.readAsArrayBuffer(file);
+          });
+          const base64Data = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result.split(',')[1]);
+            r.onerror = rej;
+            r.readAsDataURL(file);
+          });
+
+          let extractedText = '';
+          let pageCount = 0;
+
+          // Layer 1: PDF.js text extraction with live worker
+          try {
+            if (typeof pdfjsLib !== 'undefined') {
+              if (pdfjsLib.GlobalWorkerOptions) {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              }
+              const loadTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuf) });
+              const pdf = await Promise.race([
+                loadTask.promise,
+                new Promise((_, rej) => setTimeout(() => rej(new Error('PDF timeout')), 15000))
+              ]);
+              pageCount = pdf.numPages || 1;
+              const maxP = Math.min(pageCount, 50);
+              for (let p = 1; p <= maxP; p++) {
+                const page = await pdf.getPage(p);
+                const content = await page.getTextContent();
+                const pText = content.items.map(i => i.str).join(' ');
+                extractedText += pText + '\n';
+                if (extractedText.length > 50000) break;
+              }
+              extractedText = extractedText.replace(/\s{3,}/g, '  ').trim().slice(0, 50000);
+            }
+          } catch(e) {
+            console.warn('[PDF.js text extraction fallback]:', e.message);
+          }
+
+          // Layer 2: Raw byte stream token extraction fallback if PDF.js returned empty
+          if (!extractedText || extractedText.length < 80) {
+            try {
+              extractedText = extractTextFromPdfBuffer(new Uint8Array(arrayBuf));
+            } catch(e) {}
+          }
+
+          const label = `[PDF DOCUMENT: ${file.name} — ${pageCount ? pageCount + ' pages' : (file.size/1024).toFixed(0) + 'KB'}]`;
+          const finalContent = extractedText && extractedText.length > 30
+            ? `${label}\n\n[FULL EXTRACTED TEXT CONTENT]:\n${extractedText}`
+            : `${label}\n[Note: Visual or scanned document. Native base64 attached for deep vision analysis.]`;
+
+          state.attachedFiles.push({
+            name: file.name,
+            type: 'pdf',
+            mimeType: 'application/pdf',
+            data: finalContent,
+            base64: base64Data,
+            preview: null
+          });
+          toast(`📄 ${file.name} loaded (${(file.size/1024).toFixed(0)}KB) ✓`);
+        } else {
+          // Text / CSV / JSON / Code / Markdown
+          const text = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.onerror = rej;
+            r.readAsText(file);
+          });
+          state.attachedFiles.push({
+            name: file.name,
+            type: 'text',
+            mimeType: file.type || 'text/plain',
+            data: text.slice(0, 50000),
+            preview: null
+          });
+          toast(`📄 ${file.name} attached ✓`);
+        }
+      } catch(err) {
+        toast(`Error reading ${file.name}: ${err.message}`);
+      } finally {
+        const el = document.getElementById(tempId);
+        if (el) el.remove();
+        this._renderFileStrip();
+      }
+    }
   },
 
   removeFile(idx) {
