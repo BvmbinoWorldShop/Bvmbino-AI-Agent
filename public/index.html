@@ -1020,13 +1020,13 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
   <div class="modal-card">
     <div class="modal-hdr"><div class="modal-t">🎨 AI Image Generator</div><button class="icobtn" id="close-image">✕</button></div>
     <div class="modal-body">
-      <div style="font-size:10px;color:var(--pu2);background:rgba(232,169,18,.08);border:1px solid var(--bd2);border-radius:6px;padding:6px 10px;margin-bottom:10px">🍌 <strong>Nano Banana / Gemini Imagen 3 Ready</strong> · 100% Free AI image creation. Add your free Gemini key in ⚙️ Settings for ultra-high-resolution Google Imagen 3 art.</div>
+      <div style="font-size:10px;color:var(--pu2);background:rgba(232,169,18,.08);border:1px solid var(--bd2);border-radius:6px;padding:6px 10px;margin-bottom:10px">⚡ <strong>100% Free Clean AI Studio</strong> · Powered by Stable Diffusion & FLUX.1. Zero accounts or keys needed. Studio-grade clean visuals delivered straight into chat.</div>
       <div><span class="lbl">Prompt</span><textarea class="set-input" id="img-prompt" rows="3" placeholder="Cinematic aerial shot of Abidjan at golden hour, hyperrealistic, 8K…" style="min-height:80px"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
         <div><span class="lbl">Size</span><select class="set-input" id="img-size"><option value="1024x1024">1024×1024 Square</option><option value="1792x1024">1792×1024 Wide</option><option value="1024x1792">1024×1792 Portrait</option></select></div>
         <div><span class="lbl">Quality</span><select class="set-input" id="img-quality"><option value="standard">Standard</option><option value="hd">HD</option></select></div>
       </div>
-      <div class="api-notice" style="margin-top:8px">✨ 100% In-App AI Art · Gemini Nano Banana, FLUX & Free In-App Diffusion. Zero redirects or external logins.</div>
+      <div class="api-notice" style="margin-top:8px">✨ 100% Clean In-App Art · Free Stable Diffusion & FLUX. Zero external redirects, zero watermarks, 100% clean pictures delivered straight into chat.</div>
       <div id="img-result" style="display:none;margin-top:8px"></div>
     </div>
     <div class="modal-foot">
@@ -4474,8 +4474,8 @@ async function generateAndDeliverImage(prompt, size = '768x768', quality = 'stan
         <div class="mmeta ai-meta" style="color:var(--rd)">IMAGE GENERATION ERROR</div>
         <p style="color:var(--rd);font-size:12px;margin-bottom:10px">${esc(err.message)}</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="mact" onclick="window.toggleSettings && window.toggleSettings(true)" style="color:var(--pu2);border-color:var(--pu2)">⚙️ Open Settings to Add Gemini Key</button>
-          <button class="mact" onclick="window.generateAndDeliverImage && window.generateAndDeliverImage('${esc(prompt)}')">🔄 Retry</button>
+          <button class="mact" onclick="window.generateAndDeliverImage && window.generateAndDeliverImage('${esc(prompt)}')">🔄 Retry Free Generation</button>
+          <button class="mact" onclick="window.toggleSettings && window.toggleSettings(true)" style="color:var(--pu2);border-color:var(--pu2)">⚙️ Studio Settings</button>
         </div>
       </div>`;
     toast('Image generation failed: ' + err.message);

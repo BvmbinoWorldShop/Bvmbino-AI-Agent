@@ -10,106 +10,52 @@ export default async function handler(req, res) {
     const { prompt, width = 768, height = 768, quality = 'standard', keys = {} } = body;
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
-    const cleanPrompt = String(prompt).replace(/[^\w\s.,!?'"-\/]/gi, ' ').trim();
+    // Clean and enrich the prompt for studio-grade, sharp, photorealistic visual outputs
+    const rawPrompt = String(prompt).replace(/[^\w\s.,!?'"-\/]/gi, ' ').trim();
+    const cleanPrompt = `${rawPrompt}, sharp focus, highly detailed, professional lighting, masterpiece, clean 8k`;
+    const negativePrompt = 'ugly, deformed, blurry, pixelated, bad quality, low quality, artifacts, watermark, signature, distortion, amateur';
 
-    const rawGemini = keys.gemini || req.headers['x-gemini-key'] || process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
-    const geminiKey = String(rawGemini).replace(/[^\x20-\x7E]/g, '').trim();
+    const rawHf = keys.huggingface || req.headers['x-hf-key'] || process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN || '';
+    const hfKey = String(rawHf).replace(/[^\x20-\x7E]/g, '').trim();
 
     const rawOpenai = keys.openai || req.headers['x-openai-key'] || process.env.OPENAI_API_KEY || '';
     const openaiKey = String(rawOpenai).replace(/[^\x20-\x7E]/g, '').trim();
 
-    const rawHf = keys.huggingface || req.headers['x-hf-key'] || process.env.HUGGINGFACE_API_KEY || '';
-    const hfKey = String(rawHf).replace(/[^\x20-\x7E]/g, '').trim();
+    const rawGemini = keys.gemini || req.headers['x-gemini-key'] || process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+    const geminiKey = String(rawGemini).replace(/[^\x20-\x7E]/g, '').trim();
 
     const errors = [];
 
-    // ── 1. GOOGLE GEMINI NANO BANANA (INTERACTIONS & MULTIMODAL API) ──
-    if (geminiKey) {
-      const nanoBananaModels = [
-        'gemini-nano-banana-2.1',
-        'gemini-3.1-flash-image',
-        'gemini-3-pro-image',
-        'gemini-3.1-flash-lite-image'
-      ];
-      for (const m of nanoBananaModels) {
-        try {
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 18000);
-          const iRes = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': geminiKey
-            },
-            body: JSON.stringify({
-              model: m,
-              input: cleanPrompt,
-              response_format: {
-                type: 'image',
-                aspect_ratio: width > height ? '16:9' : height > width ? '9:16' : '1:1',
-                image_size: quality === 'hd' ? '2K' : '1K'
-              }
-            }),
-            signal: ctrl.signal
-          });
-          clearTimeout(tid);
-
-          if (iRes.ok) {
-            const iData = await iRes.json();
-            const steps = iData.steps || [];
-            for (const step of steps) {
-              const contents = step.content || [];
-              for (const c of contents) {
-                if (c.type === 'image' && c.data) {
-                  const mime = c.mime_type || 'image/png';
-                  return res.status(200).json({
-                    success: true,
-                    url: `data:${mime};base64,${c.data}`,
-                    model: m
-                  });
-                }
-              }
-            }
-          } else {
-            const errTxt = await iRes.text().catch(() => '');
-            errors.push(`[${m}] status ${iRes.status}: ${errTxt.slice(0, 120)}`);
-          }
-        } catch (e) {
-          errors.push(`[${m}] exception: ${e.message}`);
-        }
-      }
-
-      // Fallback: Gemini predict Imagen 3 if whitelisted
+    // ── 1. HUGGING FACE FLUX.1 (Free Token · Studio Quality Clean Visuals) ──
+    if (hfKey) {
       try {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 16000);
-        const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`, {
+        const tid = setTimeout(() => ctrl.abort(), 24000);
+        const hfRes = await fetch('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instances: [{ prompt: cleanPrompt }],
-            parameters: { sampleCount: 1, aspectRatio: '1:1', outputMimeType: 'image/jpeg' }
-          }),
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${hfKey}` },
+          body: JSON.stringify({ inputs: cleanPrompt }),
           signal: ctrl.signal
         });
         clearTimeout(tid);
-        if (gRes.ok) {
-          const gData = await gRes.json();
-          const b64Predict = gData.predictions?.[0]?.bytesBase64Encoded;
-          if (b64Predict) {
-            return res.status(200).json({
-              success: true,
-              url: `data:image/jpeg;base64,${b64Predict}`,
-              model: 'imagen-3.0-generate-002'
-            });
-          }
+        if (hfRes.ok) {
+          const buf = Buffer.from(await hfRes.arrayBuffer());
+          const mime = hfRes.headers.get('content-type') || 'image/jpeg';
+          return res.status(200).json({
+            success: true,
+            url: `data:${mime};base64,${buf.toString('base64')}`,
+            model: 'flux-1-schnell'
+          });
+        } else {
+          const errTxt = await hfRes.text().catch(() => '');
+          errors.push(`HuggingFace status ${hfRes.status}: ${errTxt.slice(0, 100)}`);
         }
       } catch (e) {
-        errors.push(`[imagen-3] exception: ${e.message}`);
+        errors.push(`HF error: ${e.message}`);
       }
     }
 
-    // ── 2. OPENAI DALL-E 3 (returns base64 directly in-app) ──
+    // ── 2. OPENAI DALL-E 3 (if key provided) ──
     if (openaiKey) {
       try {
         const ctrl = new AbortController();
@@ -119,7 +65,7 @@ export default async function handler(req, res) {
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
           body: JSON.stringify({
             model: 'dall-e-3',
-            prompt: cleanPrompt,
+            prompt: rawPrompt,
             n: 1,
             size: '1024x1024',
             quality,
@@ -138,52 +84,18 @@ export default async function handler(req, res) {
               model: 'dall-e-3'
             });
           }
-        } else {
-          const errTxt = await oRes.text().catch(() => '');
-          errors.push(`OpenAI status ${oRes.status}: ${errTxt.slice(0, 120)}`);
         }
       } catch (e) {
         errors.push(`OpenAI error: ${e.message}`);
       }
     }
 
-    // ── 3. HUGGING FACE FLUX.1 (Free inference router with key) ──
-    if (hfKey) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 22000);
-        const hfRes = await fetch('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${hfKey}` },
-          body: JSON.stringify({ inputs: cleanPrompt }),
-          signal: ctrl.signal
-        });
-        clearTimeout(tid);
-        if (hfRes.ok) {
-          const buf = Buffer.from(await hfRes.arrayBuffer());
-          const mime = hfRes.headers.get('content-type') || 'image/jpeg';
-          return res.status(200).json({
-            success: true,
-            url: `data:${mime};base64,${buf.toString('base64')}`,
-            model: 'flux-schnell-hf'
-          });
-        } else {
-          const errTxt = await hfRes.text().catch(() => '');
-          errors.push(`HuggingFace status ${hfRes.status}: ${errTxt.slice(0, 120)}`);
-        }
-      } catch (e) {
-        errors.push(`HF error: ${e.message}`);
-      }
-    }
-
-    // ── 4. 100% FREE SOVEREIGN DIFFUSION ENGINE (SERVERLESS BASE64 IN-APP) ──
-    // Fetches real diffusion visual server-side, converts to data:image/jpeg;base64,...
-    // Zero external URLs, zero redirects, zero third-party logins
+    // ── 3. 100% FREE ZERO-KEY DIFFUSION: POLLINATIONS TURBO (Clean & Fast) ──
     try {
       const seed = Date.now() + Math.floor(Math.random() * 100000);
       const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=turbo`;
       const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 9000);
+      const tid = setTimeout(() => ctrl.abort(), 8000);
       const pRes = await fetch(pollUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -197,33 +109,34 @@ export default async function handler(req, res) {
         const cType = pRes.headers.get('content-type') || '';
         if (cType.includes('image')) {
           const buf = Buffer.from(await pRes.arrayBuffer());
-          if (buf.length > 1000) {
+          if (buf.length > 2000) {
             const mime = cType.split(';')[0] || 'image/jpeg';
             return res.status(200).json({
               success: true,
               url: `data:${mime};base64,${buf.toString('base64')}`,
-              model: 'sovereign-free-diffusion'
+              model: 'clean-turbo-diffusion'
             });
           }
         }
       } else {
         const pErr = await pRes.text().catch(() => '');
-        errors.push(`Diffusion server status ${pRes.status}: ${pErr.slice(0, 80)}`);
+        errors.push(`Pollinations status ${pRes.status}: ${pErr.slice(0, 80)}`);
       }
     } catch (e) {
-      errors.push(`Diffusion serverless error: ${e.message}`);
+      errors.push(`Pollinations error: ${e.message}`);
     }
 
-    // ── 5. AI HORDE DECENTRALIZED GPU CLUSTER FALLBACK (100% Free · Anonymous) ──
+    // ── 4. 100% FREE DECENTRALIZED STABLE DIFFUSION (AI HORDE - No Keys Needed) ──
     try {
       const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 12000);
+      const tid = setTimeout(() => ctrl.abort(), 18000);
+      const hordePrompt = `${cleanPrompt} ### ${negativePrompt}`;
       const hSubmit = await fetch('https://aihorde.net/api/v2/generate/async', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': '0000000000' },
         body: JSON.stringify({
-          prompt: cleanPrompt,
-          params: { steps: 16, width: Math.min(width, 768), height: Math.min(height, 768) }
+          prompt: hordePrompt,
+          params: { steps: 18, width: Math.min(width, 512), height: Math.min(height, 512), cfg_scale: 7.5 }
         }),
         signal: ctrl.signal
       });
@@ -233,8 +146,8 @@ export default async function handler(req, res) {
         const hData = await hSubmit.json();
         const hordeId = hData.id;
         if (hordeId) {
-          // Poll up to 8 seconds
-          for (let p = 0; p < 4; p++) {
+          // Poll up to 14 seconds
+          for (let p = 0; p < 7; p++) {
             await new Promise(r => setTimeout(r, 2000));
             const statRes = await fetch(`https://aihorde.net/api/v2/generate/status/${hordeId}`);
             if (statRes.ok) {
@@ -264,12 +177,46 @@ export default async function handler(req, res) {
         }
       }
     } catch (e) {
-      errors.push(`Horde fallback error: ${e.message}`);
+      errors.push(`Horde error: ${e.message}`);
     }
 
-    // ── 6. DIRECT BROWSER RESOLUTION SIGNAL ──
-    // If Vercel datacenter IPs are temporarily rate-limited, instruct client browser
-    // to perform direct fetch from the user's residential IP and convert to Base64 in-app.
+    // ── 5. OPTIONAL GEMINI FALLBACK (if user explicitly provided Gemini key) ──
+    if (geminiKey) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 12000);
+        const iRes = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
+          body: JSON.stringify({
+            model: 'gemini-nano-banana-2.1',
+            input: rawPrompt,
+            response_format: { type: 'image', aspect_ratio: '1:1', image_size: '1K' }
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+        if (iRes.ok) {
+          const iData = await iRes.json();
+          for (const step of (iData.steps || [])) {
+            for (const c of (step.content || [])) {
+              if (c.type === 'image' && c.data) {
+                return res.status(200).json({
+                  success: true,
+                  url: `data:${c.mime_type || 'image/png'};base64,${c.data}`,
+                  model: 'gemini-nano-banana'
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        errors.push(`Gemini optional error: ${e.message}`);
+      }
+    }
+
+    // ── 6. DIRECT CLIENT BROWSER RESOLVER ──
+    // Instruct client browser to resolve cleanly using user's personal IP
     return res.status(200).json({
       success: false,
       fallbackToBrowser: true,
