@@ -2466,13 +2466,22 @@ function detectIntent(text) {
     return { type: 'builder', active: state.isBuilderMode };
   }
 
-  if (t.startsWith('/image ') || t.startsWith('/img ')) {
-    const p = text.replace(/^\/(image|img)\s+/i, '').trim();
-    return p ? { type: 'image', prompt: p } : null;
+  // 1. Direct slash commands: /image, /img, /draw, /art, /visual
+  if (/^\/(?:image|img|draw|art|visual)\s+(.+)$/i.test(text)) {
+    const m = text.match(/^\/(?:image|img|draw|art|visual)\s+(.+)$/i);
+    return m ? { type: 'image', prompt: m[1].trim() } : null;
   }
-  const imgMatch = text.match(/^(?:generate|create|make|draw|génère|genere|crée|cree|dessine)\s+(?:an?\s+|une?\s+)?image\s+(?:of|de|about|representing|représentant)?\s*(.+)$/i);
-  if (imgMatch && imgMatch[1]) {
-    return { type: 'image', prompt: imgMatch[1].trim() };
+  // 2. Natural language image creation requests
+  const nlImg = text.match(/^(?:(?:can you|could you|please|i want you to|i want an?|would you)\s+)?(?:generate|create|make|draw|paint|render|produce|génère|genere|crée|cree|dessine|peins)\s+(?:me\s+)?(?:an?\s+|une?\s+)?(?:new\s+)?(?:ai\s+)?(?:image|picture|photo|illustration|drawing|artwork|visual|visuel|peinture)\s*(?:of|de|about|representing|représentant|showing|with|:)?\s*(.+)$/i);
+  if (nlImg && nlImg[1]) {
+    const p = nlImg[1].trim().replace(/^[:\-–—]\s*/, '');
+    if (p.length > 2) return { type: 'image', prompt: p };
+  }
+  // 3. Direct draw / paint commands
+  const drawMatch = text.match(/^(?:draw|dessine|paint|peins)\s+(?:me\s+)?(?:an?\s+|une?\s+)?(.+)$/i);
+  if (drawMatch && drawMatch[1] && !drawMatch[1].toLowerCase().startsWith('conclusion')) {
+    const p = drawMatch[1].trim();
+    if (p.length > 2) return { type: 'image', prompt: p };
   }
   if (t.startsWith('/scrape '))  { const url = text.slice(8).trim(); return url ? { type: 'scrape', url } : null; }
   if (t.startsWith('/search '))  return { type: 'search', query: text.slice(8).trim() };
@@ -4129,12 +4138,13 @@ async function handleScrape(url) {
   }
 }
 
-// ── 100% IN-APP IMAGE GENERATION (NANO BANANA GEMINI ENGINE) ──
+// ── 100% IN-APP IMAGE GENERATION (MULTI-ENGINE CASCADE) ──
 let _imgGenActive = false;
 async function generateImage(prompt, size = '768x768', quality = 'standard') {
   _imgGenActive = true;
   try {
     const [w, h] = size.split('x').map(x => parseInt(x, 10) || 768);
+    const cleanPrompt = String(prompt).replace(/[^\w\s.,!?'"-\/]/gi, ' ').trim();
     const rawGemini = (
       localStorage.getItem('bv_key_gemini') ||
       localStorage.getItem('bvmbino_key_gemini') ||
@@ -4145,92 +4155,97 @@ async function generateImage(prompt, size = '768x768', quality = 'standard') {
     const openaiKey = safeKey(localStorage.getItem('bv_key_openai') || localStorage.getItem('bvmbino_key_openai') || '');
     const hfKey     = safeKey(localStorage.getItem('bv_key_huggingface') || '');
 
-    // 1. Primary: Serverless /api/image Multi-Engine Cascade
+    // 1. Primary: Serverless /api/image Multi-Engine Cascade (Google Gemini Interactions, OpenAI, HF, Serverless Diffusion)
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 26000);
+      const timer = setTimeout(() => ctrl.abort(), 22000);
       const res = await fetch('/api/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, width: w, height: h, quality, keys: { gemini: geminiKey, openai: openaiKey, huggingface: hfKey } }),
+        body: JSON.stringify({ prompt: cleanPrompt, width: w, height: h, quality, keys: { gemini: geminiKey, openai: openaiKey, huggingface: hfKey } }),
         signal: ctrl.signal
       });
       clearTimeout(timer);
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data.url) {
+      if (res.ok && data.success && data.url) {
         return data.url;
       }
-      if (!res.ok && data.error && !geminiKey) {
-        throw new Error(data.error);
-      }
     } catch (e) {
-      if (e.message && e.message.includes('No image engine key') || e.message.includes('Google Gemini')) {
-        throw e;
-      }
-      console.warn('/api/image error, trying direct browser engine:', e.message);
+      console.warn('/api/image error, trying client-side diffusion engine:', e.message);
     }
 
-    // 2. Direct Gemini Multimodal Engine (client-side fallback with user's key)
-    if (geminiKey) {
-      const directEndpoints = [
-        {
-          model: 'gemini-2.5-flash-image',
-          url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiKey}`,
-          body: {
-            contents: [{ role: 'user', parts: [{ text: `Generate a detailed, high-resolution photorealistic image: ${prompt}` }] }],
-            generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
-          }
-        },
-        {
-          model: 'gemini-2.0-flash-exp',
-          url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`,
-          body: {
-            contents: [{ role: 'user', parts: [{ text: `Generate a photorealistic image: ${prompt}` }] }],
-            generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
-          }
-        },
-        {
-          model: 'gemini-2.0-flash',
-          url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-          body: {
-            contents: [{ role: 'user', parts: [{ text: `Generate an image: ${prompt}` }] }],
-            generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+    // 2. Client-Side Direct Fetch from User's IP (Converted to Base64 in-app)
+    try {
+      const seed = Date.now() + Math.floor(Math.random() * 100000);
+      const directUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${w}&height=${h}&nologo=true&seed=${seed}&model=turbo`;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 18000);
+      const bRes = await fetch(directUrl, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (bRes.ok) {
+        const blob = await bRes.blob();
+        if (blob && blob.size > 1000) {
+          const b64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          if (b64 && String(b64).startsWith('data:image/')) {
+            return b64;
           }
         }
-      ];
+      }
+    } catch (bErr) {
+      console.warn('Browser direct fetch fallback failed:', bErr.message);
+    }
 
-      for (const ep of directEndpoints) {
-        try {
-          const ctrl = new AbortController();
-          const timer = setTimeout(() => ctrl.abort(), 20000);
-          const gRes = await fetch(ep.url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
-            body: JSON.stringify(ep.body),
-            signal: ctrl.signal
-          });
-          clearTimeout(timer);
-          if (gRes.ok) {
-            const gData = await gRes.json();
-            const candidates = gData.candidates || [];
-            for (const cand of candidates) {
-              const parts = cand.content?.parts || [];
-              for (const p of parts) {
-                const inline = p.inlineData || p.inline_data;
-                if (inline && inline.data) {
-                  const mime = inline.mimeType || inline.mime_type || 'image/png';
-                  return `data:${mime};base64,${inline.data}`;
+    // 3. Client-Side AI Horde Asynchronous Fallback (100% Free · Anonymous)
+    try {
+      const hSubmit = await fetch('https://aihorde.net/api/v2/generate/async', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': '0000000000' },
+        body: JSON.stringify({
+          prompt: cleanPrompt,
+          params: { steps: 16, width: Math.min(w, 512), height: Math.min(h, 512) }
+        })
+      });
+      if (hSubmit.status === 202) {
+        const hData = await hSubmit.json();
+        const hordeId = hData.id;
+        if (hordeId) {
+          for (let p = 0; p < 5; p++) {
+            await new Promise(r => setTimeout(r, 2500));
+            const statRes = await fetch(`https://aihorde.net/api/v2/generate/status/${hordeId}`);
+            if (statRes.ok) {
+              const statData = await statRes.json();
+              if (statData.done && statData.generations?.[0]?.img) {
+                const imgLoc = statData.generations[0].img;
+                if (imgLoc.startsWith('http')) {
+                  const imgRes = await fetch(imgLoc);
+                  if (imgRes.ok) {
+                    const blob = await imgRes.blob();
+                    const b64 = await new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(blob);
+                    });
+                    if (b64) return b64;
+                  }
+                } else if (imgLoc.length > 500) {
+                  return `data:image/webp;base64,${imgLoc}`;
                 }
               }
             }
           }
-        } catch (e) {
-          console.warn(`Direct Gemini ${ep.model} error:`, e.message);
         }
       }
+    } catch (hErr) {
+      console.warn('Browser Horde fallback error:', hErr.message);
     }
 
-    throw new Error('Image generation could not complete. Please verify your free Google AI Studio key in ⚙️ Settings (aistudio.google.com/apikey).');
+    throw new Error('Image generation could not complete. Please retry in a moment.');
   } finally {
     _imgGenActive = false;
   }
@@ -5724,8 +5739,11 @@ const App = {
 
   downloadImg(url) {
     const a = document.createElement('a');
-    a.href = url; a.download = `bvmbino-img-${Date.now()}.png`; a.target = '_blank';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    a.href = url;
+    a.download = `bvmbino-image-${Date.now()}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   },
 
   // ── Message actions ───────────────────────────────────────────
