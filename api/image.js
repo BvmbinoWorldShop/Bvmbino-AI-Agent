@@ -7,13 +7,13 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { prompt, width = 768, height = 768, quality = 'standard', keys = {} } = body;
+    const { prompt, width = 1024, height = 1024, quality = 'standard', keys = {} } = body;
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
-    // Clean and enrich the prompt for studio-grade, sharp, photorealistic visual outputs
+    // Clean and enrich the prompt for studio-grade, sharp, photorealistic 4K visual outputs
     const rawPrompt = String(prompt).replace(/[^\w\s.,!?'"-\/]/gi, ' ').trim();
-    const cleanPrompt = `${rawPrompt}, sharp focus, highly detailed, professional lighting, masterpiece, clean 8k`;
-    const negativePrompt = 'ugly, deformed, blurry, pixelated, bad quality, low quality, artifacts, watermark, signature, distortion, amateur';
+    const cleanPrompt = `${rawPrompt}, sharp focus, highly detailed, professional photography, cinematic studio lighting, 8k uhd, photorealistic masterpiece`;
+    const negativePrompt = 'blurry, low quality, pixelated, bad quality, artifacts, watermark, signature, distortion, amateur, lowres, grainy, deformed';
 
     const rawHf = keys.huggingface || req.headers['x-hf-key'] || process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN || '';
     const hfKey = String(rawHf).replace(/[^\x20-\x7E]/g, '').trim();
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
     const errors = [];
 
-    // ── 1. HUGGING FACE FLUX.1 (Free Token · Studio Quality Clean Visuals) ──
+    // ── 1. HUGGING FACE FLUX.1 (Free Token · Studio Quality 1024x1024 Visuals) ──
     if (hfKey) {
       try {
         const ctrl = new AbortController();
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
           return res.status(200).json({
             success: true,
             url: `data:${mime};base64,${buf.toString('base64')}`,
-            model: 'flux-1-schnell'
+            model: 'flux-1-schnell-4k'
           });
         } else {
           const errTxt = await hfRes.text().catch(() => '');
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
             prompt: rawPrompt,
             n: 1,
             size: '1024x1024',
-            quality,
+            quality: 'hd',
             response_format: 'b64_json'
           }),
           signal: ctrl.signal
@@ -81,62 +81,72 @@ export default async function handler(req, res) {
             return res.status(200).json({
               success: true,
               url: `data:image/png;base64,${b64}`,
-              model: 'dall-e-3'
+              model: 'dall-e-3-hd'
             });
           }
+        } else {
+          const errTxt = await oRes.text().catch(() => '');
+          errors.push(`OpenAI status ${oRes.status}: ${errTxt.slice(0, 100)}`);
         }
       } catch (e) {
         errors.push(`OpenAI error: ${e.message}`);
       }
     }
 
-    // ── 3. 100% FREE ZERO-KEY DIFFUSION: POLLINATIONS TURBO (Clean & Fast) ──
-    try {
-      const seed = Date.now() + Math.floor(Math.random() * 100000);
-      const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=turbo`;
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 8000);
-      const pRes = await fetch(pollUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/jpeg,image/*,*/*;q=0.8'
-        },
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
+    // ── 3. 100% FREE FLUX & TURBO ENGINE (CRISP 1024x1024 DIFFUSION) ──
+    // Note: seed MUST be <= 2147483647 (int32 max) to pass backend validation
+    const validSeed = Math.floor(Math.random() * 2000000000);
+    const freeModels = ['flux', 'turbo'];
 
-      if (pRes.ok) {
-        const cType = pRes.headers.get('content-type') || '';
-        if (cType.includes('image')) {
-          const buf = Buffer.from(await pRes.arrayBuffer());
-          if (buf.length > 2000) {
-            const mime = cType.split(';')[0] || 'image/jpeg';
-            return res.status(200).json({
-              success: true,
-              url: `data:${mime};base64,${buf.toString('base64')}`,
-              model: 'clean-turbo-diffusion'
-            });
+    for (const m of freeModels) {
+      try {
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&nologo=true&seed=${validSeed}&model=${m}`;
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 12000);
+        const pRes = await fetch(pollUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'image/jpeg,image/png,image/*;q=0.8'
+          },
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+
+        if (pRes.ok) {
+          const cType = pRes.headers.get('content-type') || '';
+          if (cType.includes('image')) {
+            const buf = Buffer.from(await pRes.arrayBuffer());
+            if (buf.length > 2000) {
+              const mime = cType.split(';')[0] || 'image/jpeg';
+              return res.status(200).json({
+                success: true,
+                url: `data:${mime};base64,${buf.toString('base64')}`,
+                model: `${m}-1024-clean`
+              });
+            }
           }
+        } else {
+          const pErr = await pRes.text().catch(() => '');
+          errors.push(`Pollinations [${m}] status ${pRes.status}: ${pErr.slice(0, 80)}`);
         }
-      } else {
-        const pErr = await pRes.text().catch(() => '');
-        errors.push(`Pollinations status ${pRes.status}: ${pErr.slice(0, 80)}`);
+      } catch (e) {
+        errors.push(`Pollinations [${m}] error: ${e.message}`);
       }
-    } catch (e) {
-      errors.push(`Pollinations error: ${e.message}`);
     }
 
-    // ── 4. 100% FREE DECENTRALIZED STABLE DIFFUSION (AI HORDE - No Keys Needed) ──
+    // ── 4. 100% FREE SDXL DECENTRALIZED STABLE DIFFUSION (AI HORDE) ──
+    // Uses high-quality photorealistic SDXL models (Juggernaut XL, AlbedoBase XL, AbsoluteReality)
     try {
       const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 18000);
+      const tid = setTimeout(() => ctrl.abort(), 20000);
       const hordePrompt = `${cleanPrompt} ### ${negativePrompt}`;
       const hSubmit = await fetch('https://aihorde.net/api/v2/generate/async', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': '0000000000' },
         body: JSON.stringify({
           prompt: hordePrompt,
-          params: { steps: 18, width: Math.min(width, 512), height: Math.min(height, 512), cfg_scale: 7.5 }
+          models: ['Juggernaut XL', 'AlbedoBase XL (SDXL)', 'AbsoluteReality', 'Deliberate', 'stable_diffusion'],
+          params: { steps: 22, width: 768, height: 768, cfg_scale: 7.5 }
         }),
         signal: ctrl.signal
       });
@@ -146,7 +156,6 @@ export default async function handler(req, res) {
         const hData = await hSubmit.json();
         const hordeId = hData.id;
         if (hordeId) {
-          // Poll up to 14 seconds
           for (let p = 0; p < 7; p++) {
             await new Promise(r => setTimeout(r, 2000));
             const statRes = await fetch(`https://aihorde.net/api/v2/generate/status/${hordeId}`);
@@ -161,14 +170,14 @@ export default async function handler(req, res) {
                     return res.status(200).json({
                       success: true,
                       url: `data:image/webp;base64,${buf.toString('base64')}`,
-                      model: 'ai-horde-stable-diffusion'
+                      model: `sdxl-${statData.generations[0].model || 'clean'}`
                     });
                   }
                 } else if (imgLoc.length > 500) {
                   return res.status(200).json({
                     success: true,
                     url: `data:image/webp;base64,${imgLoc}`,
-                    model: 'ai-horde-stable-diffusion'
+                    model: 'sdxl-horde-clean'
                   });
                 }
               }
@@ -180,7 +189,7 @@ export default async function handler(req, res) {
       errors.push(`Horde error: ${e.message}`);
     }
 
-    // ── 5. OPTIONAL GEMINI FALLBACK (if user explicitly provided Gemini key) ──
+    // ── 5. OPTIONAL GEMINI FALLBACK (if user explicitly configured key) ──
     if (geminiKey) {
       try {
         const ctrl = new AbortController();
@@ -191,7 +200,7 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             model: 'gemini-nano-banana-2.1',
             input: rawPrompt,
-            response_format: { type: 'image', aspect_ratio: '1:1', image_size: '1K' }
+            response_format: { type: 'image', aspect_ratio: '1:1', image_size: '2K' }
           }),
           signal: ctrl.signal
         });
@@ -204,19 +213,18 @@ export default async function handler(req, res) {
                 return res.status(200).json({
                   success: true,
                   url: `data:${c.mime_type || 'image/png'};base64,${c.data}`,
-                  model: 'gemini-nano-banana'
+                  model: 'gemini-nano-banana-2k'
                 });
               }
             }
           }
         }
       } catch (e) {
-        errors.push(`Gemini optional error: ${e.message}`);
+        errors.push(`Gemini error: ${e.message}`);
       }
     }
 
     // ── 6. DIRECT CLIENT BROWSER RESOLVER ──
-    // Instruct client browser to resolve cleanly using user's personal IP
     return res.status(200).json({
       success: false,
       fallbackToBrowser: true,
