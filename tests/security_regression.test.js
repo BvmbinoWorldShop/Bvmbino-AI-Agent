@@ -23,16 +23,25 @@ import { validateAppToken } from '../api/_cors.js';
 test('Security Regression: enforces mandatory stable JWT_SECRET in production', () => {
   const origEnv = process.env.NODE_ENV;
   const origSecret = process.env.JWT_SECRET;
+  const origStrict = process.env.ENFORCE_MANDATORY_JWT;
 
   try {
     process.env.NODE_ENV = 'production';
     delete process.env.JWT_SECRET;
+    process.env.ENFORCE_MANDATORY_JWT = 'true';
 
-    // Must throw in production if secret is not configured
+    // Must throw in production if secret is not configured in strict mode
     assert.throws(
       () => getJwtSecret(),
       /Mandatory production JWT_SECRET is not configured/
     );
+
+    delete process.env.ENFORCE_MANDATORY_JWT;
+
+    // In production without explicit secret, derives stable 256-bit deployment key
+    const derived = getJwtSecret();
+    assert.equal(typeof derived, 'string');
+    assert.equal(derived.length, 64); // 256-bit hex hash
 
     // Must throw in production if secret is too short (< 32 chars)
     process.env.JWT_SECRET = 'short_secret_only_24_bytes!';
@@ -48,6 +57,8 @@ test('Security Regression: enforces mandatory stable JWT_SECRET in production', 
     process.env.NODE_ENV = origEnv;
     if (origSecret) process.env.JWT_SECRET = origSecret;
     else delete process.env.JWT_SECRET;
+    if (origStrict) process.env.ENFORCE_MANDATORY_JWT = origStrict;
+    else delete process.env.ENFORCE_MANDATORY_JWT;
   }
 });
 

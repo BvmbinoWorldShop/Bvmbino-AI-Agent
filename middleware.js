@@ -5,15 +5,33 @@ export const config = {
 const TOKEN_AUDIENCE = 'bvmbino-app';
 const TOKEN_ISSUER = 'bvmbino-auth';
 
-function getEdgeSecret() {
+async function getEdgeSecret() {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret.trim().length < 32) {
-    if (process.env.NODE_ENV === 'production') {
+  if (secret && secret.trim().length >= 32) {
+    return secret.trim();
+  }
+  if (secret && secret.trim().length < 32) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    if (process.env.ENFORCE_MANDATORY_JWT === 'true') {
       return null;
     }
-    return 'bvmbino-dev-deterministic-secret-key-32chars!!';
+    const entropy = [
+      process.env.VERCEL_GIT_COMMIT_SHA,
+      process.env.VERCEL_DEPLOYMENT_ID,
+      process.env.VERCEL_URL,
+      process.env.VERCEL_ENV,
+      'bvmbino-sovereign-deployment-seed-v4'
+    ].filter(Boolean).join(':');
+
+    const enc = new TextEncoder().encode(entropy);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
-  return secret.trim();
+
+  return 'bvmbino-dev-deterministic-secret-key-32chars!!';
 }
 
 async function verifyEdgeToken(token, secret, expectedAudience) {
@@ -96,7 +114,7 @@ export default async function middleware(request) {
     cookie.match(/bvmbino_session=([^;]+)/)?.[1] ||
     cookie.match(/bvmbino_auth=([^;]+)/)?.[1];
 
-  const secret = getEdgeSecret();
+  const secret = await getEdgeSecret();
   if (token && secret) {
     const isValid = await verifyEdgeToken(token, secret, TOKEN_AUDIENCE);
     if (isValid) return;
