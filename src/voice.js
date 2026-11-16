@@ -54,7 +54,7 @@ export const BillyLive = (() => {
     const pulse = document.getElementById('voice-pulse-wrap');
     if (pulse) { pulse.classList.add('v-speaking'); pulse.classList.remove('v-listening'); }
 
-    const clean = text.replace(/[*_`#>\[\]]/g, '').slice(0, 500);
+    const clean = text.replace(/[*_`#>[\]]/g, '').slice(0, 500);
     const ut = new SpeechSynthesisUtterance(clean);
     ut.lang = currentLang;
     ut.onend = () => {

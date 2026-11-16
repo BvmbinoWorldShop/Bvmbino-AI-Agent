@@ -2,8 +2,19 @@ export const config = {
   matcher: ['/((?!_next|_vercel|favicon).*)'],
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || '';
 const TOKEN_AUDIENCE = 'bvmbino-app';
+const TOKEN_ISSUER = 'bvmbino-auth';
+
+function getEdgeSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.trim().length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      return null;
+    }
+    return 'bvmbino-dev-deterministic-secret-key-32chars!!';
+  }
+  return secret.trim();
+}
 
 async function verifyEdgeToken(token, secret, expectedAudience) {
   if (!token || typeof token !== 'string') return false;
@@ -11,7 +22,20 @@ async function verifyEdgeToken(token, secret, expectedAudience) {
   if (parts.length !== 3) return false;
   const [encHeader, encPayload, signature] = parts;
 
-  // Verify payload claims (exp, aud)
+  // 1. Check header
+  let header;
+  try {
+    const rawHeader = atob(encHeader.replace(/-/g, '+').replace(/_/g, '/'));
+    header = JSON.parse(rawHeader);
+  } catch {
+    return false;
+  }
+
+  if (!header || header.alg !== 'HS256' || header.typ !== 'JWT') {
+    return false;
+  }
+
+  // 2. Check payload claims
   let payload;
   try {
     const rawPayload = atob(encPayload.replace(/-/g, '+').replace(/_/g, '/'));
@@ -21,10 +45,18 @@ async function verifyEdgeToken(token, secret, expectedAudience) {
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (typeof payload.exp === 'number' && payload.exp < now) return false;
+  // Expiration check
+  if (typeof payload.exp !== 'number' || payload.exp <= now) return false;
+  // Issued-at check with 30s clock tolerance
+  if (typeof payload.iat === 'number' && payload.iat > now + 30) return false;
+  // Audience check
   if (expectedAudience && payload.aud !== expectedAudience) return false;
+  // Issuer check
+  if (payload.iss && payload.iss !== TOKEN_ISSUER) return false;
+  // Subject check
+  if (!payload.sub || typeof payload.sub !== 'string') return false;
 
-  // Verify HMAC-SHA256 signature using Web Crypto API (Vercel Edge Runtime)
+  // 3. Verify HMAC-SHA256 signature using Web Crypto API
   try {
     const enc = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -64,9 +96,10 @@ export default async function middleware(request) {
     cookie.match(/bvmbino_session=([^;]+)/)?.[1] ||
     cookie.match(/bvmbino_auth=([^;]+)/)?.[1];
 
-  if (token) {
-    const isValid = await verifyEdgeToken(token, JWT_SECRET, TOKEN_AUDIENCE);
-    if (isValid) return; // Authenticated with valid signed token
+  const secret = getEdgeSecret();
+  if (token && secret) {
+    const isValid = await verifyEdgeToken(token, secret, TOKEN_AUDIENCE);
+    if (isValid) return;
   }
 
   // Not authenticated → redirect to login page

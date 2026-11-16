@@ -6,7 +6,7 @@ export async function executeOllama({
   model = 'llama3.2',
   messages = [],
   system = '',
-  stream = false,
+  stream: _stream = false,
   temperature = 0.7,
   maxTokens = 2048,
   timeoutMs = 60000,

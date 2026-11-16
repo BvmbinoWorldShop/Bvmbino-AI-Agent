@@ -20,11 +20,11 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { prompt, width = 1024, height = 1024, quality = 'standard', keys = {} } = body;
+    const { prompt, width = 1024, height = 1024, quality: _quality = 'standard', keys = {} } = body;
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
     // Clean and enrich the prompt for studio-grade, sharp, photorealistic 4K visual outputs
-    const rawPrompt = String(prompt).replace(/[^\w\s.,!?'"-\/]/gi, ' ').trim();
+    const rawPrompt = String(prompt).replace(/[^\w\s.,!?'"/-]/gi, ' ').trim();
     const cleanPrompt = `${rawPrompt}, sharp focus, highly detailed, professional photography, cinematic studio lighting, 8k uhd, photorealistic masterpiece`;
     const negativePrompt = 'blurry, low quality, pixelated, bad quality, artifacts, watermark, signature, distortion, amateur, lowres, grainy, deformed';
 

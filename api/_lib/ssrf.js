@@ -1,4 +1,7 @@
 import dns from 'dns/promises';
+import http from 'http';
+import https from 'https';
+import tls from 'tls';
 import { isIPv4, isIPv6 } from 'net';
 
 /**
@@ -85,7 +88,7 @@ export function isPrivateIp(ip) {
 }
 
 /**
- * Comprehensive SSRF Validator with DNS Resolution & Pinning
+ * Validates that a raw URL uses a permitted protocol and does not resolve to private/internal IPs
  */
 export async function validateSafeUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') {
@@ -123,7 +126,7 @@ export async function validateSafeUrl(rawUrl) {
     if (isPrivateIp(rawHost)) {
       throw new Error(`SSRF Protection: Access to restricted private/internal IP address is forbidden: ${rawHost}`);
     }
-    return { url: parsed.toString(), ip: rawHost, hostname: rawHost };
+    return { url: parsed.toString(), ip: rawHost, hostname: rawHost, parsed };
   }
 
   // Resolve hostname via DNS to prevent DNS rebinding attacks
@@ -149,6 +152,113 @@ export async function validateSafeUrl(rawUrl) {
     url: parsed.toString(),
     ip: addresses[0].address,
     hostname: rawHost,
-    allIps: addresses.map(a => a.address)
+    allIps: addresses.map(a => a.address),
+    parsed
   };
+}
+
+/**
+ * DNS-Pinned SSRF-Safe Fetcher
+ * Connects directly to the pre-validated IP address, preventing TOCTOU DNS rebinding,
+ * while maintaining TLS SNI and Certificate Identity Verification.
+ */
+export async function safePinnedFetch(rawUrl, options = {}, hopCount = 0) {
+  if (hopCount > 3) {
+    throw new Error('SSRF Protection: Exceeded maximum redirect limit (3 hops)');
+  }
+
+  const { parsed, ip, hostname } = await validateSafeUrl(rawUrl);
+  const isHttps = parsed.protocol === 'https:';
+  const defaultPort = isHttps ? 443 : 80;
+  const port = parsed.port ? parseInt(parsed.port, 10) : defaultPort;
+  const timeoutMs = options.timeoutMs || 15000;
+  const maxBytes = options.maxBytes || 5 * 1024 * 1024; // 5 MB
+
+  return new Promise((resolve, reject) => {
+    let timer = null;
+    let req = null;
+
+    const requestOptions = {
+      host: ip, // Socket connects DIRECTLY to the pinned IP (defeats DNS rebinding)
+      port,
+      path: parsed.pathname + parsed.search,
+      method: options.method || 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 BvmbinoBot/1.0',
+        'Accept': 'text/html,application/xhtml+xml,text/plain;q=0.9',
+        ...options.headers,
+        'Host': parsed.host // Preserves virtual host routing
+      }
+    };
+
+    if (isHttps) {
+      requestOptions.servername = hostname; // SNI sends the domain name for TLS handshake
+      requestOptions.rejectUnauthorized = true; // Enforces trusted certificate authority
+      requestOptions.checkServerIdentity = (host, cert) => {
+        // Strictly verify certificate matches the domain hostname, NOT the pinned IP
+        return tls.checkServerIdentity(hostname, cert);
+      };
+    }
+
+    const client = isHttps ? https : http;
+
+    req = client.request(requestOptions, async (res) => {
+      clearTimeout(timer);
+
+      // Handle HTTP Redirects with strict re-validation & re-pinning
+      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+        const location = res.headers['location'];
+        if (!location) {
+          return reject(new Error('Redirect returned without Location header'));
+        }
+        res.resume(); // Discard redirect body
+        const nextUrl = new URL(location, parsed.toString()).toString();
+        try {
+          const redirectRes = await safePinnedFetch(nextUrl, options, hopCount + 1);
+          return resolve(redirectRes);
+        } catch (e) {
+          return reject(e);
+        }
+      }
+
+      const chunks = [];
+      let totalBytes = 0;
+
+      res.on('data', (chunk) => {
+        totalBytes += chunk.length;
+        if (totalBytes > maxBytes) {
+          req.destroy(new Error(`Response body exceeded maximum allowed size (${maxBytes} bytes)`));
+          return;
+        }
+        chunks.push(chunk);
+      });
+
+      res.on('end', () => {
+        const bodyBuffer = Buffer.concat(chunks);
+        resolve({
+          status: res.statusCode,
+          headers: res.headers,
+          url: parsed.toString(),
+          pinnedIp: ip,
+          buffer: bodyBuffer,
+          text: () => bodyBuffer.toString('utf8'),
+          ok: res.statusCode >= 200 && res.statusCode < 300
+        });
+      });
+    });
+
+    req.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+
+    timer = setTimeout(() => {
+      req.destroy(new Error(`safePinnedFetch timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    if (options.body) {
+      req.write(options.body);
+    }
+    req.end();
+  });
 }

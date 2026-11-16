@@ -1,8 +1,13 @@
 import { verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './_lib/auth.js';
+import {
+  checkRateLimit,
+  applyRateLimitHeaders,
+  trackAbuse as sharedTrackAbuse
+} from './_lib/ratelimit.js';
 
 // ── 1. CORS HANDLER ───────────────────────────────────────────────────────
 export function setCors(req, res) {
-  const origin = req.headers.origin;
+  const origin = req.headers?.origin;
   
   // Strict Production Origin Matching
   const isAllowed = !origin || 
@@ -20,6 +25,8 @@ export function setCors(req, res) {
 
 // ── 2. APP TOKEN SECURITY (Strict Signed-Token Verification Only) ───────────
 export function validateAppToken(req) {
+  if (!req || !req.headers) return false;
+
   // 1. Check cookies for signed token
   const cookieHeader = req.headers['cookie'] || '';
   const cookieTokens = [
@@ -64,40 +71,23 @@ export function validateAppToken(req) {
   return false;
 }
 
-// ── 3. ABUSE PROTECTION ────────────────────────────────────────────────────
-const abuseStorage = new Map();
-export async function trackAbuse(req) {
-  const ip = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
-  const now = Date.now();
-  const userData = abuseStorage.get(ip) || { count: 0, last: 0 };
-  
-  if (now - userData.last < 1000) userData.count++;
-  else userData.count = 1;
-  
-  userData.last = now;
-  abuseStorage.set(ip, userData);
-  
-  return userData.count > 50;
+// ── 3. ABUSE PROTECTION & RATE LIMITING (Shared Engine) ────────────────────
+export const trackAbuse = sharedTrackAbuse;
+
+export function isRateLimited(req, limit = 60, res = null, routeKey = 'api') {
+  const result = checkRateLimit(req, routeKey, limit, 60000);
+  if (res) {
+    applyRateLimitHeaders(res, result);
+  }
+  return !result.allowed;
 }
 
-// ── 4. RATE LIMITING ───────────────────────────────────────────────────────
-const rateLimitMap = new Map();
-export function isRateLimited(req, limit = 10) {
-  const ip = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
-  const now = Math.floor(Date.now() / 60000);
-  
-  const currentKey = `${ip}:${now}`;
-  const count = (rateLimitMap.get(currentKey) || 0) + 1;
-  rateLimitMap.set(currentKey, count);
-  
-  if (rateLimitMap.size > 1000) rateLimitMap.clear();
-  return count > limit;
-}
-
-// ── 5. MESSAGE VALIDATION ──────────────────────────────────────────────────
+// ── 4. MESSAGE VALIDATION ──────────────────────────────────────────────────
 export function validateMessages(messages) {
   if (!messages) return 'messages are required';
   if (!Array.isArray(messages)) return 'messages must be an array';
   if (messages.length === 0) return 'messages cannot be empty';
   return null;
 }
+
+export { checkRateLimit, applyRateLimitHeaders };
