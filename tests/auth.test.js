@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { signToken, verifyToken, checkAdminCredentials, JWT_SECRET, TOKEN_AUDIENCE } from '../api/lib/auth.js';
+import { signToken, verifyToken, checkAdminCredentials, JWT_SECRET, TOKEN_AUDIENCE } from '../api/_lib/auth.js';
 
 test('Auth: signs and verifies a valid token', () => {
   const token = signToken({ sub: 'Lataupe95', role: 'admin' });

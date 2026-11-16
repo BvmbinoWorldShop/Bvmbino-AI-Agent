@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { transformAnthropicPayload } from '../api/lib/adapters/anthropic.js';
-import { ADAPTERS, executeAdapter } from '../api/lib/adapters/index.js';
+import { transformAnthropicPayload } from '../api/_lib/adapters/anthropic.js';
+import { ADAPTERS, executeAdapter } from '../api/_lib/adapters/index.js';
 
 test('Adapters: transforms Anthropic payload correctly', () => {
   const inputMessages = [

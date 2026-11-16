@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildExecutionChain } from '../api/lib/chain.js';
+import { buildExecutionChain } from '../api/_lib/chain.js';
 
 test('Orchestrator Chain: prioritizes free providers before paid providers', () => {
   const allKeys = {

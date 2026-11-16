@@ -1,4 +1,4 @@
-import { signToken, checkAdminCredentials, JWT_SECRET } from './lib/auth.js';
+import { signToken, checkAdminCredentials, JWT_SECRET } from './_lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();

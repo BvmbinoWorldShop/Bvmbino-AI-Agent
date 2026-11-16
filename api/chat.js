@@ -1,7 +1,7 @@
 import { setCors, isRateLimited, validateMessages, validateAppToken, trackAbuse } from './_cors.js';
-import { CORE, SKILLS, detectSkill, getMaxTokens } from './lib/prompts.js';
-import { executeAdapter } from './lib/adapters/index.js';
-import { buildExecutionChain } from './lib/chain.js';
+import { CORE, SKILLS, detectSkill, getMaxTokens } from './_lib/prompts.js';
+import { executeAdapter } from './_lib/adapters/index.js';
+import { buildExecutionChain } from './_lib/chain.js';
 
 export const maxDuration = 60;
 

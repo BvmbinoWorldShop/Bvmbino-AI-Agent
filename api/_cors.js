@@ -1,4 +1,4 @@
-import { verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './lib/auth.js';
+import { verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './_lib/auth.js';
 
 // ── 1. CORS HANDLER ───────────────────────────────────────────────────────
 export function setCors(req, res) {

@@ -1,5 +1,5 @@
 import { setCors } from './_cors.js';
-import { signToken, verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './lib/auth.js';
+import { signToken, verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './_lib/auth.js';
 
 export default async function handler(req, res) {
   setCors(req, res);
