@@ -10,6 +10,7 @@ export default async function handler(req, res) {
   const sessionToken = 
     authCookie.match(/bvmbino_session=([^;]+)/)?.[1] ||
     authCookie.match(/bvmbino_auth=([^;]+)/)?.[1] ||
+    req.headers['x-app-token'] ||
     req.headers['authorization']?.replace('Bearer ', '');
 
   const payload = sessionToken ? verifyToken(sessionToken, JWT_SECRET, TOKEN_AUDIENCE) : null;
