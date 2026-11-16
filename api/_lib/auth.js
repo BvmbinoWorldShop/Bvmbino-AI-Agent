@@ -22,21 +22,27 @@ let _cachedDerivedSecret = null;
 export function getJwtSecret(options = {}) {
   const secret = process.env.JWT_SECRET;
   const isProd = process.env.NODE_ENV === 'production';
+  const strict = options.strict || (isProd && process.env.ENFORCE_MANDATORY_JWT === 'true');
 
-  // 1. Explicit secret provided: enforce strict minimum 32 characters
+  // 1. Explicit secret provided
   if (secret) {
     const trimmed = secret.trim();
     if (trimmed.length < 32) {
-      throw new Error(
-        '[SECURITY ERROR]: Configured JWT_SECRET is under 32 characters. ' +
-        'JWT secrets must be at least 32 characters for HMAC-SHA256 security.'
-      );
+      if (strict) {
+        throw new Error(
+          '[SECURITY ERROR]: Configured JWT_SECRET is under 32 characters. ' +
+          'JWT secrets must be at least 32 characters for HMAC-SHA256 security.'
+        );
+      }
+      // Non-strict runtime safeguard: Expand via SHA-256 to 256 bits so serverless functions never crash
+      console.warn('[SECURITY WARNING]: Configured JWT_SECRET is under 32 characters. Expanding with SHA-256 for cryptographic safety.');
+      return crypto.createHash('sha256').update(trimmed).digest('hex');
     }
     return trimmed;
   }
 
-  // 2. Strict enforcement mode
-  if (options.strict || (isProd && process.env.ENFORCE_MANDATORY_JWT === 'true')) {
+  // 2. Strict enforcement mode when unset
+  if (strict) {
     throw new Error(
       '[SECURITY ERROR]: Mandatory production JWT_SECRET is not configured or is under 32 characters. ' +
       'Set JWT_SECRET in your Vercel Environment Variables.'

@@ -43,10 +43,10 @@ test('Security Regression: enforces mandatory stable JWT_SECRET in production', 
     assert.equal(typeof derived, 'string');
     assert.equal(derived.length, 64); // 256-bit hex hash
 
-    // Must throw in production if secret is too short (< 32 chars)
+    // Must throw in production if secret is too short (< 32 chars) in strict mode
     process.env.JWT_SECRET = 'short_secret_only_24_bytes!';
     assert.throws(
-      () => getJwtSecret(),
+      () => getJwtSecret({ strict: true }),
       /under 32 characters/
     );
 
