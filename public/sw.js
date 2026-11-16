@@ -1,8 +1,10 @@
-const CACHE_NAME = 'bvmbino-sovereign-v7.9';
+const CACHE_NAME = 'bvmbino-sovereign-v8.0';
 const ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/assets/avatars/billy.png',
+  '/assets/avatars/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', e => {
@@ -25,7 +27,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.pathname.startsWith('/api/')) return;
 
-  // Network-first strategy so live updates and sidebar/layout fixes are always served fresh
+  // Network-first strategy with cache fallback for instant offline availability
   e.respondWith(
     fetch(e.request)
       .then(res => {

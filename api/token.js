@@ -1,14 +1,5 @@
-import crypto from 'crypto';
 import { setCors } from './_cors.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'bvmbino-secret-v3';
-
-function signToken(payload, secret) {
-  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
-  return `${header}.${body}.${signature}`;
-}
+import { signToken, verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './lib/auth.js';
 
 export default async function handler(req, res) {
   setCors(req, res);
@@ -16,7 +7,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const authCookie = req.headers.cookie || '';
-  const isAuthenticated = authCookie.includes('bvmbino_auth=ok') || process.env.NODE_ENV === 'development';
+  const sessionToken = 
+    authCookie.match(/bvmbino_session=([^;]+)/)?.[1] ||
+    authCookie.match(/bvmbino_auth=([^;]+)/)?.[1] ||
+    req.headers['authorization']?.replace('Bearer ', '');
+
+  const payload = sessionToken ? verifyToken(sessionToken, JWT_SECRET, TOKEN_AUDIENCE) : null;
+  const isAuthenticated = !!payload || process.env.NODE_ENV === 'development';
 
   if (!isAuthenticated) {
     return res.status(401).json({
@@ -27,14 +24,15 @@ export default async function handler(req, res) {
 
   try {
     const token = signToken({ 
+      sub: payload?.sub || 'Lataupe95',
       auth: 'elite',
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24)
-    }, JWT_SECRET);
+      role: 'admin'
+    }, JWT_SECRET, 60 * 60 * 24);
 
     return res.status(200).json({
       token,
       status: 'active',
-      empire: 'bvmbino_pro_v3'
+      empire: 'bvmbino_pro_v4'
     });
   } catch (err) {
     console.error('[Token] Generation Failed:', err);

@@ -1,4 +1,4 @@
-const JWT_SECRET = process.env.JWT_SECRET || 'bvmbino-secret-v3';
+import { verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './lib/auth.js';
 
 // ── 1. CORS HANDLER ───────────────────────────────────────────────────────
 export function setCors(req, res) {
@@ -18,35 +18,51 @@ export function setCors(req, res) {
   }
 }
 
-// ── 2. APP TOKEN SECURITY ──────────────────────────────────────────────────
+// ── 2. APP TOKEN SECURITY (Signed Tokens with Exp and Aud Checks) ───────────
 export function validateAppToken(req) {
-  // Check cookie auth from login portal
-  const cookie = req.headers['cookie'] || '';
-  if (cookie.includes('bvmbino_auth=ok')) return true;
+  // 1. Check cookies for signed token
+  const cookieHeader = req.headers['cookie'] || '';
+  const cookieTokens = [
+    cookieHeader.match(/bvmbino_session=([^;]+)/)?.[1],
+    cookieHeader.match(/bvmbino_auth=([^;]+)/)?.[1]
+  ].filter(Boolean);
 
-  // Check x-app-token header
-  const token = req.headers['x-app-token'];
-  if (token) {
-    if (token === JWT_SECRET || token === 'bvmbino-elite-pass') return true;
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-        if (payload && (payload.auth === 'elite' || payload.role === 'admin')) return true;
-      }
-    } catch (err) {
-      console.error('[Auth] Token Validation Failed:', err.message);
+  for (const cToken of cookieTokens) {
+    const payload = verifyToken(cToken, JWT_SECRET, TOKEN_AUDIENCE);
+    if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
+      return true;
     }
   }
 
-  // Check authorization header
-  const auth = req.headers['authorization'];
-  if (auth && (auth.startsWith('Bearer ') || auth === JWT_SECRET)) return true;
+  // 2. Check x-app-token header
+  const token = req.headers['x-app-token'];
+  if (token) {
+    if (token === JWT_SECRET) return true;
+    const payload = verifyToken(token, JWT_SECRET, TOKEN_AUDIENCE);
+    if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
+      return true;
+    }
+  }
 
-  // Allow same-origin / internal requests
-  const host = req.headers['host'] || '';
-  if (host.includes('localhost') || host.includes('127.0.0.1') || host.includes('bvmbino-ai-agent')) {
-    return true;
+  // 3. Check authorization header (Bearer <signed-jwt>)
+  const auth = req.headers['authorization'];
+  if (auth) {
+    if (auth === `Bearer ${JWT_SECRET}`) return true;
+    if (auth.startsWith('Bearer ')) {
+      const bearerToken = auth.slice(7).trim();
+      const payload = verifyToken(bearerToken, JWT_SECRET, TOKEN_AUDIENCE);
+      if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
+        return true;
+      }
+    }
+  }
+
+  // 4. In local development allow localhost
+  if (process.env.NODE_ENV === 'development') {
+    const host = req.headers['host'] || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+      return true;
+    }
   }
 
   return false;

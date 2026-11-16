@@ -1,24 +1,29 @@
+import { signToken, checkAdminCredentials, JWT_SECRET } from './lib/auth.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { username, password } = body || {};
     
-    const u = (username || '').trim().toUpperCase();
-    const p = (password || '').trim();
+    // Check credentials against environment variables (with secure password rotation)
+    const isValid = checkAdminCredentials(username, password);
 
-    // Check credentials (case-insensitive for username)
-    const validUser = u === 'LATAUPE95';
-    const validPass = p === 'Tyanna225' || p === '021291';
+    if (isValid) {
+      const cleanUser = (username || 'Lataupe95').trim();
+      // Generate signed JWT token with 30-day expiration and audience check
+      const token = signToken({ sub: cleanUser, role: 'admin' }, JWT_SECRET, 30 * 24 * 3600);
 
-    if (validUser && validPass) {
       // Set secure auth cookie with 30-day persistence
-      res.setHeader('Set-Cookie', 'bvmbino_auth=ok; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000');
-      res.status(200).json({ ok: true, username: 'Lataupe95' });
+      res.setHeader('Set-Cookie', [
+        `bvmbino_session=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`,
+        `bvmbino_auth=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`
+      ]);
+      return res.status(200).json({ ok: true, token, username: cleanUser });
     } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
   } catch (e) {
-    res.status(400).json({ error: 'Bad request' });
+    return res.status(400).json({ error: 'Bad request: ' + e.message });
   }
 }
