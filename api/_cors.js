@@ -18,7 +18,7 @@ export function setCors(req, res) {
   }
 }
 
-// ── 2. APP TOKEN SECURITY (Signed Tokens with Exp and Aud Checks) ───────────
+// ── 2. APP TOKEN SECURITY (Strict Signed-Token Verification Only) ───────────
 export function validateAppToken(req) {
   // 1. Check cookies for signed token
   const cookieHeader = req.headers['cookie'] || '';
@@ -34,10 +34,9 @@ export function validateAppToken(req) {
     }
   }
 
-  // 2. Check x-app-token header
+  // 2. Check x-app-token header (strictly verify cryptographic signature & claims)
   const token = req.headers['x-app-token'];
   if (token) {
-    if (token === JWT_SECRET) return true;
     const payload = verifyToken(token, JWT_SECRET, TOKEN_AUDIENCE);
     if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
       return true;
@@ -46,18 +45,15 @@ export function validateAppToken(req) {
 
   // 3. Check authorization header (Bearer <signed-jwt>)
   const auth = req.headers['authorization'];
-  if (auth) {
-    if (auth === `Bearer ${JWT_SECRET}`) return true;
-    if (auth.startsWith('Bearer ')) {
-      const bearerToken = auth.slice(7).trim();
-      const payload = verifyToken(bearerToken, JWT_SECRET, TOKEN_AUDIENCE);
-      if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
-        return true;
-      }
+  if (auth && auth.startsWith('Bearer ')) {
+    const bearerToken = auth.slice(7).trim();
+    const payload = verifyToken(bearerToken, JWT_SECRET, TOKEN_AUDIENCE);
+    if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
+      return true;
     }
   }
 
-  // 4. In local development allow localhost
+  // 4. In local development allow localhost only if explicit dev mode
   if (process.env.NODE_ENV === 'development') {
     const host = req.headers['host'] || '';
     if (host.includes('localhost') || host.includes('127.0.0.1')) {

@@ -1,9 +1,22 @@
-import { setCors } from './_cors.js';
+import { setCors, isRateLimited, validateAppToken, trackAbuse } from './_cors.js';
 
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Rate Limit check (20 image generations / min)
+  if (isRateLimited(req, 20)) return res.status(429).json({ error: 'Rate limit exceeded (20 req/min)' });
+
+  // Mandatory App Token Authentication
+  if (!validateAppToken(req)) {
+    return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
+  }
+
+  // Abuse Protection
+  if (await trackAbuse(req)) {
+    return res.status(429).json({ error: 'System busy — too many requests from your IP' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});

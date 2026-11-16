@@ -1,15 +1,17 @@
 /**
  * Builds the provider execution chain respecting the user mandate:
- * 100% Free / low-cost providers first (Groq, Cerebras, OpenRouter free, Gemini free tier).
- * Paid frontier models (OpenAI, Anthropic) strictly last.
+ * 1. 100% Free / Local AI first (Local Ollama, Groq, Cerebras, OpenRouter free, Gemini free tier).
+ * 2. Paid frontier models (OpenAI, Anthropic) strictly last as optional accelerators.
  */
 export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocuments = [] }) {
   const chain = [];
 
-  // Honour explicit user-requested model first if corresponding key is provided
+  // Honour explicit user-requested model first if corresponding key/endpoint is provided
   if (requestedModel) {
     const rm = requestedModel.toLowerCase();
-    if (rm.includes('claude') && keys.anthropic) {
+    if ((rm.startsWith('local/') || rm.startsWith('ollama/')) || rm.includes('llama3.2') || rm.includes('qwen') || rm.includes('phi3')) {
+      chain.push({ provider: 'ollama', model: requestedModel.replace(/^(local|ollama)\//, '') });
+    } else if (rm.includes('claude') && keys.anthropic) {
       chain.push({ provider: 'anthropic', model: requestedModel });
     } else if (rm.includes('gpt') && keys.openai) {
       chain.push({ provider: 'openai', model: requestedModel });
@@ -32,7 +34,12 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     if (keys.anthropic) chain.push({ provider: 'anthropic', model: 'claude-3-5-sonnet-latest' });
   }
 
-  // Priority 1: 100% Free LPU / Wafer-Scale Tier (Groq & Cerebras)
+  // Priority 1A: Local AI (Zero API Keys · 100% Private · Zero Cost)
+  if (keys.ollama || keys.local || process.env.OLLAMA_HOST) {
+    chain.push({ provider: 'ollama', model: 'llama3.2' });
+  }
+
+  // Priority 1B: 100% Free Cloud LPU / Wafer-Scale Tier (Groq & Cerebras)
   if (keys.groq) {
     chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
   }

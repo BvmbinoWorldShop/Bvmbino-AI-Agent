@@ -1,10 +1,22 @@
-import { setCors, isRateLimited } from './_cors.js';
+import { setCors, isRateLimited, validateAppToken, trackAbuse } from './_cors.js';
 
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  
+  // Rate Limit check (40 req/min)
   if (isRateLimited(req, 40)) return res.status(429).json({ error: 'Rate limit exceeded (40 req/min)' });
+
+  // Mandatory App Token Authentication
+  if (!validateAppToken(req)) {
+    return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
+  }
+
+  // Abuse Protection
+  if (await trackAbuse(req)) {
+    return res.status(429).json({ error: 'System busy — too many requests from your IP' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -49,38 +61,45 @@ export default async function handler(req, res) {
     const urls = [...rawText.matchAll(urlRegex)].map(m => m[0]);
     const titles = [...rawText.matchAll(titleRegex)].map(m => m[1]);
 
-    for (let i = 0; i < Math.min(urls.length, count); i++) {
-      results.push({ title: titles[i] || `Result ${i + 1}`, url: urls[i], description: '' });
-    }
+    const seen = new Set();
+    urls.slice(0, count).forEach((u, i) => {
+      if (!seen.has(u)) {
+        seen.add(u);
+        results.push({
+          title: titles[i] || u.replace(/https?:\/\/(www\.)?/, '').split('/')[0],
+          url: u,
+          snippet: rawText.slice(Math.max(0, rawText.indexOf(u) - 100), rawText.indexOf(u) + 150).replace(/[#*`]/g, '').trim(),
+        });
+      }
+    });
 
-    // Step 3: Summarize with Gemini if key available
+    // Step 3: Synthesis with Gemini if key available, else return clean web snippets
     let answer = '';
-    if (gKey && rawText) {
-      const cleanText = rawText.replace(/[#*`]/g, '').slice(0, 3000);
-      const gCtrl = new AbortController();
-      const gTid = setTimeout(() => gCtrl.abort(), 8000);
+    if (gKey && results.length > 0) {
       try {
-        const gRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${gKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': gKey },
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text: `Based on these search results for "${query}", give a direct, verified, comprehensive summary with all key names, numbers, and facts:\n\n${cleanText}` }] }],
-              generationConfig: { maxOutputTokens: 600 },
-            }),
-            signal: gCtrl.signal,
-          }
-        );
-        clearTimeout(gTid);
-        const gData = await gRes.json();
-        answer = gData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      } catch (e) { clearTimeout(gTid); answer = ''; }
-    } else {
-      answer = rawText.slice(0, 1000);
+        const gemCtrl = new AbortController();
+        const gemTid = setTimeout(() => gemCtrl.abort(), 8000);
+        const gemRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${gKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              role: 'user',
+              parts: [{ text: `Synthesize a direct, concise executive answer based strictly on these search results:\n\nQuery: ${query}\n\nIntel:\n${rawText.slice(0, 3000)}` }]
+            }],
+            generationConfig: { maxOutputTokens: 300 }
+          }),
+          signal: gemCtrl.signal
+        });
+        clearTimeout(gemTid);
+        if (gemRes.ok) {
+          const gd = await gemRes.json();
+          answer = gd.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        }
+      } catch {}
     }
 
-    return res.status(200).json({ results, answer, query });
+    return res.status(200).json({ query, results, answer, count: results.length });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

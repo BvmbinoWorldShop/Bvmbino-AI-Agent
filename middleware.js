@@ -2,7 +2,7 @@ export const config = {
   matcher: ['/((?!_next|_vercel|favicon).*)'],
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || 'bvmbino-prod-secret-v4-s0v3r31gn';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 const TOKEN_AUDIENCE = 'bvmbino-app';
 
 async function verifyEdgeToken(token, secret, expectedAudience) {

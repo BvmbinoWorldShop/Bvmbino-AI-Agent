@@ -45,7 +45,12 @@ test('Auth: rejects token signed with different secret', () => {
 });
 
 test('Auth: validates admin credentials and supports rotation', () => {
-  // Standard default credentials
+  // Set configured credentials
+  process.env.ADMIN_USER = 'LATAUPE95';
+  process.env.ADMIN_PASSWORD = 'Tyanna225';
+  process.env.ADMIN_PASSWORDS = 'Tyanna225,021291';
+
+  // Standard credentials
   assert.equal(checkAdminCredentials('LATAUPE95', 'Tyanna225'), true);
   assert.equal(checkAdminCredentials('lataupe95', '021291'), true); // case-insensitive user
   assert.equal(checkAdminCredentials('LATAUPE95', 'wrongpass'), false);
@@ -58,7 +63,8 @@ test('Auth: validates admin credentials and supports rotation', () => {
   assert.equal(checkAdminCredentials('SUPERADMIN', 'backupsecret456'), true);
   assert.equal(checkAdminCredentials('superadmin', 'Tyanna225'), false);
 
-  // Restore defaults
+  // Clean up
   delete process.env.ADMIN_USER;
+  delete process.env.ADMIN_PASSWORD;
   delete process.env.ADMIN_PASSWORDS;
 });
