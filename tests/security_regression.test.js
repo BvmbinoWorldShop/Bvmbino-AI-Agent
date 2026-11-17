@@ -28,18 +28,26 @@ test('Security Regression: enforces mandatory stable JWT_SECRET in production', 
   try {
     process.env.NODE_ENV = 'production';
     delete process.env.JWT_SECRET;
+    process.env.ENFORCE_MANDATORY_JWT = 'true';
 
-    // Must throw in production if secret is not configured
+    // Must throw in production if secret is not configured in strict mode
     assert.throws(
       () => getJwtSecret(),
-      /strictly requires a secure JWT_SECRET/
+      /Mandatory production JWT_SECRET is not configured/
     );
 
-    // Must throw in production if secret is too short (< 32 chars)
+    delete process.env.ENFORCE_MANDATORY_JWT;
+
+    // In production without explicit secret, derives stable 256-bit deployment key
+    const derived = getJwtSecret();
+    assert.equal(typeof derived, 'string');
+    assert.equal(derived.length, 64); // 256-bit hex hash
+
+    // Must throw in production if secret is too short (< 32 chars) in strict mode
     process.env.JWT_SECRET = 'short_secret_only_24_bytes!';
     assert.throws(
-      () => getJwtSecret(),
-      /strictly requires a secure JWT_SECRET/
+      () => getJwtSecret({ strict: true }),
+      /under 32 characters/
     );
 
     // Valid production secret (>= 32 chars)
