@@ -15,8 +15,10 @@ import {
 import {
   loadLedger,
   addRecord,
+  updateRecordVerification,
   deleteRecord,
-  getFinancialSummary
+  getFinancialSummary,
+  FINANCIAL_VERIFICATION_STATES
 } from './_lib/business_records.js';
 
 export const maxDuration = 60;
@@ -185,10 +187,24 @@ export default async function handler(req, res) {
           type: body.type,
           date: body.date,
           description: body.description,
-          verifiedBy: body.verifiedBy || 'Boss'
+          verifiedBy: body.verifiedBy || 'Boss',
+          status: body.status,
+          verificationStatus: body.verificationStatus,
+          evidenceRef: body.evidenceRef
         });
         const summary = getFinancialSummary(record.date?.slice(0, 7));
         return res.status(201).json({ ok: true, record, summary });
+      }
+
+      if (action === 'verify_record') {
+        if (!body.id) return res.status(400).json({ error: 'Record id is required' });
+        const updated = updateRecordVerification(body.id, {
+          verificationStatus: body.verificationStatus || body.status || FINANCIAL_VERIFICATION_STATES.VERIFIED,
+          evidenceRef: body.evidenceRef,
+          verifiedBy: body.verifiedBy || 'Boss'
+        });
+        const summary = getFinancialSummary(updated.date?.slice(0, 7));
+        return res.status(200).json({ ok: true, record: updated, summary });
       }
 
       if (action === 'delete_record') {
@@ -203,7 +219,7 @@ export default async function handler(req, res) {
       }
 
       return res.status(400).json({
-        error: `Unknown action: ${action}. Available: add_item, update_item, supersede_item, delete_item, summarize, import, add_record, delete_record, summary`
+        error: `Unknown action: ${action}. Available: add_item, update_item, supersede_item, delete_item, summarize, import, add_record, verify_record, delete_record, summary`
       });
     } catch (err) {
       return res.status(400).json({ error: err.message });

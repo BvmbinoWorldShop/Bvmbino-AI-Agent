@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     req.headers['authorization']?.replace('Bearer ', '');
 
   const payload = sessionToken ? verifyToken(sessionToken, JWT_SECRET, TOKEN_AUDIENCE) : null;
-  const isAuthenticated = !!payload || process.env.NODE_ENV === 'development';
+  const isAuthenticated = !!payload;
 
   if (!isAuthenticated) {
     return res.status(401).json({

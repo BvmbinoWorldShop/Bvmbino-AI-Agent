@@ -60,14 +60,6 @@ export function validateAppToken(req) {
     }
   }
 
-  // 4. In local development allow localhost only if explicit dev mode
-  if (process.env.NODE_ENV === 'development') {
-    const host = req.headers['host'] || '';
-    if (host.includes('localhost') || host.includes('127.0.0.1')) {
-      return true;
-    }
-  }
-
   return false;
 }
 

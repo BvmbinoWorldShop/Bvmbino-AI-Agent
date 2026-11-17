@@ -1,7 +1,8 @@
 /**
  * Builds the provider execution chain respecting the user mandate:
- * 1. 100% Free / Local AI first (Local Ollama, Groq, Cerebras, OpenRouter free, Gemini free tier).
- * 2. Paid frontier models (OpenAI, Anthropic) strictly last as optional accelerators.
+ * 1. 100% Free Cloud LPUs / APIs first (Groq, Cerebras, OpenRouter free, Gemini free tier).
+ * 2. Developer / fast models (Mistral, OpenRouter standard).
+ * 3. Paid frontier models (OpenAI, Anthropic) strictly last as optional accelerators.
  */
 export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocuments = [] }) {
   const chain = [];
@@ -9,9 +10,7 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
   // Honour explicit user-requested model first if corresponding key/endpoint is provided
   if (requestedModel) {
     const rm = requestedModel.toLowerCase();
-    if ((rm.startsWith('local/') || rm.startsWith('ollama/')) || rm.includes('llama3.2') || rm.includes('qwen') || rm.includes('phi3')) {
-      chain.push({ provider: 'ollama', model: requestedModel.replace(/^(local|ollama)\//, '') });
-    } else if (rm.includes('claude') && keys.anthropic) {
+    if (rm.includes('claude') && keys.anthropic) {
       chain.push({ provider: 'anthropic', model: requestedModel });
     } else if (rm.includes('gpt') && keys.openai) {
       chain.push({ provider: 'openai', model: requestedModel });
@@ -53,12 +52,7 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     chain.push({ provider: 'groq', model: 'llama-3.1-8b-instant' });
   }
 
-  // Priority 2: Local AI (Zero API Keys · 100% Private · Zero Cost)
-  if (keys.ollama || keys.local || process.env.OLLAMA_HOST) {
-    chain.push({ provider: 'ollama', model: 'llama3.2' });
-  }
-
-  // Priority 3: Generous / Developer Cloud Tier
+  // Priority 2: Generous / Developer Cloud Tier
   if (keys.openrouter) {
     chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct' });
   }
@@ -66,7 +60,7 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     chain.push({ provider: 'mistral', model: 'mistral-small-latest' });
   }
 
-  // Priority 4: Paid Frontier Models (STRICTLY LAST)
+  // Priority 3: Paid Frontier Models (STRICTLY LAST)
   if (keys.openai) {
     chain.push({ provider: 'openai', model: 'gpt-4o-mini' });
     chain.push({ provider: 'openai', model: 'gpt-4o' });

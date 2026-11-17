@@ -456,11 +456,12 @@ export function createConversationSummary({ sessionId, messages = [], title = 'S
  * Retrieves most relevant memory items based on query tokens, venture match, and tier confidence.
  * Strictly excludes superseded/archived items to prevent acting on stale data.
  */
-export function retrieveRelevantMemory({ query = '', venture = null, limit = 8 }) {
-  const memory = loadPersistentMemory();
+export function retrieveRelevantMemory({ query = '', venture = null, limit = 8, sourceMemory = null }) {
+  const memory = sourceMemory || loadPersistentMemory();
   const queryTokens = tokenize(query);
 
-  const activeItems = memory.items.filter(item => item.status === 'active');
+  const items = Array.isArray(memory.items) ? memory.items : [];
+  const activeItems = items.filter(item => item.status === 'active');
 
   const scored = activeItems.map(item => {
     let score = 0;
@@ -512,9 +513,9 @@ export function retrieveRelevantMemory({ query = '', venture = null, limit = 8 }
 /**
  * Format retrieved memory for LLM system prompt injection with clear tier separation.
  */
-export function formatRelevantMemoryForPrompt(query = '', venture = null) {
-  const { confirmedFacts, assumptions, targets } = retrieveRelevantMemory({ query, venture, limit: 10 });
-  const memory = loadPersistentMemory();
+export function formatRelevantMemoryForPrompt(query = '', venture = null, clientDeviceMemory = null) {
+  const memory = (clientDeviceMemory && typeof clientDeviceMemory === 'object') ? clientDeviceMemory : loadPersistentMemory();
+  const { confirmedFacts, assumptions, targets } = retrieveRelevantMemory({ query, venture, limit: 10, sourceMemory: memory });
   const ledger = loadLedger();
 
   let out = `━━ PERSISTENT SOVEREIGN MEMORY HUB ━━━━━━━━━━━━━\n`;

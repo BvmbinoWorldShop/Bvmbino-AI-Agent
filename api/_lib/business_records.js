@@ -6,6 +6,14 @@ import path from 'path';
  * Zero Fabrication Policy: Strictly calculates financial metrics from real, verified entries.
  */
 
+// Canonical Financial Verification States
+export const FINANCIAL_VERIFICATION_STATES = {
+  PENDING_REVIEW: 'pending_review', // Draft entry awaiting proof/documentation
+  VERIFIED: 'verified',             // Confirmed with invoice, receipt, or signed contract
+  RECONCILED: 'reconciled',         // Audited and reconciled against bank settlement
+  DISPUTED: 'disputed'              // Flagged, questioned, or disputed
+};
+
 // Persistent storage path (durable across restarts)
 const DATA_DIR = path.resolve(process.cwd(), '.data');
 const LEDGER_FILE = path.join(DATA_DIR, 'business_ledger.json');
@@ -96,7 +104,7 @@ export function saveLedger(data) {
 }
 
 /**
- * Add a verified business record
+ * Add a business record with explicit verification state
  */
 export function addRecord({
   venture,
@@ -107,7 +115,9 @@ export function addRecord({
   date = new Date().toISOString().split('T')[0],
   description = '',
   verifiedBy = 'Boss',
-  status = 'verified'
+  status = 'verified',
+  verificationStatus = null,
+  evidenceRef = ''
 }) {
   if (!venture || !amount) {
     throw new Error('venture and amount are required to log a business record');
@@ -134,8 +144,25 @@ export function addRecord({
     throw new Error(`Unsupported currency: ${currency}. Supported: EUR, FCFA, USD, GBP`);
   }
 
+  // Resolve verification status
+  let resolvedStatus = FINANCIAL_VERIFICATION_STATES.VERIFIED;
+  const rawStatus = (verificationStatus || status || '').toLowerCase().trim();
+  if (rawStatus === 'pending' || rawStatus === 'pending_review') {
+    resolvedStatus = FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW;
+  } else if (rawStatus === 'reconciled') {
+    resolvedStatus = FINANCIAL_VERIFICATION_STATES.RECONCILED;
+  } else if (rawStatus === 'disputed') {
+    resolvedStatus = FINANCIAL_VERIFICATION_STATES.DISPUTED;
+  } else if (rawStatus === 'verified' || rawStatus === 'active') {
+    resolvedStatus = FINANCIAL_VERIFICATION_STATES.VERIFIED;
+  }
+
+  const isAuditedGroundTruth = resolvedStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED ||
+                               resolvedStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED;
+
   const ledger = loadLedger();
   const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const nowIso = new Date().toISOString();
 
   const newRecord = {
     id,
@@ -146,16 +173,62 @@ export function addRecord({
     type: type.toLowerCase().trim(),
     date,
     description: description.trim(),
-    verified: status === 'verified',
+    verificationStatus: resolvedStatus,
+    verified: isAuditedGroundTruth,
+    evidenceRef: evidenceRef ? evidenceRef.trim() : '',
     verifiedBy: verifiedBy.trim(),
-    createdAt: new Date().toISOString()
+    verifiedAt: isAuditedGroundTruth ? nowIso : null,
+    reconciledAt: resolvedStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED ? nowIso : null,
+    createdAt: nowIso
   };
 
   ledger.records.unshift(newRecord);
-  ledger.updatedAt = new Date().toISOString();
+  ledger.updatedAt = nowIso;
   saveLedger(ledger);
 
   return newRecord;
+}
+
+/**
+ * Update the verification state of a business record (Audit Trail)
+ */
+export function updateRecordVerification(id, {
+  verificationStatus,
+  evidenceRef = '',
+  verifiedBy = 'Boss'
+}) {
+  const ledger = loadLedger();
+  const record = ledger.records.find(r => r.id === id);
+  if (!record) {
+    throw new Error(`Business record not found: ${id}`);
+  }
+
+  const validStates = Object.values(FINANCIAL_VERIFICATION_STATES);
+  const cleanStatus = (verificationStatus || '').toLowerCase().trim();
+  if (!validStates.includes(cleanStatus)) {
+    throw new Error(`Invalid verification status: ${verificationStatus}. Allowed: ${validStates.join(', ')}`);
+  }
+
+  record.verificationStatus = cleanStatus;
+  record.verified = cleanStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED ||
+                    cleanStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED;
+
+  const nowIso = new Date().toISOString();
+  if (record.verified && !record.verifiedAt) {
+    record.verifiedAt = nowIso;
+  }
+  if (cleanStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED) {
+    record.reconciledAt = nowIso;
+  }
+  if (evidenceRef) {
+    record.evidenceRef = evidenceRef.trim();
+  }
+  record.verifiedBy = verifiedBy.trim();
+  record.updatedAt = nowIso;
+
+  ledger.updatedAt = nowIso;
+  saveLedger(ledger);
+  return record;
 }
 
 /**
@@ -176,25 +249,41 @@ export function deleteRecord(id) {
 /**
  * Get verified financial summary for a period (e.g. '2026-11' or null for all-time)
  * STRICTLY returns audited totals from real records. If zero records, returns 0.
+ * Clearly separates Verified/Reconciled revenue from Pending Drafts and Disputed items.
  */
 export function getFinancialSummary(filterMonth = null) {
   const ledger = loadLedger();
   const targetPrefix = filterMonth || new Date().toISOString().slice(0, 7); // 'YYYY-MM'
 
-  const matched = ledger.records.filter(r => {
-    if (!r.verified) return false;
+  const recordsInPeriod = ledger.records.filter(r => {
     if (!r.date) return false;
     return r.date.startsWith(targetPrefix);
   });
 
+  const auditedRecords = recordsInPeriod.filter(r => r.verified === true);
+  const pendingRecords = recordsInPeriod.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW);
+  const disputedRecords = recordsInPeriod.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.DISPUTED);
+  const reconciledRecords = recordsInPeriod.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED);
+
   const totals = {
     period: targetPrefix,
-    recordCount: matched.length,
+    recordCount: auditedRecords.length,
     totalEur: 0,
     totalFcfa: 0,
     totalUsd: 0,
+    reconciledEur: 0,
+    pendingEur: 0,
+    disputedEur: 0,
+    verificationCounts: {
+      verified: auditedRecords.length - reconciledRecords.length,
+      reconciled: reconciledRecords.length,
+      pending: pendingRecords.length,
+      disputed: disputedRecords.length,
+      totalAudited: auditedRecords.length
+    },
     byVenture: {},
-    records: matched
+    records: auditedRecords,
+    pendingRecords
   };
 
   // Initialize all canonical ventures with 0
@@ -203,16 +292,21 @@ export function getFinancialSummary(filterMonth = null) {
       ventureName: VENTURES[vKey].name,
       totalEur: 0,
       totalFcfa: 0,
+      reconciledEur: 0,
+      pendingEur: 0,
       recordCount: 0
     };
   }
 
-  for (const r of matched) {
+  // Calculate Audited Totals
+  for (const r of auditedRecords) {
     if (!totals.byVenture[r.venture]) {
       totals.byVenture[r.venture] = {
         ventureName: r.venture,
         totalEur: 0,
         totalFcfa: 0,
+        reconciledEur: 0,
+        pendingEur: 0,
         recordCount: 0
       };
     }
@@ -222,11 +316,31 @@ export function getFinancialSummary(filterMonth = null) {
     if (r.currency === 'EUR') {
       totals.totalEur += r.amount;
       totals.byVenture[r.venture].totalEur += r.amount;
+      if (r.verificationStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED) {
+        totals.reconciledEur += r.amount;
+        totals.byVenture[r.venture].reconciledEur += r.amount;
+      }
     } else if (r.currency === 'FCFA') {
       totals.totalFcfa += r.amount;
       totals.byVenture[r.venture].totalFcfa += r.amount;
     } else if (r.currency === 'USD') {
       totals.totalUsd += r.amount;
+    }
+  }
+
+  // Calculate Pending Drafts & Disputed Totals
+  for (const r of pendingRecords) {
+    if (r.currency === 'EUR') {
+      totals.pendingEur += r.amount;
+      if (totals.byVenture[r.venture]) {
+        totals.byVenture[r.venture].pendingEur += r.amount;
+      }
+    }
+  }
+
+  for (const r of disputedRecords) {
+    if (r.currency === 'EUR') {
+      totals.disputedEur += r.amount;
     }
   }
 
@@ -250,11 +364,14 @@ export function formatLedgerForPrompt(filterMonth = null) {
 
   let text = `[VERIFIED BUSINESS LEDGER — AUDITED GROUND TRUTH]:\n`;
   text += `- Active Period: ${summary.period}\n`;
-  text += `- Verified Total EUR: €${summary.totalEur.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+  text += `- Audited Booked Revenue: €${summary.totalEur.toLocaleString('en-US', { minimumFractionDigits: 2 })} EUR (Bank Reconciled: €${summary.reconciledEur.toLocaleString('en-US', { minimumFractionDigits: 2 })} EUR)\n`;
+  if (summary.pendingEur > 0) {
+    text += `- Pending Invoices / Drafts: €${summary.pendingEur.toLocaleString('en-US', { minimumFractionDigits: 2 })} EUR (${summary.verificationCounts.pending} drafts awaiting verification)\n`;
+  }
   if (summary.totalFcfa > 0) {
     text += `- Verified Total FCFA: ${summary.totalFcfa.toLocaleString('en-US')} FCFA\n`;
   }
-  text += `- Total Verified Records: ${summary.recordCount}\n\n`;
+  text += `- Total Audited Records: ${summary.recordCount}\n\n`;
   text += `Breakdown by Venture:\n`;
 
   for (const [, data] of Object.entries(summary.byVenture)) {

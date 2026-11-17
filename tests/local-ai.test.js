@@ -1,48 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { executeOllama } from '../api/_lib/adapters/ollama.js';
 import { buildExecutionChain } from '../api/_lib/chain.js';
 import LocalAiEngine from '../public/assets/local-ai.js';
 
-test('Local AI: executeOllama formats payload properly and handles offline host gracefully', async () => {
-  // Test connection to non-existent port to verify clean error handling without unhandled crash
-  await assert.rejects(
-    async () => {
-      await executeOllama({
-        model: 'llama3.2',
-        messages: [{ role: 'user', content: 'Hello local AI' }],
-        host: 'http://127.0.0.1:54321', // Unused port
-        timeoutMs: 800
-      });
-    },
-    (err) => {
-      assert.ok(err.isModelSpecificFailure || err.isLocalOffline);
-      return true;
-    }
-  );
-});
-
-test('Local AI: buildExecutionChain includes Ollama when local runner is active', () => {
-  const chainWithLocal = buildExecutionChain({
-    keys: { ollama: true }
+test('Execution Chain: prioritizes free fast providers before paid models', () => {
+  const chain = buildExecutionChain({
+    keys: { groq: true, openai: true, cerebras: true }
   });
 
-  const ollamaEntry = chainWithLocal.find(c => c.provider === 'ollama');
-  assert.ok(ollamaEntry, 'Chain must include ollama when local key/flag is present');
-  assert.equal(ollamaEntry.model, 'llama3.2');
+  const groqIdx = chain.findIndex(c => c.provider === 'groq');
+  const openaiIdx = chain.findIndex(c => c.provider === 'openai');
+  assert.ok(groqIdx !== -1 && openaiIdx !== -1);
+  assert.ok(groqIdx < openaiIdx, 'Free cloud LPUs (Groq) must run before paid frontier models (OpenAI)');
 });
 
-test('Local AI Engine: detectCapabilities returns hardware & runtime structure', async () => {
+test('Client AI Engine: detectCapabilities returns hardware & runtime structure', async () => {
   const caps = await LocalAiEngine.detectCapabilities();
   assert.ok(typeof caps === 'object');
   assert.ok('hasWebGPU' in caps);
   assert.ok('hasWasm' in caps);
-  assert.ok('hasOllama' in caps);
+  assert.ok('isMobile' in caps);
   assert.ok('recommendedEngine' in caps);
-  assert.equal(caps.hasWasm, true, 'Node/modern environment must support WebAssembly');
+  assert.equal(caps.hasWasm, true, 'Modern environment must support WebAssembly');
 });
 
-test('Local AI Engine: executeBuiltInExecutive runs with ZERO API keys for all specialists', () => {
+test('Client AI Engine: executeBuiltInExecutive runs with ZERO API keys for all specialists', () => {
   LocalAiEngine.resetMetrics();
 
   // Test Billy

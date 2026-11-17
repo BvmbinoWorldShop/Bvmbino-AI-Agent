@@ -157,6 +157,55 @@ export function checkRateLimit(req, routeKey = 'global', maxRequests = 60, windo
 }
 
 /**
+ * Genuinely distributed rate limiter (Redis REST + Cryptographic Ticket)
+ */
+export async function checkDistributedRateLimit(req, routeKey = 'global', maxRequests = 60, windowMs = 60000) {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+  if (redisUrl && redisToken) {
+    try {
+      const ip = getClientIp(req);
+      const windowSec = Math.ceil(windowMs / 1000);
+      const key = `bvmbino:ratelimit:${routeKey}:${ip}`;
+
+      const res = await fetch(`${redisUrl}/pipeline`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${redisToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify([
+          ['INCR', key],
+          ['EXPIRE', key, windowSec]
+        ])
+      });
+
+      if (res.ok) {
+        const results = await res.json();
+        const currentCount = results?.[0]?.result || 1;
+        const isAllowed = currentCount <= maxRequests;
+        const now = Date.now();
+        return {
+          allowed: isAllowed,
+          limit: maxRequests,
+          remaining: Math.max(0, maxRequests - currentCount),
+          reset: Math.ceil((now + windowMs) / 1000),
+          retryAfter: isAllowed ? 0 : Math.ceil(windowMs / 1000),
+          ip,
+          ticket: signRateLimitTicket({ ip, route: routeKey, count: currentCount, exp: now + windowMs }),
+          distributedEngine: 'redis-upstash'
+        };
+      }
+    } catch (e) {
+      console.warn('[RateLimit] Distributed Redis error, falling back to cryptographic ticket:', e.message);
+    }
+  }
+
+  return checkRateLimit(req, routeKey, maxRequests, windowMs);
+}
+
+/**
  * Apply standard rate-limiting headers & signed ticket to HTTP response
  */
 export function applyRateLimitHeaders(res, result) {

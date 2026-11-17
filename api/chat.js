@@ -276,7 +276,8 @@ export default async function handler(req, res) {
       lastUserText = String(enrichedMessages[lastUserIdx].content || '');
     }
 
-    const persistentMemoryPrompt = '\n\n' + formatRelevantMemoryForPrompt(lastUserText, cleanSkill);
+    const clientDeviceMemory = body?.deviceMemory || body?.clientMemory || null;
+    const persistentMemoryPrompt = '\n\n' + formatRelevantMemoryForPrompt(lastUserText, cleanSkill, clientDeviceMemory);
     const verifiedLedgerPrompt = '\n\n' + formatLedgerForPrompt();
 
     const baseCore = (system && system.length > 250) ? system : (CORE + (system ? `\n\n${system}` : ''));

@@ -21,7 +21,8 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { username, password } = body || {};
+    const username = body?.username || body?.user || body?.login;
+    const password = body?.password || body?.pass;
 
     // 2. Validate credentials against mandatory environment variables
     const isValid = checkAdminCredentials(username, password);

@@ -10,6 +10,7 @@
 <meta name="description" content="Your Sovereign AI Chief of Staff. Billy runs the show.">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/assets/avatars/apple-touch-icon.png">
+<script type="module" src="/assets/device-db.js"></script>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src * data: blob:; connect-src *; frame-src 'none'; object-src 'none'">
 <title>Bvmbino Pro — Sovereign v6.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4550,24 +4551,13 @@ async function callAI() {
     // ── ATTEMPT LOCAL AI (Zero Cost · Zero API Keys · Offline Ready) ──
   try {
     if (window.LocalAiEngine) {
-      const caps = await window.LocalAiEngine.detectCapabilities();
-      if (caps.hasOllama) {
-        const localRes = await window.LocalAiEngine.executeViaOllama(cleanMsgs, sys, 'llama3.2');
-        if (localRes?.content) {
-          hideTyping();
-          state.abortController = null;
-          window.__unlockUI?.();
-          appendAiText(localRes.content + '\n\n*(⚡ Executed 100% locally via Ollama llama3.2 — Zero Cloud Cost)*', state.activeSkill);
-          return;
-        }
-      }
       const lastUser = cleanMsgs.filter(m => m.role === 'user').pop()?.content || '';
       const localExec = window.LocalAiEngine.executeBuiltInExecutive(state.activeSkill, lastUser);
       if (localExec?.content) {
         hideTyping();
         state.abortController = null;
         window.__unlockUI?.();
-        appendAiText(localExec.content + '\n\n*(⚡ Executed via Bvmbino Sovereign Local Brain — Zero Cloud Cost · No API Key Required)*', state.activeSkill);
+        appendAiText(localExec.content + '\n\n*(⚡ Sovereign Client Brain — Zero Cloud Cost)*', state.activeSkill);
         return;
       }
     }
