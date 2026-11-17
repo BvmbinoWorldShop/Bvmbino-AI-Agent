@@ -5143,27 +5143,31 @@ if ('serviceWorker' in navigator) {
 }
 
 
-function initCoreMemory() {
+async function syncPersistentMemory() {
   try {
-    const existing = localStorage.getItem('bv_memory');
-    const parsed = existing ? JSON.parse(existing) : [];
-    if (!parsed || parsed.length === 0) {
-      const defaultFacts = [
-        "Boss (Bvmbino / Lataupe95) runs 4 core ventures: FormationPro, Purgo Clean, Keo Jus, and Entreprise AI.",
-        "FormationPro: Elite professional training (CPF/Qualiopi, SST, conflict management, athletic mental performance).",
-        "Purgo Clean: Commercial & industrial facility maintenance (B2B corporate offices, syndics, coworking, schools, gyms across Île-de-France).",
-        "Keo Jus: Premium artisanal cold-pressed juices with institutional partnerships (Abidjan / Accor Hotels distribution).",
-        "Entreprise AI / Strong Wave: B2B enterprise automation, sovereign multi-agent OS, workflow integrations.",
-        "Inner Circle: Poupex (CFO / cash flow), Mami (Legal), Daphne (Brand), Brody (Art Direction), Zeur (Security), Coach Doobs (NBA Trainer).",
-        "Monthly Consolidated Revenue Target: ~€39,550/mo across all 4 companies."
-      ];
-      localStorage.setItem('bv_memory', JSON.stringify(defaultFacts));
+    const appToken = localStorage.getItem('bvmbino_app_token') || '';
+    const res = await fetch('/api/memory', {
+      headers: { 'x-app-token': appToken },
+      credentials: 'include'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.memory) {
+        window.__BV_MEMORY__ = data.memory;
+        window.__BV_LEDGER__ = data.ledger;
+        window.__BV_SUMMARY__ = data.summary;
+        if (data.memory.facts && Array.isArray(data.memory.facts)) {
+          localStorage.setItem('bv_memory', JSON.stringify(data.memory.facts.map(f => f.text)));
+        }
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[Memory] Background sync failed:', e.message);
+  }
 }
 
 function boot() {
-  try { initCoreMemory(); } catch(e) {}
+  try { syncPersistentMemory(); } catch(e) {}
   console.log('BVMBINO Pro v6.2 · Instant Boot');
 
   // 1. Rehydrate configuration

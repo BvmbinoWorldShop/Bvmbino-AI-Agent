@@ -1,17 +1,16 @@
 import { setCors, validateAppToken, isRateLimited } from './_cors.js';
 import { executeOllama } from './_lib/adapters/ollama.js';
+import { validateSafeUrl, safePinnedFetch } from './_lib/ssrf.js';
 
 export const maxDuration = 60;
 
 /**
- * Ollama Local Relay API
- * Enables secure browser-to-local Ollama connectivity without mixed-content or CORS blocks
+ * Ollama Relay API (SSRF-Hardened)
+ * Defends against Server-Side Request Forgery, DNS rebinding, and metadata exposure.
  */
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-
-  const host = (req.query?.host || req.body?.host || process.env.OLLAMA_HOST || 'http://127.0.0.1:11434').replace(/\/+$/, '');
 
   // Rate Limiting (60 req/min)
   if (isRateLimited(req, 60, res, 'ollama')) {
@@ -23,16 +22,44 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
   }
 
+  // Extract host from query, body, or environment
+  const rawHost = req.query?.host || req.body?.host;
+  let host = '';
+  let isCustomHost = false;
+
+  if (rawHost && typeof rawHost === 'string') {
+    isCustomHost = true;
+    try {
+      // 🛡️ SSRF DEFENSE: Strictly validate protocol, hostname, DNS resolution, and IP range
+      const safeTarget = await validateSafeUrl(rawHost.trim());
+      host = safeTarget.url.replace(/\/+$/, '');
+    } catch (ssrfErr) {
+      return res.status(403).json({
+        ok: false,
+        error: `SSRF Protection: Access to requested host is forbidden (${ssrfErr.message})`
+      });
+    }
+  } else {
+    // System-configured default (only trusted env or local fallback)
+    host = (process.env.OLLAMA_HOST || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+  }
+
   // 1. Discovery / Model Tags Action
   if (req.method === 'GET' || req.query?.action === 'tags' || req.body?.action === 'tags') {
     try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 3000);
-      const tagRes = await fetch(`${host}/api/tags`, { signal: ctrl.signal });
-      clearTimeout(tid);
+      let tagRes;
+      if (isCustomHost) {
+        // Use DNS-pinned safe fetch to defeat DNS rebinding TOCTOU attacks
+        tagRes = await safePinnedFetch(`${host}/api/tags`, { timeoutMs: 5000 });
+      } else {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        tagRes = await fetch(`${host}/api/tags`, { signal: ctrl.signal });
+        clearTimeout(tid);
+      }
 
       if (tagRes.ok) {
-        const data = await tagRes.json();
+        const data = typeof tagRes.text === 'function' ? JSON.parse(await tagRes.text()) : await tagRes.json();
         const models = (data.models || []).map(m => ({
           name: m.name,
           size: m.size,
@@ -46,7 +73,7 @@ export default async function handler(req, res) {
       return res.status(503).json({
         ok: false,
         error: `Cannot connect to Ollama at ${host}: ${e.message}`,
-        hint: 'Ensure Ollama is running (`ollama serve`) or run Ollama with OLLAMA_ORIGINS="*"'
+        hint: 'Ensure Ollama is running (`ollama serve`) or configure OLLAMA_HOST in environment variables'
       });
     }
   }
@@ -68,7 +95,8 @@ export default async function handler(req, res) {
         temperature,
         maxTokens,
         timeoutMs: 50000,
-        host
+        host,
+        isCustomHost
       });
 
       return res.status(200).json({

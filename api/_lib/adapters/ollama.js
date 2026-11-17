@@ -1,6 +1,8 @@
+import { safePinnedFetch, validateSafeUrl } from '../ssrf.js';
+
 /**
  * Local AI Adapter (Ollama / llama.cpp / LM Studio / LocalAI)
- * Zero Cost · Zero API Keys · 100% Private Local Inference
+ * Zero Cost · Zero API Keys · 100% Private Local Inference · SSRF-Hardened
  */
 export async function executeOllama({
   model = 'llama3.2',
@@ -10,7 +12,8 @@ export async function executeOllama({
   temperature = 0.7,
   maxTokens = 2048,
   timeoutMs = 60000,
-  host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434'
+  host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434',
+  isCustomHost = false
 }) {
   const cleanHost = host.replace(/\/+$/, '');
   const url = `${cleanHost}/api/chat`;
@@ -26,45 +29,75 @@ export async function executeOllama({
     }
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const payloadBody = JSON.stringify({
+    model: model || 'llama3.2',
+    messages: chatMessages,
+    stream: false,
+    options: {
+      temperature,
+      num_predict: maxTokens
+    }
+  });
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model || 'llama3.2',
-        messages: chatMessages,
-        stream: false, // For unified adapter delivery
-        options: {
-          temperature,
-          num_predict: maxTokens
+    let response;
+    if (isCustomHost) {
+      // Validate safe URL and execute DNS-pinned fetch
+      await validateSafeUrl(url);
+      response = await safePinnedFetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payloadBody,
+        timeoutMs
+      });
+      if (!response.ok) {
+        const errText = typeof response.text === 'function' ? response.text() : '';
+        const err = new Error(`Local Ollama error (${response.status}): ${errText.slice(0, 150)}`);
+        err.status = response.status;
+        err.isModelSpecificFailure = true;
+        throw err;
+      }
+      const data = JSON.parse(response.text());
+      return {
+        isCustomResult: true,
+        reply: data.message?.content || '',
+        model: `local/${model}`,
+        provider: 'ollama',
+        raw: data
+      };
+    } else {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payloadBody,
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          const errText = await response.text().catch(() => '');
+          const err = new Error(`Local Ollama error (${response.status}): ${errText.slice(0, 150)}`);
+          err.status = response.status;
+          err.isModelSpecificFailure = true;
+          throw err;
         }
-      }),
-      signal: controller.signal
-    });
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      const err = new Error(`Local Ollama error (${response.status}): ${errText.slice(0, 150)}`);
-      err.status = response.status;
-      err.isModelSpecificFailure = true;
-      throw err;
+        const data = await response.json();
+        const replyText = data.message?.content || '';
+
+        return {
+          isCustomResult: true,
+          reply: replyText,
+          model: `local/${model}`,
+          provider: 'ollama',
+          raw: data
+        };
+      } finally {
+        clearTimeout(timer);
+      }
     }
-
-    const data = await response.json();
-    const replyText = data.message?.content || '';
-
-    return {
-      isCustomResult: true,
-      reply: replyText,
-      model: `local/${model}`,
-      provider: 'ollama',
-      raw: data
-    };
   } catch (e) {
     if (e.name === 'AbortError') {
       const timeoutErr = new Error(`Local Ollama timed out after ${timeoutMs}ms`);
@@ -76,7 +109,5 @@ export async function executeOllama({
     e.isLocalOffline = true;
     e.isModelSpecificFailure = true;
     throw e;
-  } finally {
-    clearTimeout(timer);
   }
 }

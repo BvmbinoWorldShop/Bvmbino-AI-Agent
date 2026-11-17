@@ -1,11 +1,16 @@
 import tls from 'tls';
-import { setCors, isRateLimited } from './_cors.js';
+import { setCors, isRateLimited, validateAppToken } from './_cors.js';
 
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (isRateLimited(req, 20)) return res.status(429).json({ error: 'Rate limit exceeded (20 req/min)' });
+
+  // Mandatory App Token Authentication
+  if (!validateAppToken(req)) {
+    return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
