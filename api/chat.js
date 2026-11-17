@@ -13,10 +13,17 @@ export const maxDuration = 60;
 function cleanAiOutput(text) {
   if (!text) return '';
   let clean = text.trim();
-  // Strip any accidental system prompt echoes
+  // Strip model thinking and internal reasoning chains (e.g. DeepSeek-R1, reasoning models)
+  clean = clean.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  clean = clean.replace(/^(Thinking Process|Thought|Reasoning|Internal Thoughts):[\s\S]*?\n\n/gi, '');
+  // Strip any accidental system prompt echoes or meta headers
   clean = clean.replace(/^(Specialist Domain:|Domain:|ACT AS AN ELITE|ACT AS|Act as an elite)[^\n]*\n+/gi, '');
   clean = clean.replace(/^## ACTIVE SPECIALIST:[^\n]*\n+/gi, '');
   clean = clean.replace(/^\[SYSTEM DIRECTIVE:[^\n]*\n+/gi, '');
+  clean = clean.replace(/^\[MANDATORY EXECUTION DIRECTIVE:[^\n]*\n+/gi, '');
+  clean = clean.replace(/^(Boss, I have analyzed your objective|I have received your instruction)[^\n]*\n+/gi, '');
+  clean = clean.replace(/\*\(⚡ Executed [^)]*\)\*/gi, '');
+  clean = clean.replace(/External providers are optional accelerators[^.\n]*[.\n]?/gi, '');
   return clean.trim();
 }
 

@@ -1694,9 +1694,15 @@ function mkTable(lines) {
 function cleanAiOutput(text) {
   if (!text) return '';
   let clean = text.trim();
+  clean = clean.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  clean = clean.replace(/^(Thinking Process|Thought|Reasoning|Internal Thoughts):[\s\S]*?\n\n/gi, '');
   clean = clean.replace(/^(Specialist Domain:|Domain:|ACT AS AN ELITE|ACT AS|Act as an elite)[^\n]*\n+/gi, '');
   clean = clean.replace(/^## ACTIVE SPECIALIST:[^\n]*\n+/gi, '');
   clean = clean.replace(/^\[SYSTEM DIRECTIVE:[^\n]*\n+/gi, '');
+  clean = clean.replace(/^\[MANDATORY EXECUTION DIRECTIVE:[^\n]*\n+/gi, '');
+  clean = clean.replace(/^(Boss, I have analyzed your objective|I have received your instruction)[^\n]*\n+/gi, '');
+  clean = clean.replace(/\*\(⚡ Executed [^)]*\)\*/gi, '');
+  clean = clean.replace(/External providers are optional accelerators[^.\n]*[.\n]?/gi, '');
   return clean.trim();
 }
 
@@ -3611,9 +3617,14 @@ async function callAI() {
   // Ultra-Fast Sovereign Engine (Cerebras, Groq, Gemini, OpenRouter)
   if (!state._skipProxy) {
     try {
+      const appToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('bvmbino_app_token') : '') || '';
       const proxyRes = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-token': appToken
+        },
+        credentials: 'include',
         body: JSON.stringify({
           messages: toOAIMsgs(cleanMsgs),
           system: sys,

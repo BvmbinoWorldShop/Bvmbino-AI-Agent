@@ -242,60 +242,38 @@ export async function executeViaOllama(messages, systemPrompt, modelName = null,
 /**
  * Built-in Sovereign Cognitive Fallback
  */
-export function executeBuiltInExecutive(skillId, userText) {
+export function executeBuiltInExecutive(skillId, _userText) {
   const start = Date.now();
-  const clean = (userText || '').trim();
 
-  let title = '⚡ Executive Strategy Brief';
   let body = '';
 
   if (skillId === 'sales') {
-    title = '💰 Papou — High-Conversion Sales Matrix';
-    body = `### 1. High-Impact Value Hook
-"Most solutions force you to pay upfront before seeing ROI. We eliminate that friction by delivering verified results within 48 hours."
+    body = `I'm on it, Boss — Papou here. Here's our exact Objection Handling Protocol and plan to close deals right away:
 
-### 2. Objection Handling Protocol
-- **Objection**: "We don't have the budget right now."
-  * **Pivot**: "That is precisely why we structure this on milestones. The immediate cost reduction covers the deployment in month one."
-- **Objection**: "Send me more information first."
-  * **Pivot**: "I will send a 2-page custom breakdown today. Let's do a 7-minute alignment call Thursday at 14:00 to review the numbers."
-
-### 3. Closing Call-To-Action
-- Target agreed deliverables with clear timeline.
-- Lock next micro-commitment immediately.`;
+1. **Lead with Proof**: Most competitors force clients to pay before seeing results. We lead with verifiable value within 48 hours to remove all hesitation.
+2. **Handle "No Budget"**: *"That's exactly why we structure this on clear milestones. The initial savings cover the setup within month one."*
+3. **Handle "Send info first"**: *"I'm sending over a concise 2-page custom breakdown right now. Let's do a quick 7-minute call Thursday at 2 PM to walk through the numbers."*
+4. **The Closing Move**: Lock the timeline and secure the next micro-commitment right now.`;
   } else if (skillId === 'coach') {
-    title = '🏀 Coach — Elite Athletic & Conditioning Protocol';
-    body = `### 1. Neuro-Fascia & Athletic Balance
-- **Target**: Joint decompression, posterior chain activation, and tendon elasticity.
-- **Dynamic Warmup**: 3 rounds (Band glute bridges, ankle dorsiflexion rocks, single-leg RDLs).
+    body = `Coach here — let's lock in your training and Neuro-Fascia balance:
 
-### 2. Tactical Training Structure
-- **Block A (Power & Elasticity)**: Depth jumps into max vert (4 sets x 3 reps, 90s rest).
-- **Block B (Force Absorption)**: Trap bar deadlifts / Bulgarian split squats (4 sets x 5 reps).
-- **Block C (Conditioning)**: Deceleration shuttle sprints (6 reps, 100% effort).`;
+- **Warmup & Tendons**: 3 rounds of band glute bridges, ankle dorsiflexion rocks, and single-leg RDLs. Keep joints decompressed.
+- **Power & Elasticity**: Depth jumps into max vertical (4 sets x 3 reps, full 90s rest).
+- **Strength & Force Absorption**: Trap bar deadlifts or Bulgarian split squats (4 sets x 5 reps).
+- **Conditioning**: Deceleration shuttle sprints (6 reps at 100% effort). Stay light on your feet and explosive.`;
   } else if (skillId === 'lex') {
-    title = '⚖️ Mami — Legal & Compliance Risk Assessment';
-    body = `### 1. Key Contractual Vulnerabilities
-- Ambiguous termination clauses without defined cure periods.
-- Undefined intellectual property assignment on deliverables.
-- Limitation of liability exposure exceeding 1x contract value.
+    body = `Mami here — here's what you need to protect your business on this:
 
-### 2. Immediate Recommended Amendments
-- Add strict indemnification caps.
-- Define force majeure and service-level commitments.
-- Ensure jurisdiction clause is explicitly locked.`;
+1. **Termination Terms**: Make sure there is a defined 30-day cure period before either party can walk away.
+2. **IP Assignment**: Ensure all intellectual property and custom deliverables belong 100% to you upon payment.
+3. **Liability Protection**: Cap liability exposure at a maximum of 1x contract value.
+4. **Governing Law**: Lock the jurisdiction explicitly so you never get dragged into out-of-state disputes.`;
   } else {
-    title = '👑 Billy — Sovereign Chief of Staff Direct Execution';
-    body = `### 1. Strategic Assessment
-Boss, I have analyzed your objective: "${clean}".
+    body = `I'm on it, Boss — Billy here. Here's exactly how we tackle this together:
 
-### 2. Immediate Action Blueprint
-1. **Primary Priority**: Eliminate friction and capture revenue channels with zero delay.
-2. **Resource Allocation**: Automate lead generation, qualify decision makers, and lock outreach scripts.
-3. **Execution Milestone**: Complete phase 1 deliverables and verify metrics within 24 hours.
-
-### 3. Next Direct Move
-Execute the verified framework immediately. External providers are optional accelerators; sovereign control remains 100% local.`;
+1. **Immediate Focus**: Cut straight to the highest-leverage move and eliminate friction.
+2. **Execution**: We lock down the core pieces today so you get real momentum right now.
+3. **Next Move**: Tell me what you want me to write, calculate, or pull together next and consider it done.`;
   }
 
   const duration = Date.now() - start;
@@ -304,7 +282,7 @@ Execute the verified framework immediately. External providers are optional acce
   metrics.lastExecution = { engine: 'built-in-executive', skill: skillId, duration };
 
   return {
-    content: `## ${title}\n\n${body}`,
+    content: body,
     engine: 'built-in-executive',
     model: 'sovereign-local-v1',
     durationMs: duration
