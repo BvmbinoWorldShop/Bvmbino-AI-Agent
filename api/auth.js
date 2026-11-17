@@ -35,8 +35,8 @@ export default async function handler(req, res) {
       const token = signToken({ sub: cleanUser, role: 'admin' }, JWT_SECRET, 30 * 24 * 3600);
 
       res.setHeader('Set-Cookie', [
-        `bvmbino_session=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`,
-        `bvmbino_auth=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`
+        `bvmbino_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`,
+        `bvmbino_auth=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
       ]);
       return res.status(200).json({ ok: true, token, username: cleanUser });
     } else {

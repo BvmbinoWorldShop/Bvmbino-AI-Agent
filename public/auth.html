@@ -42,25 +42,38 @@ html,body{height:100%;background:#06080a;font-family:'Syne',sans-serif;color:#f0
 </div>
 <script>
 async function doAuth(){
-  const u=document.getElementById('user').value.trim();
-  const p=document.getElementById('pass').value;
-  const err=document.getElementById('err');
-  const btn=document.getElementById('btn');
-  const dots=document.getElementById('dots');
-  err.textContent='';
-  if(!u||!p){err.textContent='Enter your credentials';return;}
-  btn.style.display='none';dots.style.display='flex';
-  try{
-    const r=await fetch('/api/auth',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:u,password:p})
+  const u = document.getElementById('user').value.trim();
+  const p = document.getElementById('pass').value;
+  const err = document.getElementById('err');
+  const btn = document.getElementById('btn');
+  const dots = document.getElementById('dots');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'Enter your credentials'; return; }
+  btn.style.display = 'none';
+  dots.style.display = 'flex';
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
     });
-    if(r.ok){window.location.replace('/');}
-    else{dots.style.display='none';btn.style.display='block';err.textContent='Access denied — invalid credentials';}
-  }catch(e){
-    dots.style.display='none';btn.style.display='block';
-    err.textContent='Connection error — try again';
+    const data = await r.json().catch(() => ({}));
+    if (r.ok && data.token) {
+      try {
+        localStorage.setItem('bvmbino_app_token', data.token);
+        localStorage.setItem('bv_user', data.username || u);
+        sessionStorage.setItem('bvmbino_app_token', data.token);
+      } catch (_) {}
+      window.location.replace('/');
+    } else {
+      dots.style.display = 'none';
+      btn.style.display = 'block';
+      err.textContent = data.error || 'Access denied — invalid credentials';
+    }
+  } catch (e) {
+    dots.style.display = 'none';
+    btn.style.display = 'block';
+    err.textContent = 'Connection error — try again';
   }
 }
 </script>

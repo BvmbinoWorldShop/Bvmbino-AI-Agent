@@ -11,7 +11,13 @@ async function getEdgeSecret() {
     return secret.trim();
   }
   if (secret && secret.trim().length < 32) {
-    return null;
+    if (process.env.ENFORCE_MANDATORY_JWT === 'true') {
+      return null;
+    }
+    // Expand via SHA-256 for parity with api/_lib/auth.js
+    const enc = new TextEncoder().encode(secret.trim());
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   if (process.env.NODE_ENV === 'production') {
@@ -108,11 +114,17 @@ export default async function middleware(request) {
 
   if (isPublic) return;
 
-  // Check for signed auth session cookie
+  // Check for signed auth session cookie or header
   const cookie = request.headers.get('cookie') || '';
+  const authHeader = request.headers.get('authorization') || '';
+  const headerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const xAppToken = request.headers.get('x-app-token') || null;
+
   const token = 
     cookie.match(/bvmbino_session=([^;]+)/)?.[1] ||
-    cookie.match(/bvmbino_auth=([^;]+)/)?.[1];
+    cookie.match(/bvmbino_auth=([^;]+)/)?.[1] ||
+    headerToken ||
+    xAppToken;
 
   const secret = await getEdgeSecret();
   if (token && secret) {
