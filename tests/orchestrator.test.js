@@ -38,6 +38,8 @@ test('Orchestrator Chain: prioritizes free providers before paid providers', () 
   assert.ok(cerebrasIndex < anthropicIndex, 'Cerebras must be prioritized before Anthropic');
   assert.ok(geminiIndex < openaiIndex, 'Gemini must be prioritized before OpenAI');
   assert.ok(geminiIndex < anthropicIndex, 'Gemini must be prioritized before Anthropic');
+  assert.ok(openrouterIndex < openaiIndex, 'OpenRouter free must be prioritized before OpenAI');
+  assert.ok(openrouterIndex < anthropicIndex, 'OpenRouter free must be prioritized before Anthropic');
 });
 
 test('Orchestrator Chain: prioritizes Gemini for multimodal PDF documents', () => {

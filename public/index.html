@@ -2412,6 +2412,7 @@ if (typeof window !== 'undefined') {
 
 
 const SKILL_ROUTER = [
+  { skill:'coach',    kw:['workout','fitness','basketball','nba','exercise','training split','drills','athletic','conditioning','fascia','muscle','recovery','gym','weight training','plyometrics','tendon'] },
   { skill:'leads',    kw:['prospects','find leads','lead generation','scraping','find customers','targeting','potential clients','prospecting','lead intelligence','qualify leads'] },
   { skill:'email',    kw:['write an email','draft an email','email sequence','cold email','follow-up email','newsletter','email automation','mail professionnel','outreach email'] },
   { skill:'content',  kw:['instagram','linkedin','twitter','tiktok','social media','reel','story','caption','hooks','viral','blog post','content creation','social strategy'] },
@@ -2506,10 +2507,32 @@ function detectIntent(text) {
   const urlMatch = text.match(/https?:\/\/[^\s)>]+/);
   if (urlMatch) return { type: 'scrape', url: urlMatch[0] };
 
-  // Autonomous Live Search & Scrape Detection (GOLDEN RULE) — activates whenever Boss asks to search online,
-  // find contacts, scrape websites, research world news, finance, stocks, crypto, sports, or business intel
-  const hasContactIntent = /\b(phone|number|numéro|numero|téléphone|telephone|tel|contact|contacts|email|mail|call|appeler|joindre|who is|qui est|coach|manager|player|joueur|roster|effectif|agent|agency|agence|club|team|équipe|equipe|address|adresse|headquarters|siège|siege|ceo|founder|president|président|director|directeur|owner|propriétaire|real madrid|barcelona|lakers|warriors|celtics|bulls|knicks|heat|spurs|bucks|suns|asvel|monaco|paris basketball|olympiacos|panathinaikos|fenerbahce|efes|partizan|zvezda|baskonia|maccabi|bayern|milan|virtus|alba|zalgiris|nba|euroleague|lnb|fiba|fibb|ncaa|acb|gleague|betclic|fifa|uefa|premier league|ligue 1|serie a|la liga|bundesliga)\b/i.test(t);
-  const hasLiveLookupIntent = /\b(search|find|trouve|trouver|cherche|chercher|recherche|rechercher|lookup|look up|google|scrape|scraping|scraper|online|en ligne|internet|web|website|site|url|link|lien|latest|current|today|now|recent|actuel|aujourd'hui|dernier|dernière|news|world news|actualité|actualités|actualite|actualites|infos|info|breaking|headline|politics|politique|finance|financial|financier|bourse|stock|stocks|actions|market|markets|marché|marchés|crypto|bitcoin|btc|eth|ethereum|solana|rates|taux|inflation|revenue|chiffre d'affaires|valuation|price|prix|cost|coût|cout|tarif|score|scores|standings|classement|stats|statistiques|schedule|calendrier|weather|météo|meteo|give me|donne moi|donne-moi|fournis|list|liste|directory|annuaire|whatsapp|linkedin|instagram|twitter|tiktok)\b/i.test(t);
+  // Never trigger external web search for personal, internal, or company queries
+  function isPersonalOrInternalLocal(s) {
+    if (!s) return false;
+    const str = s.toLowerCase();
+    if (/\b(my|mon|ma|mes|mine|i've|ive|i have|j'ai|notre|nos|our|us|moi|me)\s+(company|companies|business|businesses|startup|startups|venture|ventures|enterprise|projet|projets|formationpro|purgo|keo|jus|entreprise ai|revenue|chiffre|ca|argent|money|client|clients|compte|dashboard|metrics|stats|vente|ventes|solde|bank|stripe|facture|factures|profit|gagné|gagne|bilan|cash)\b/i.test(str)) return true;
+    if (/\b(how much money|combien j'ai|combien ai-je|combien d'argent|mes entreprises|mes boîtes|mes boites|nos entreprises|nos boîtes)\b/i.test(str)) return true;
+    if (/\b(who am i|qui suis-je|do you remember|tu te souviens|what do you know about me|mes objectifs|my goals)\b/i.test(str)) return true;
+    if (/\b(formationpro|purgo clean|keo jus|entreprise ai)\b/i.test(str) && !/\b(client|lead|prospect|annuaire)\b/i.test(str)) return true;
+    return false;
+  }
+
+  if (isPersonalOrInternalLocal(text)) {
+    return null;
+  }
+
+  // Explicit web search commands: /search, google, search for, cherche sur le web
+  const isExplicitSearch = /^\/(?:search|find|lookup)\s+(.+)$/i.test(text) ||
+    /^(?:search (?:for|the web for|online for)|cherche (?:sur le web|en ligne)|google|trouve en ligne|find online)\s+(.+)$/i.test(text);
+  if (isExplicitSearch) {
+    const q = text.replace(/^\/(?:search|find|lookup)\s+/i, '').replace(/^(?:search (?:for|the web for|online for)|cherche (?:sur le web|en ligne)|google|trouve en ligne|find online)\s+/i, '').trim();
+    return { type: 'search', query: q || text.trim() };
+  }
+
+  // Live External OSINT Lookup Intent (real-time sports, news, financial ticker prices, weather)
+  const hasContactIntent = /\b(prospect|prospects|lead|leads|phone.*number|numéro de tel|téléphone de|who is the current|qui est l'actuel|roster of|effectif de|annuaire des|real madrid|barcelona|lakers|warriors|celtics|bulls|knicks|heat|spurs|bucks|suns|asvel|monaco|paris basketball|olympiacos|panathinaikos|fenerbahce|efes|partizan|zvezda|baskonia|maccabi|bayern|milan|virtus|alba|zalgiris|nba|euroleague|lnb|fiba|fifa|uefa|premier league|ligue 1|serie a|la liga|bundesliga)\b/i.test(t);
+  const hasLiveLookupIntent = /\b(latest news on|breaking news|weather in|météo à|actualité sur|cours du bitcoin|cours de l'ethereum|stock price of|cours de l'action|bourse aujourd'hui)\b/i.test(t);
 
   if ((hasContactIntent || hasLiveLookupIntent) && !t.startsWith('/') && t.split(/\s+/).length >= 2) {
     return { type: 'search', query: text.trim() };
@@ -2602,13 +2625,13 @@ const GRID_SKILLS = [
   {id:'analytics',cat:'strategy', name:'Bjorn',     persona:'Data Auditor',             cmd:'/analytics',desc:'KPI Audit',           use:'Metrics, ROAS & optimization pivots.',         iconType:'img', accent:'#22c55e', icon:'/assets/avatars/analytics.png'},
   {id:'course',   cat:'creative', name:'Sasha',     persona:'Curriculum Pro',           cmd:'/course',   desc:'Course Design',      use:'Outcome-driven online courses.',               iconType:'img', accent:'#a78bfa', icon:'/assets/avatars/course.png'},
   {id:'resume',   cat:'creative', name:'Xandria',   persona:'Career Architect',         cmd:'/resume',   desc:'ATS Mastery',        use:'Elite executive CVs.',                         iconType:'img', accent:'#a78bfa', icon:'/assets/avatars/resume.png'},
-  {id:'schedule', cat:'strategy', name:'Planner',   persona:'Daily Architect',          cmd:'/schedule', desc:'Time Mastery',       use:'Deep work, time blocks & peak-state scheduling.',iconType:'emoji', accent:'#22c55e', icon:'ðŸ“…'},
-  {id:'imgprompt',cat:'creative', name:'Visionary', persona:'Art Director',             cmd:'/imgprompt',desc:'AI Art Prompts',      use:'Midjourney & DALLÂ·E prompts.',                 iconType:'emoji', accent:'#a78bfa', icon:'ðŸ–¼ï¸'},
-  {id:'builder',  cat:'tech',     name:'Architect', persona:'System Builder',           cmd:'/builder',  desc:'App Building',       use:'Build, debug & expand systems.',               iconType:'emoji', accent:'#22c55e', icon:'ðŸ› ï¸'},
-  {id:'gmail',    cat:'revenue',  name:'Postmaster',persona:'Email Engine',             cmd:'/gmail',    desc:'Email Campaigns',    use:'Deliverability & conversion.',                 iconType:'emoji', accent:'#e8a912', icon:'ðŸ“§'},
-  {id:'slack',    cat:'strategy', name:'Signal',    persona:'Team Sync',                cmd:'/slack',    desc:'Workspace Flow',     use:'Slack bots & team velocity.',                  iconType:'emoji', accent:'#22c55e', icon:'ðŸ’¬'},
-  {id:'n8n',      cat:'tech',     name:'Hub',       persona:'Automation Hub',           cmd:'/n8n',      desc:'Workflows',          use:'Trigger & automate business ops.',             iconType:'emoji', accent:'#22c55e', icon:'ðŸ”„'},
-  {id:'kenzo',    cat:'revenue',  name:'Billy',     persona:'Chief of Staff',           cmd:'/billy',    desc:'Direct Voice',       use:'Think out loud, make fast decisions, direct answers.',iconType:'img', accent:'#d4940a', icon:'/assets/avatars/schedule.png', zoom:true},
+  {id:'schedule', cat:'strategy', name:'Planner',   persona:'Daily Architect',          cmd:'/schedule', desc:'Time Mastery',       use:'Deep work, time blocks & peak-state scheduling.',iconType:'img', accent:'#22c55e', icon:'/assets/avatars/schedule.png'},
+  {id:'imgprompt',cat:'creative', name:'Visionary', persona:'Art Director',             cmd:'/imgprompt',desc:'AI Art Prompts',      use:'Midjourney & DALL·E prompts.',                 iconType:'img', accent:'#a78bfa', icon:'/assets/avatars/present.png'},
+  {id:'builder',  cat:'tech',     name:'Architect', persona:'System Builder',           cmd:'/builder',  desc:'App Building',       use:'Build, debug & expand systems.',               iconType:'img', accent:'#22c55e', icon:'/assets/avatars/automate.png'},
+  {id:'gmail',    cat:'revenue',  name:'Postmaster',persona:'Email Engine',             cmd:'/gmail',    desc:'Email Campaigns',    use:'Deliverability & conversion.',                 iconType:'img', accent:'#e8a912', icon:'/assets/avatars/email.png'},
+  {id:'slack',    cat:'strategy', name:'Signal',    persona:'Team Sync',                cmd:'/slack',    desc:'Workspace Flow',     use:'Slack bots & team velocity.',                  iconType:'img', accent:'#22c55e', icon:'/assets/avatars/psych.png'},
+  {id:'n8n',      cat:'tech',     name:'Hub',       persona:'Automation Hub',           cmd:'/n8n',      desc:'Workflows',          use:'Trigger & automate business ops.',             iconType:'img', accent:'#22c55e', icon:'/assets/avatars/automate.png'},
+  {id:'kenzo',    cat:'revenue',  name:'Billy',     persona:'Chief of Staff',           cmd:'/billy',    desc:'Direct Voice',       use:'Think out loud, make fast decisions, direct answers.',iconType:'img', accent:'#d4940a', icon:'/assets/avatars/billy.png', zoom:true},
 ];
 
 function renderWelcome() {
@@ -2651,7 +2674,7 @@ function renderWelcome() {
   }
   const grid = document.getElementById('welcome-grid');
   if (!grid) return;
-  const portraitOnes = GRID_SKILLS.filter(s => s.iconType === 'img');
+  const portraitOnes = GRID_SKILLS;
   const cardTpl = (s, hidden) => `
     <div class="wcard card-${s.cat}${hidden ? ' agent-hidden' : ''}" id="skill-btn-${s.id}" onclick="window.slash('${s.id}')">
       <img class="wcard-bg-img" src="${s.icon}" alt="${s.name}" loading="lazy" decoding="async" onerror="this.style.display='none'"${s.zoom ? ' style="transform:scale(1.35);transform-origin:center 20%;object-position:center 15%"' : ''}>
@@ -3523,11 +3546,11 @@ async function callAI() {
     if (isVoice) tryOrder.push('llama3.1-8b', 'llama-3.3-70b');
     else         tryOrder.push('llama-3.3-70b', 'llama3.1-8b');
   }
-  if (keys.anthropic)  tryOrder.push('claude-haiku-4-5-20251001');
-  if (keys.openai)     tryOrder.push('gpt-4o-mini');
-  if (keys.openrouter) tryOrder.push('deepseek/deepseek-chat-v3-0324:free', 'meta-llama/llama-3.3-70b-instruct:free', 'google/gemini-2.0-flash-exp:free');
+  if (keys.gemini)     tryOrder.push('gemini-2.0-flash', 'gemini-1.5-flash');
+  if (keys.openrouter) tryOrder.push('meta-llama/llama-3.3-70b-instruct:free', 'google/gemini-2.0-flash-exp:free', 'deepseek/deepseek-chat-v3-0324:free');
   if (keys.mistral)    tryOrder.push('mistral-small-latest');
-  if (keys.gemini)     tryOrder.push('gemini-2.0-flash');
+  if (keys.openai)     tryOrder.push('gpt-4o-mini', 'gpt-4o');
+  if (keys.anthropic)  tryOrder.push('claude-haiku-4-5-20251001', 'claude-3-5-sonnet-latest');
 
   if (!tryOrder.length) {
     // No keys — OpenRouter allows anonymous calls to free models (rate-limited)
@@ -3898,7 +3921,7 @@ async function callAI() {
         clean = clean.replace(/\[EXECUTE:n8n\]/gi, '').trim();
         const n8nUrl = localStorage.getItem('bv_n8n_url');
         if (n8nUrl && _isSafeExternalUrl(n8nUrl)) {
-          fetch(n8nUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source:'bvmbino', agent: state.activeSkill||'kenzo', timestamp: new Date().toISOString(), content: clean }), signal: _abortIn(8000) })
+          fetch(n8nUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source:'bvmbino', agent: state.activeSkill||'kenzo', timestamp: new Date().toISOString(), content: clean }), signal: _abortIn(3500) })
             .then(r => { window.logFeed && window.logFeed('system', `n8n auto-triggered: ${r.status}`); toast('⚡ n8n triggered'); })
             .catch(e => { window.logFeed && window.logFeed('warn', 'n8n auto-trigger failed: ' + e.message); });
         }
@@ -4072,7 +4095,7 @@ async function webSearch(query) {
     const scUrl = 'https://swisscows.com/en/web?query=' + encodeURIComponent(query);
     const res = await fetch('https://r.jina.ai/' + scUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text', ..._jinaAuth },
-      signal: _abortIn(6500),
+      signal: _abortIn(2800),
     });
     if (res.ok) {
       let text = (await res.text()).trim().slice(0, 7000);
@@ -4085,7 +4108,7 @@ async function webSearch(query) {
     const liteUrl = 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query);
     const res = await fetch('https://r.jina.ai/' + liteUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text', ..._jinaAuth },
-      signal: _abortIn(5500),
+      signal: _abortIn(2500),
     });
     if (res.ok) {
       let text = await res.text();
@@ -4119,7 +4142,7 @@ async function webSearch(query) {
 
   // Fallback 3: DuckDuckGo Instant Answer JSON
   try {
-    const ddg = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`, { signal: _abortIn(3000) });
+    const ddg = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`, { signal: _abortIn(2000) });
     if (ddg.ok) {
       const d = await ddg.json();
       let r = '';
@@ -4952,8 +4975,8 @@ const BillyLive = (function() {
         if (v) utt.voice = v;
         const _isFR = currentLang.startsWith('fr');
         utt.lang   = currentLang || 'en-US';
-        utt.rate   = 1.0;
-        utt.pitch  = _isFR ? 0.85 : 0.90;
+        utt.rate   = 1.04;
+        utt.pitch  = 1.0;
         utt.volume = 1;
 
         utt.onend   = done;
@@ -5119,7 +5142,28 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+
+function initCoreMemory() {
+  try {
+    const existing = localStorage.getItem('bv_memory');
+    const parsed = existing ? JSON.parse(existing) : [];
+    if (!parsed || parsed.length === 0) {
+      const defaultFacts = [
+        "Boss (Bvmbino / Lataupe95) runs 4 core ventures: FormationPro, Purgo Clean, Keo Jus, and Entreprise AI.",
+        "FormationPro: Elite professional training (CPF/Qualiopi, SST, conflict management, athletic mental performance).",
+        "Purgo Clean: Commercial & industrial facility maintenance (B2B corporate offices, syndics, coworking, schools, gyms across Île-de-France).",
+        "Keo Jus: Premium artisanal cold-pressed juices with institutional partnerships (Abidjan / Accor Hotels distribution).",
+        "Entreprise AI / Strong Wave: B2B enterprise automation, sovereign multi-agent OS, workflow integrations.",
+        "Inner Circle: Poupex (CFO / cash flow), Mami (Legal), Daphne (Brand), Brody (Art Direction), Zeur (Security), Coach Doobs (NBA Trainer).",
+        "Monthly Consolidated Revenue Target: ~€39,550/mo across all 4 companies."
+      ];
+      localStorage.setItem('bv_memory', JSON.stringify(defaultFacts));
+    }
+  } catch (e) {}
+}
+
 function boot() {
+  try { initCoreMemory(); } catch(e) {}
   console.log('BVMBINO Pro v6.2 · Instant Boot');
 
   // 1. Rehydrate configuration

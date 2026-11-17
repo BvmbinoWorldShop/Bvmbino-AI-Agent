@@ -32,7 +32,7 @@ async function serverSingleSearch(query) {
   try {
     const scUrl = 'https://swisscows.com/en/web?query=' + encodeURIComponent(query);
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 6500);
+    const tid = setTimeout(() => ctrl.abort(), 2800);
     const res = await fetch('https://r.jina.ai/' + scUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
       signal: ctrl.signal
@@ -50,7 +50,7 @@ async function serverSingleSearch(query) {
   try {
     const liteUrl = 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query);
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 5500);
+    const tid = setTimeout(() => ctrl.abort(), 2500);
     const res = await fetch('https://r.jina.ai/' + liteUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
       signal: ctrl.signal
@@ -71,7 +71,7 @@ async function serverSingleSearch(query) {
   // Fallback 2: DuckDuckGo Instant Answer API
   try {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 3500);
+    const tid = setTimeout(() => ctrl.abort(), 2000);
     const ddg = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`, { signal: ctrl.signal });
     clearTimeout(tid);
     if (ddg.ok) {
@@ -177,13 +177,24 @@ async function serverReadUrl(targetUrl) {
   return '';
 }
 
+function isPersonalOrInternal(text) {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.trim().toLowerCase();
+  if (/\b(my|mon|ma|mes|mine|i've|ive|i have|j'ai|notre|nos|our|us|moi|me)\s+(company|companies|business|businesses|startup|startups|venture|ventures|enterprise|projet|projets|formationpro|purgo|keo|jus|entreprise ai|revenue|chiffre|ca|argent|money|client|clients|compte|dashboard|metrics|stats|vente|ventes|solde|bank|stripe|facture|factures|profit|gagné|gagne|bilan|cash)\b/i.test(t)) return true;
+  if (/\b(how much money|combien j'ai|combien ai-je|combien d'argent|mes entreprises|mes boîtes|mes boites|nos entreprises|nos boîtes)\b/i.test(t)) return true;
+  if (/\b(who am i|qui suis-je|do you remember|tu te souviens|what do you know about me|mes objectifs|my goals)\b/i.test(t)) return true;
+  if (/\b(formationpro|purgo clean|keo jus|entreprise ai)\b/i.test(t) && !/\b(client|lead|prospect|annuaire)\b/i.test(t)) return true;
+  return false;
+}
+
 function needsLiveWebSearch(text) {
   if (!text || typeof text !== 'string') return false;
+  if (isPersonalOrInternal(text)) return false;
   if (text.includes('[WEB SEARCH') || text.includes('[PAGE CONTENT FROM')) return false;
   const t = text.trim().toLowerCase();
   if (t.startsWith('/') || t.split(/\s+/).length < 2) return false;
   const hasContactIntent = /\b(client|clients|leint|leints|prospect|prospects|lead|leads|phone|number|numéro|numero|téléphone|telephone|tel|contact|contacts|email|mail|call|appeler|joindre|who is|qui est|coach|manager|player|joueur|roster|effectif|agent|agency|agence|club|team|équipe|equipe|address|adresse|headquarters|siège|siege|ceo|founder|president|président|director|directeur|owner|propriétaire|real madrid|barcelona|lakers|warriors|celtics|bulls|knicks|heat|spurs|bucks|suns|asvel|monaco|paris basketball|olympiacos|panathinaikos|fenerbahce|efes|partizan|zvezda|baskonia|maccabi|bayern|milan|virtus|alba|zalgiris|nba|euroleague|lnb|fiba|fibb|ncaa|acb|gleague|betclic|fifa|uefa|premier league|ligue 1|serie a|la liga|bundesliga)\b/i.test(t);
-  const hasLiveLookupIntent = /\b(search|find|trouve|trouver|cherche|chercher|recherche|rechercher|lookup|look up|google|scrape|scraping|scraper|online|en ligne|internet|web|website|site|url|link|lien|latest|current|today|now|recent|actuel|aujourd'hui|dernier|dernière|news|world news|actualité|actualités|actualite|actualites|infos|info|breaking|headline|politics|politique|finance|financial|financier|bourse|stock|stocks|actions|market|markets|marché|marchés|crypto|bitcoin|btc|eth|ethereum|solana|rates|taux|inflation|revenue|chiffre d'affaires|valuation|price|prix|cost|coût|cout|tarif|score|scores|standings|classement|stats|statistiques|schedule|calendrier|weather|météo|meteo|give me|donne moi|donne-moi|fournis|list|liste|directory|annuaire|whatsapp|linkedin|instagram|twitter|tiktok)\b/i.test(t);
+  const hasLiveLookupIntent = /\b(search|find|trouve|trouver|cherche|chercher|recherche|rechercher|lookup|look up|google|scrape|scraping|scraper|online|en ligne|internet|web|website|site|url|link|lien|latest|current|today|now|recent|actuel|aujourd'hui|dernier|dernière|news|world news|actualité|actualités|actualite|actualites|infos|info|breaking|headline|politics|politique|finance|financial|financier|bourse|stock|stocks|actions|market|markets|marché|marchés|crypto|bitcoin|btc|eth|ethereum|solana|rates|taux|inflation|valuation|score|scores|standings|classement|weather|météo|meteo|annuaire)\b/i.test(t);
   return hasContactIntent || hasLiveLookupIntent;
 }
 

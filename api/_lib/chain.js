@@ -34,12 +34,7 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     if (keys.anthropic) chain.push({ provider: 'anthropic', model: 'claude-3-5-sonnet-latest' });
   }
 
-  // Priority 1A: Local AI (Zero API Keys · 100% Private · Zero Cost)
-  if (keys.ollama || keys.local || process.env.OLLAMA_HOST) {
-    chain.push({ provider: 'ollama', model: 'llama3.2' });
-  }
-
-  // Priority 1B: 100% Free Cloud LPU / Wafer-Scale Tier (Groq & Cerebras)
+  // Priority 1: Free Ultra-Fast Cloud LPUs & Free Cloud Engines (Groq, Cerebras, Gemini Free Tier, OpenRouter Free)
   if (keys.groq) {
     chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
   }
@@ -47,18 +42,23 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     chain.push({ provider: 'cerebras', model: 'llama-3.3-70b' });
     chain.push({ provider: 'cerebras', model: 'llama3.1-8b' });
   }
-  if (keys.groq) {
-    chain.push({ provider: 'groq', model: 'llama-3.1-8b-instant' });
-  }
-
-  // Priority 2: Generous Free / Low-Cost Tier (OpenRouter Free / Gemini Free Tier / Mistral)
-  if (keys.openrouter) {
-    chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct:free' });
-  }
   if (keys.gemini) {
     chain.push({ provider: 'gemini', model: 'gemini-2.0-flash' });
     chain.push({ provider: 'gemini', model: 'gemini-1.5-flash' });
   }
+  if (keys.openrouter) {
+    chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct:free' });
+  }
+  if (keys.groq) {
+    chain.push({ provider: 'groq', model: 'llama-3.1-8b-instant' });
+  }
+
+  // Priority 2: Local AI (Zero API Keys · 100% Private · Zero Cost)
+  if (keys.ollama || keys.local || process.env.OLLAMA_HOST) {
+    chain.push({ provider: 'ollama', model: 'llama3.2' });
+  }
+
+  // Priority 3: Generous / Developer Cloud Tier
   if (keys.openrouter) {
     chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct' });
   }
@@ -66,7 +66,7 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     chain.push({ provider: 'mistral', model: 'mistral-small-latest' });
   }
 
-  // Priority 3: Paid Frontier Models (STRICTLY LAST)
+  // Priority 4: Paid Frontier Models (STRICTLY LAST)
   if (keys.openai) {
     chain.push({ provider: 'openai', model: 'gpt-4o-mini' });
     chain.push({ provider: 'openai', model: 'gpt-4o' });
