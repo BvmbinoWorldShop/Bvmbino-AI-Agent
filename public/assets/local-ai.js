@@ -114,9 +114,156 @@ export function resetMetrics() {
   metrics.latencies = [];
 }
 
+/**
+ * Execute Ollama via secure browser-to-device architecture
+ * 1. Direct browser-to-device LAN fetch (Zero Cloud Footprint, PNA compliant)
+ * 2. Authenticated SSRF-hardened relay fallback (/api/ollama)
+ */
+export async function executeDeviceOllama({
+  model = 'llama3.2',
+  messages = [],
+  system = '',
+  host = 'http://127.0.0.1:11434',
+  token = ''
+}) {
+  const start = Date.now();
+  const cleanHost = (host || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+
+  const chatMessages = [];
+  if (system) chatMessages.push({ role: 'system', content: system });
+  for (const m of messages) {
+    if (m && m.role && m.content) chatMessages.push({ role: m.role, content: m.content });
+  }
+
+  // Attempt 1: Direct Browser-to-Device PNA Fetch (Phone or Laptop to local/LAN daemon)
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 45000);
+    const directRes = await fetch(`${cleanHost}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Request-Private-Network': 'true'
+      },
+      body: JSON.stringify({
+        model: model || 'llama3.2',
+        messages: chatMessages,
+        stream: false
+      }),
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+
+    if (directRes.ok) {
+      const data = await directRes.json();
+      const duration = Date.now() - start;
+      metrics.localRequests++;
+      metrics.latencies.push(duration);
+      metrics.lastExecution = { engine: 'direct-device-ollama', model, duration };
+
+      return {
+        content: data.message?.content || '',
+        engine: 'direct-device-ollama',
+        model: `local/${model}`,
+        durationMs: duration
+      };
+    }
+  } catch (directErr) {
+    console.warn('[DeviceOllama] Direct browser fetch failed, falling back to authenticated relay:', directErr.message);
+  }
+
+  // Attempt 2: Secure SSRF-hardened Serverless Relay (/api/ollama)
+  try {
+    const appToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('bvmbino_app_token') : '') || '';
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 60000);
+
+    const relayRes = await fetch('/api/ollama', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-app-token': appToken
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        model,
+        messages: chatMessages,
+        system,
+        host: cleanHost
+      }),
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+
+    if (relayRes.ok) {
+      const data = await relayRes.json();
+      const duration = Date.now() - start;
+      metrics.localRequests++;
+      metrics.latencies.push(duration);
+      metrics.lastExecution = { engine: 'relay-ollama', model, duration };
+
+      return {
+        content: data.reply || '',
+        engine: 'relay-ollama',
+        model: data.model || `local/${model}`,
+        durationMs: duration
+      };
+    } else {
+      const errData = await relayRes.json().catch(() => ({}));
+      throw new Error(errData.error || `Ollama relay error: ${relayRes.status}`);
+    }
+  } catch (relayErr) {
+    const duration = Date.now() - start;
+    throw new Error(`Local Ollama unavailable: ${relayErr.message} (elapsed: ${duration}ms)`);
+  }
+}
+
+/**
+ * Check if Local Ollama daemon is reachable and list installed models
+ */
+export async function checkOllamaStatus(host = 'http://127.0.0.1:11434', token = '') {
+  const cleanHost = (host || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+
+  // Direct probe
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 3000);
+    const res = await fetch(`${cleanHost}/api/tags`, {
+      signal: ctrl.signal,
+      headers: { 'Access-Control-Request-Private-Network': 'true' }
+    });
+    clearTimeout(tid);
+    if (res.ok) {
+      const data = await res.json();
+      return { ok: true, direct: true, models: data.models || [] };
+    }
+  } catch {}
+
+  // Relay probe
+  try {
+    const appToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('bvmbino_app_token') : '') || '';
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch(`/api/ollama?host=${encodeURIComponent(cleanHost)}`, {
+      headers: { 'x-app-token': appToken },
+      credentials: 'include',
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+    if (res.ok) {
+      const data = await res.json();
+      return { ok: true, direct: false, models: data.models || [] };
+    }
+  } catch {}
+
+  return { ok: false, direct: false, models: [] };
+}
+
 const LocalAiEngine = {
   detectCapabilities,
   executeBuiltInExecutive,
+  executeDeviceOllama,
+  checkOllamaStatus,
   getMetrics,
   resetMetrics
 };

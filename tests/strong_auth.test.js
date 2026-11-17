@@ -4,6 +4,7 @@ import chatHandler from '../api/chat.js';
 import searchHandler from '../api/search.js';
 import imageHandler from '../api/image.js';
 import scrapeHandler from '../api/scrape.js';
+import ollamaHandler from '../api/ollama.js';
 import emailHandler from '../api/email.js';
 import memoryHandler from '../api/memory.js';
 import tokenHandler from '../api/token.js';
@@ -38,6 +39,7 @@ const endpoints = [
   { name: '/api/search', handler: searchHandler, method: 'POST', body: { query: 'test' } },
   { name: '/api/image', handler: imageHandler, method: 'POST', body: { prompt: 'test' } },
   { name: '/api/scrape', handler: scrapeHandler, method: 'POST', body: { url: 'https://example.com' } },
+  { name: '/api/ollama', handler: ollamaHandler, method: 'GET', query: { action: 'tags' } },
   { name: '/api/email', handler: emailHandler, method: 'POST', body: { to: 'a@b.com', subject: 'hi' } },
   { name: '/api/memory', handler: memoryHandler, method: 'GET', query: {} },
   { name: '/api/token', handler: tokenHandler, method: 'GET', query: {} },

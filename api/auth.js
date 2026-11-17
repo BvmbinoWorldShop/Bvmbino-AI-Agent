@@ -1,7 +1,7 @@
 import {
   signToken,
   checkAdminCredentials,
-  checkLoginRateLimit,
+  checkLoginRateLimitDistributed,
   recordFailedLogin,
   clearFailedLogins,
   JWT_SECRET
@@ -12,8 +12,8 @@ export default async function handler(req, res) {
 
   const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
 
-  // 1. Brute-Force Rate Limiting (Max 5 attempts per 15 min)
-  if (checkLoginRateLimit(ip)) {
+  // 1. Brute-Force Rate Limiting (Max 5 attempts per 15 min across serverless instances)
+  if (await checkLoginRateLimitDistributed(ip, req)) {
     return res.status(429).json({
       error: 'Too many failed login attempts. Access temporarily locked for 15 minutes for security.'
     });
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
     if (isValid) {
       // Clear failed attempts upon successful login
-      clearFailedLogins(ip);
+      clearFailedLogins(ip, res);
 
       const cleanUser = (username || 'Admin').trim();
       // Generate signed JWT token with 30-day persistence and audience claim
@@ -42,11 +42,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, token, username: cleanUser });
     } else {
       // Record failed attempt
-      recordFailedLogin(ip);
+      recordFailedLogin(ip, res);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
   } catch (e) {
-    recordFailedLogin(ip);
+    recordFailedLogin(ip, res);
     return res.status(400).json({ error: 'Bad request: ' + e.message });
   }
 }

@@ -6,14 +6,14 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // Rate Limit check (20 req/min)
-  if (isRateLimited(req, 20, res, 'scrape')) {
-    return res.status(429).json({ error: 'Rate limit exceeded (20 req/min)' });
-  }
-
   // Mandatory App Token Authentication
   if (!validateAppToken(req)) {
     return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
+  }
+
+  // Rate Limit check (20 req/min)
+  if (await isRateLimited(req, 20, res, 'scrape')) {
+    return res.status(429).json({ error: 'Rate limit exceeded (20 req/min)' });
   }
 
   // Global Abuse Protection

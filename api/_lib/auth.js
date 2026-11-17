@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 export {
   checkLoginRateLimit,
+  checkLoginRateLimitDistributed,
   recordFailedLogin,
   clearFailedLogins
 } from './ratelimit.js';
@@ -21,52 +22,36 @@ let _cachedDerivedSecret = null;
  */
 export function getJwtSecret(options = {}) {
   const secret = process.env.JWT_SECRET;
-  const isProd = process.env.NODE_ENV === 'production';
-  const strict = options.strict || (isProd && process.env.ENFORCE_MANDATORY_JWT === 'true');
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 
-  // 1. Explicit secret provided
+  // In production, strictly require a proper JWT_SECRET (minimum 32 characters)
+  if (isProd) {
+    if (!secret || secret.trim().length < 32) {
+      throw new Error(
+        '[SECURITY ERROR]: Production deployment strictly requires a secure JWT_SECRET environment variable ' +
+        '(minimum 32 characters). Set JWT_SECRET in your Vercel Environment Variables.'
+      );
+    }
+    return secret.trim();
+  }
+
+  // Development and Test environments
   if (secret) {
     const trimmed = secret.trim();
     if (trimmed.length < 32) {
-      if (strict) {
-        throw new Error(
-          '[SECURITY ERROR]: Configured JWT_SECRET is under 32 characters. ' +
-          'JWT secrets must be at least 32 characters for HMAC-SHA256 security.'
-        );
+      if (options.strict) {
+        throw new Error('[SECURITY ERROR]: Configured JWT_SECRET is under 32 characters.');
       }
-      // Non-strict runtime safeguard: Expand via SHA-256 to 256 bits so serverless functions never crash
-      console.warn('[SECURITY WARNING]: Configured JWT_SECRET is under 32 characters. Expanding with SHA-256 for cryptographic safety.');
       return crypto.createHash('sha256').update(trimmed).digest('hex');
     }
     return trimmed;
   }
 
-  // 2. Strict enforcement mode when unset
-  if (strict) {
-    throw new Error(
-      '[SECURITY ERROR]: Mandatory production JWT_SECRET is not configured or is under 32 characters. ' +
-      'Set JWT_SECRET in your Vercel Environment Variables.'
-    );
+  if (options.strict) {
+    throw new Error('[SECURITY ERROR]: Mandatory production JWT_SECRET is not configured or is under 32 characters.');
   }
 
-  // 3. In production without explicit JWT_SECRET: derive a deployment-stable 256-bit secret
-  if (isProd) {
-    if (!_cachedDerivedSecret) {
-      const entropy = [
-        process.env.VERCEL_GIT_COMMIT_SHA,
-        process.env.VERCEL_DEPLOYMENT_ID,
-        process.env.VERCEL_URL,
-        process.env.VERCEL_ENV,
-        'bvmbino-sovereign-deployment-seed-v4'
-      ].filter(Boolean).join(':');
-
-      _cachedDerivedSecret = crypto.createHash('sha256').update(entropy).digest('hex');
-      console.warn('[SECURITY WARNING]: JWT_SECRET is not explicitly set in Vercel environment variables. Using deployment-derived 256-bit secret. Set JWT_SECRET in Vercel for production hardening.');
-    }
-    return _cachedDerivedSecret;
-  }
-
-  // 4. Development/test key
+  // Deterministic 32-character key for local development and offline testing
   return 'bvmbino-dev-deterministic-secret-key-32chars!!';
 }
 

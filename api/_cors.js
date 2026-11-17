@@ -1,6 +1,7 @@
 import { verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './_lib/auth.js';
 import {
   checkRateLimit,
+  checkDistributedRateLimit,
   applyRateLimitHeaders,
   trackAbuse as sharedTrackAbuse
 } from './_lib/ratelimit.js';
@@ -66,8 +67,8 @@ export function validateAppToken(req) {
 // ── 3. ABUSE PROTECTION & RATE LIMITING (Shared Engine) ────────────────────
 export const trackAbuse = sharedTrackAbuse;
 
-export function isRateLimited(req, limit = 60, res = null, routeKey = 'api') {
-  const result = checkRateLimit(req, routeKey, limit, 60000);
+export async function isRateLimited(req, limit = 60, res = null, routeKey = 'api') {
+  const result = await checkDistributedRateLimit(req, routeKey, limit, 60000);
   if (res) {
     applyRateLimitHeaders(res, result);
   }

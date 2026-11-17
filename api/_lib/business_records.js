@@ -251,8 +251,10 @@ export function deleteRecord(id) {
  * STRICTLY returns audited totals from real records. If zero records, returns 0.
  * Clearly separates Verified/Reconciled revenue from Pending Drafts and Disputed items.
  */
-export function getFinancialSummary(filterMonth = null) {
-  const ledger = loadLedger();
+export function getFinancialSummary(filterMonth = null, customLedger = null) {
+  const ledger = customLedger && Array.isArray(customLedger)
+    ? { records: customLedger }
+    : (customLedger && Array.isArray(customLedger.records) ? customLedger : loadLedger());
   const targetPrefix = filterMonth || new Date().toISOString().slice(0, 7); // 'YYYY-MM'
 
   const recordsInPeriod = ledger.records.filter(r => {
@@ -351,8 +353,8 @@ export function getFinancialSummary(filterMonth = null) {
  * Format verified financial ledger string for injection into LLM system prompt.
  * Zero fabrication: guarantees truthfulness.
  */
-export function formatLedgerForPrompt(filterMonth = null) {
-  const summary = getFinancialSummary(filterMonth);
+export function formatLedgerForPrompt(filterMonth = null, customLedger = null) {
+  const summary = getFinancialSummary(filterMonth, customLedger);
 
   if (summary.recordCount === 0) {
     return `[VERIFIED BUSINESS LEDGER — ZERO FABRICATION GROUND TRUTH]:

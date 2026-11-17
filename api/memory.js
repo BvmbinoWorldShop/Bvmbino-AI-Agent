@@ -32,14 +32,14 @@ export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Rate Limiting (60 req/min)
-  if (isRateLimited(req, 60, res, 'memory')) {
-    return res.status(429).json({ error: 'Rate limit exceeded (60 req/min)' });
-  }
-
   // Mandatory App Token Authentication
   if (!validateAppToken(req)) {
     return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
+  }
+
+  // Rate Limiting (60 req/min)
+  if (await isRateLimited(req, 60, res, 'memory')) {
+    return res.status(429).json({ error: 'Rate limit exceeded (60 req/min)' });
   }
 
   // 1. GET Requests

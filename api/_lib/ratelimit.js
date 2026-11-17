@@ -250,8 +250,31 @@ export function trackAbuse(req) {
 // ── LOGIN RATE LIMITING & BRUTE-FORCE LOCKOUT ─────────────────────────
 /**
  * Check whether an IP is currently locked out from login attempts.
- * Supports signed lockout ticket and memory store.
+ * Supports distributed Redis REST, signed lockout ticket, and memory store.
  */
+export async function checkLoginRateLimitDistributed(ip, req = null) {
+  if (!ip) return false;
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+  if (redisUrl && redisToken) {
+    try {
+      const res = await fetch(`${redisUrl}/get/bvmbino:lockout:${ip}`, {
+        headers: { 'Authorization': `Bearer ${redisToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const count = parseInt(data?.result, 10);
+        if (!isNaN(count) && count >= FAILED_LOGIN_LIMIT) {
+          return true;
+        }
+      }
+    } catch {}
+  }
+
+  return checkLoginRateLimit(ip, req);
+}
+
 export function checkLoginRateLimit(ip, req = null) {
   if (!ip) return false;
   const now = Date.now();
@@ -285,6 +308,27 @@ export function checkLoginRateLimit(ip, req = null) {
 export function recordFailedLogin(ip, res = null) {
   if (!ip) return null;
   const now = Date.now();
+
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+  if (redisUrl && redisToken) {
+    try {
+      const key = `bvmbino:lockout:${ip}`;
+      fetch(`${redisUrl}/pipeline`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${redisToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify([
+          ['INCR', key],
+          ['EXPIRE', key, Math.ceil(LOGIN_LOCKOUT_MS / 1000)]
+        ])
+      }).catch(() => {});
+    } catch {}
+  }
+
   const entry = failedLoginStore.get(ip);
   let newCount = 1;
   let firstAttempt = now;
@@ -325,6 +369,13 @@ export function recordFailedLogin(ip, res = null) {
  */
 export function clearFailedLogins(ip, res = null) {
   if (ip) failedLoginStore.delete(ip);
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (redisUrl && redisToken && ip) {
+    fetch(`${redisUrl}/del/bvmbino:lockout:${ip}`, {
+      headers: { 'Authorization': `Bearer ${redisToken}` }
+    }).catch(() => {});
+  }
   if (res) {
     res.setHeader('X-Lockout-Ticket', '');
   }

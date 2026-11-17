@@ -3251,6 +3251,19 @@ async function refreshMemoryHub() {
     const data = await getAuthenticatedMemoryData();
     window.MemoryHubState.data = data;
 
+    // Asynchronously mirror into client's local IndexedDB (SovereignDeviceDB)
+    if (window.SovereignDeviceDB) {
+      if (Array.isArray(data.memory?.items)) {
+        for (const item of data.memory.items) window.SovereignDeviceDB.putMemoryItem(item).catch(() => {});
+      }
+      if (Array.isArray(data.ledger?.records)) {
+        for (const rec of data.ledger.records) window.SovereignDeviceDB.putLedgerRecord(rec).catch(() => {});
+      }
+      if (Array.isArray(data.summaries)) {
+        for (const sum of data.summaries) window.SovereignDeviceDB.putSummary(sum).catch(() => {});
+      }
+    }
+
     const factsCount = data.tiers?.confirmedFacts?.length || 0;
     const targetsCount = data.tiers?.targets?.length || 0;
     const assumptionsCount = data.tiers?.assumptions?.length || 0;
@@ -3267,7 +3280,44 @@ async function refreshMemoryHub() {
 
     renderMemoryHubItems();
   } catch (err) {
-    console.warn('[MemoryHub] Sync error:', err.message);
+    console.warn('[MemoryHub] Sync error, reading from sovereign device IndexedDB:', err.message);
+    if (window.SovereignDeviceDB) {
+      try {
+        const snap = await window.SovereignDeviceDB.exportSnapshot();
+        const memItems = snap.memoryItems || [];
+        const activeItems = memItems.filter(i => i.status !== 'superseded');
+        const confirmedFacts = activeItems.filter(i => i.type === 'confirmed_fact' || !i.type);
+        const targets = activeItems.filter(i => i.type === 'target');
+        const assumptions = activeItems.filter(i => i.type === 'assumption');
+        const ledgerRecords = snap.ledgerRecords || [];
+        const audited = ledgerRecords.filter(r => r.verified === true);
+        const totalEur = audited.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+
+        window.MemoryHubState.data = {
+          ok: true,
+          totalActiveItems: activeItems.length,
+          tiers: { confirmedFacts, targets, assumptions, superseded: memItems.filter(i => i.status === 'superseded') },
+          summaries: snap.summaries || [],
+          ledger: { records: ledgerRecords },
+          financialSummary: { totalEur, recordCount: audited.length, byVenture: {} }
+        };
+
+        const cfEl = document.getElementById('count-facts');
+        const ctEl = document.getElementById('count-targets');
+        const caEl = document.getElementById('count-assumptions');
+        if (cfEl) cfEl.textContent = confirmedFacts.length;
+        if (ctEl) ctEl.textContent = targets.length;
+        if (caEl) caEl.textContent = assumptions.length;
+
+        const badge = document.getElementById('mem-status-badge');
+        if (badge) badge.textContent = `${activeItems.length} Device Items (Offline)`;
+
+        renderMemoryHubItems();
+        return;
+      } catch (devErr) {
+        console.warn('[MemoryHub] Device DB fallback failed:', devErr.message);
+      }
+    }
     if (container && !window.MemoryHubState.data) {
       container.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--t3);font-size:11px">Local memory mode or sign in required.<br><button class="sbtn sbtn-primary" style="margin-top:8px;font-size:10px" onclick="refreshMemoryHub()">🔄 Retry</button></div>`;
     }
@@ -3455,6 +3505,10 @@ window.submitMemoryAdd = async function(allowDuplicate = false) {
       return;
     }
 
+    if (data.item && window.SovereignDeviceDB) {
+      await window.SovereignDeviceDB.putMemoryItem(data.item);
+    }
+
     toast('💾 Saved to Sovereign Vault');
     window.closeMemoryAddModal();
     refreshMemoryHub();
@@ -3481,6 +3535,11 @@ window.editMemoryItemUI = async function(id) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Update failed');
+
+    if (data.item && window.SovereignDeviceDB) {
+      await window.SovereignDeviceDB.putMemoryItem(data.item);
+    }
+
     toast('💾 Memory updated');
     refreshMemoryHub();
   } catch (e) {
@@ -3524,6 +3583,12 @@ window.submitMemorySupersede = async function() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to supersede');
+
+    if (window.SovereignDeviceDB) {
+      if (data.newItem) await window.SovereignDeviceDB.putMemoryItem(data.newItem);
+      if (data.oldItem) await window.SovereignDeviceDB.putMemoryItem(data.oldItem);
+    }
+
     toast('⟳ Outdated fact superseded in audit vault');
     window.closeMemorySupersedeModal();
     refreshMemoryHub();
@@ -3544,6 +3609,11 @@ window.deleteMemoryItemUI = async function(id) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Delete failed');
+
+    if (window.SovereignDeviceDB) {
+      await window.SovereignDeviceDB.deleteMemoryItem(id);
+    }
+
     toast('🗑️ Record deleted');
     refreshMemoryHub();
   } catch (e) {
@@ -3573,6 +3643,11 @@ window.summarizeChatUI = async function() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Summarisation failed');
+
+    if (data.summary && window.SovereignDeviceDB) {
+      await window.SovereignDeviceDB.putSummary(data.summary);
+    }
+
     toast('⚡ Decisions & action items saved to vault!');
 
     // Switch tab to summaries and refresh
@@ -3596,12 +3671,21 @@ window.closeMemoryBackupModal = function() {
 window.downloadMemoryBackup = async function() {
   const token = localStorage.getItem('bvmbino_app_token') || '';
   try {
-    const res = await fetch('/api/memory?action=export', {
-      headers: { 'x-app-token': token },
-      credentials: 'include'
-    });
-    if (!res.ok) throw new Error('Export failed');
-    const data = await res.json();
+    let data = null;
+    try {
+      const res = await fetch('/api/memory?action=export', {
+        headers: { 'x-app-token': token },
+        credentials: 'include'
+      });
+      if (res.ok) data = await res.json();
+    } catch {}
+
+    if (!data && window.SovereignDeviceDB) {
+      data = await window.SovereignDeviceDB.exportSnapshot();
+    }
+
+    if (!data) throw new Error('No memory backup available to download');
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3631,6 +3715,11 @@ window.submitMemoryImport = async function() {
     try {
       const backup = JSON.parse(e.target.result);
       const token = localStorage.getItem('bvmbino_app_token') || '';
+
+      if (window.SovereignDeviceDB) {
+        await window.SovereignDeviceDB.importSnapshot(backup, mode).catch(() => {});
+      }
+
       const res = await fetch('/api/memory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-app-token': token },
@@ -4233,6 +4322,14 @@ async function callAI() {
   if (!state._skipProxy) {
     try {
       const appToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('bvmbino_app_token') : '') || '';
+      let deviceMem = [];
+      let deviceLed = [];
+      if (window.SovereignDeviceDB) {
+        try {
+          deviceMem = await window.SovereignDeviceDB.getAllMemoryItems();
+          deviceLed = await window.SovereignDeviceDB.getAllLedgerRecords();
+        } catch {}
+      }
       const proxyRes = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -4246,7 +4343,9 @@ async function callAI() {
           model: chosen,
           stream: false,
           activeSkill: state.activeSkill,
-          clientKeys: keys
+          clientKeys: keys,
+          deviceMemory: deviceMem,
+          deviceLedger: deviceLed
         }),
         signal
       });
@@ -4548,16 +4647,39 @@ async function callAI() {
     }
   }
 
-    // ── ATTEMPT LOCAL AI (Zero Cost · Zero API Keys · Offline Ready) ──
+    // ── ATTEMPT LOCAL AI (Ollama Browser-to-Device / Sovereign Cognitive Engine) ──
   try {
     if (window.LocalAiEngine) {
       const lastUser = cleanMsgs.filter(m => m.role === 'user').pop()?.content || '';
+      
+      // If user has Ollama running locally or on device LAN, execute via device connector
+      const ollamaHost = localStorage.getItem('bvmbino_ollama_host') || 'http://127.0.0.1:11434';
+      const appToken = localStorage.getItem('bvmbino_app_token') || '';
+      try {
+        const ollamaRes = await window.LocalAiEngine.executeDeviceOllama({
+          model: 'llama3.2',
+          messages: cleanMsgs,
+          system: sys,
+          host: ollamaHost,
+          token: appToken
+        });
+        if (ollamaRes?.content) {
+          hideTyping();
+          state.abortController = null;
+          window.__unlockUI?.();
+          appendAiText(cleanAiOutput(ollamaRes.content), state.activeSkill);
+          return;
+        }
+      } catch (ollamaErr) {
+        console.warn('[Local Ollama Attempt Failed, falling back to Executive Brain]:', ollamaErr.message);
+      }
+
       const localExec = window.LocalAiEngine.executeBuiltInExecutive(state.activeSkill, lastUser);
       if (localExec?.content) {
         hideTyping();
         state.abortController = null;
         window.__unlockUI?.();
-        appendAiText(localExec.content + '\n\n*(⚡ Sovereign Client Brain — Zero Cloud Cost)*', state.activeSkill);
+        appendAiText(cleanAiOutput(localExec.content), state.activeSkill);
         return;
       }
     }

@@ -1,4 +1,4 @@
-import { setCors } from './_cors.js';
+import { setCors, isRateLimited } from './_cors.js';
 import { signToken, verifyToken, JWT_SECRET, TOKEN_AUDIENCE } from './_lib/auth.js';
 
 export default async function handler(req, res) {
@@ -21,6 +21,11 @@ export default async function handler(req, res) {
       error: 'Unauthorized: Access restricted to Bvmbino Pro members.',
       instructions: 'Please log in via the main dashboard.'
     });
+  }
+
+  // Distributed Rate Limiting (30 req/min)
+  if (await isRateLimited(req, 30, res, 'token')) {
+    return res.status(429).json({ error: 'Rate limit exceeded (30 req/min)' });
   }
 
   try {

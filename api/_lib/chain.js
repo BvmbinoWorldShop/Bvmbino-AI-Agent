@@ -24,6 +24,8 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
       chain.push({ provider: 'cerebras', model: requestedModel.replace('cerebras/', '') });
     } else if ((rm.startsWith('groq/') || rm.includes('llama-3.3-70b-versatile')) && keys.groq) {
       chain.push({ provider: 'groq', model: requestedModel.replace('groq/', '') });
+    } else if (rm.startsWith('local/') || rm.startsWith('ollama/')) {
+      chain.push({ provider: 'ollama', model: requestedModel.replace(/^(local|ollama)\//, '') });
     }
   }
 
@@ -34,6 +36,9 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
   }
 
   // Priority 1: Free Ultra-Fast Cloud LPUs & Free Cloud Engines (Groq, Cerebras, Gemini Free Tier, OpenRouter Free)
+  if (keys.ollama || keys.local) {
+    chain.push({ provider: 'ollama', model: 'llama3.2' });
+  }
   if (keys.groq) {
     chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
   }

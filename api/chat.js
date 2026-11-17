@@ -206,11 +206,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // Rate Limit check
-  if (isRateLimited(req, 60)) return res.status(429).json({ error: 'System busy — too many requests' });
-
   // Security layer (signed token verification)
   if (!validateAppToken(req)) return res.status(403).json({ error: 'Unauthorized: Session required' });
+
+  // Distributed Rate Limit check (60 req/min)
+  if (await isRateLimited(req, 60, res, 'chat')) return res.status(429).json({ error: 'System busy — too many requests' });
   if (await trackAbuse(req)) return res.status(429).json({ error: 'Resource limit reached' });
 
   try {
@@ -277,8 +277,9 @@ export default async function handler(req, res) {
     }
 
     const clientDeviceMemory = body?.deviceMemory || body?.clientMemory || null;
+    const clientDeviceLedger = body?.deviceLedger || body?.clientLedger || null;
     const persistentMemoryPrompt = '\n\n' + formatRelevantMemoryForPrompt(lastUserText, cleanSkill, clientDeviceMemory);
-    const verifiedLedgerPrompt = '\n\n' + formatLedgerForPrompt();
+    const verifiedLedgerPrompt = '\n\n' + formatLedgerForPrompt(null, clientDeviceLedger);
 
     const baseCore = (system && system.length > 250) ? system : (CORE + (system ? `\n\n${system}` : ''));
     const fullSystem = baseCore + clientPrompt + skillPrompt + persistentMemoryPrompt + verifiedLedgerPrompt + antiLeakDirective;

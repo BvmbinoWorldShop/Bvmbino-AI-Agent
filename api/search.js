@@ -5,12 +5,14 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // Rate Limit check (40 req/min)
-  if (isRateLimited(req, 40)) return res.status(429).json({ error: 'Rate limit exceeded (40 req/min)' });
-
   // Mandatory App Token Authentication
   if (!validateAppToken(req)) {
     return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
+  }
+
+  // Rate Limit check (40 req/min)
+  if (await isRateLimited(req, 40, res, 'search')) {
+    return res.status(429).json({ error: 'Rate limit exceeded (40 req/min)' });
   }
 
   // Abuse Protection
