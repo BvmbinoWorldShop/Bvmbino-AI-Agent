@@ -322,12 +322,33 @@ body::before{
 .in-meta{margin-left:auto;font-size:9px;color:var(--t3);display:flex;gap:8px;}
 .in-meta span{opacity:.5;}
 
-.mpanel{width:280px;height:100vh;background:var(--bg2);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;}
-.mpanel.closed{transform:translateX(100%);margin-right:-280px;}
+.mpanel{width:320px;max-width:92vw;height:100vh;background:var(--bg2);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;}
+.mpanel.closed{transform:translateX(100%);margin-right:-320px;}
 .mpanel:not(.closed){transform:translateX(0);}
 .mph{padding:14px 14px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
 .mpt{font-family:var(--head);font-weight:800;font-size:11px;color:var(--pu2);letter-spacing:2px;}
-.mpe{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;}
+.mpe{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+
+.mp-tab-btn{flex:1;padding:8px 4px;font-size:10px;font-family:var(--head);font-weight:700;border:none;background:transparent;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-align:center;}
+.mp-tab-btn:hover{color:var(--t1);background:rgba(255,255,255,.03);}
+.mp-tab-btn.active{color:var(--pu2);border-bottom-color:var(--pu2);background:rgba(168,85,247,.08);}
+
+.mem-card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rsm);padding:10px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s;}
+.mem-card:hover{border-color:var(--bd2);}
+.mem-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.mem-venture-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase;font-family:var(--mono);}
+.mem-v-formationpro{background:rgba(20,184,166,.18);color:#2dd4bf;border:1px solid rgba(20,184,166,.3);}
+.mem-v-purgoclean{background:rgba(168,85,247,.18);color:#c084fc;border:1px solid rgba(168,85,247,.3);}
+.mem-v-keojus{background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.3);}
+.mem-v-entrepriseai{background:rgba(59,130,246,.18);color:#60a5fa;border:1px solid rgba(59,130,246,.3);}
+.mem-v-global{background:rgba(148,163,184,.18);color:#cbd5e1;border:1px solid rgba(148,163,184,.3);}
+.mem-text{font-size:11px;color:var(--t1);line-height:1.5;word-break:break-word;}
+.mem-footer{display:flex;align-items:center;justify-content:space-between;margin-top:2px;font-size:9px;color:var(--t3);}
+.mem-act-btns{display:flex;gap:4px;}
+.mem-act-btn{background:var(--bg2);border:1px solid var(--bd);color:var(--t2);border-radius:3px;font-size:9px;padding:2px 6px;cursor:pointer;}
+.mem-act-btn:hover{color:var(--t1);border-color:var(--pu2);}
+.mem-act-btn.danger:hover{color:#f87171;border-color:rgba(248,113,113,.4);}
+
 .mp-tier{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
 .mp-tier-head{padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--pu3);}
 .mp-tier-label{font-size:10px;font-family:var(--head);font-weight:700;color:var(--pu2);}
@@ -973,33 +994,143 @@ textarea.set-input{resize:vertical;min-height:70px;line-height:1.5;}
 
 <!-- ═══ MEMORY PANEL ═══ -->
 <aside class="mpanel closed" id="mpanel">
-  <div class="mph"><div class="mpt">💾 SOVEREIGN VAULT</div><button class="icobtn" id="close-mpanel-btn">✕</button></div>
-  <div class="mpe">
-    <div class="mp-tier">
-      <div class="mp-tier-head"><span class="mp-tier-label">VENTURES Context</span><button class="icobtn" id="edit-ventures-btn" style="width:20px;height:20px;font-size:9px">✎</button></div>
-      <div class="editable-zone" id="mp-ventures" contenteditable="false">Active context for FormationPro, Strong Wave, and Purgo Clean.</div>
-    </div>
-    <div class="mp-tier">
-      <div class="mp-tier-head"><span class="mp-tier-label">PROJECTS Goals</span><button class="icobtn" id="edit-projects-btn" style="width:20px;height:20px;font-size:9px">✎</button></div>
-      <div class="editable-zone" id="mp-projects" contenteditable="false">Current Objectives: Scaling FormationPro sales in Abidjan.</div>
-    </div>
-    <div class="mp-tier">
-      <div class="mp-tier-head">
-        <span class="mp-tier-label" style="display:flex;align-items:center;gap:5px">
-          <span class="feed-live-dot"></span>LIVE FEED
-        </span>
-        <button class="icobtn" onclick="window.clearMemoryFeed && window.clearMemoryFeed()" style="width:20px;height:20px;font-size:9px" title="Clear">🗑</button>
-      </div>
-      <div id="mp-feed" style="max-height:280px;overflow-y:auto;font-size:10px;line-height:1.6;color:var(--t2);background:rgba(0,0,0,.4);border-radius:6px;border:1px solid var(--bd);font-family:var(--mono)">
-        <div class="feed-empty">System online. Awaiting orders, Boss…</div>
-      </div>
+  <div class="mph">
+    <div class="mpt">💾 SOVEREIGN MEMORY HUB</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="icobtn" id="refresh-memory-btn" title="Refresh Memory Vault" style="width:24px;height:24px;font-size:11px">🔄</button>
+      <button class="icobtn" id="close-mpanel-btn">✕</button>
     </div>
   </div>
+
+  <!-- Quick Action Controls -->
+  <div style="padding:10px 12px;border-bottom:1px solid var(--bd);display:flex;gap:6px;flex-wrap:wrap;background:rgba(0,0,0,0.25)">
+    <button class="sbtn sbtn-primary" id="mem-btn-add" style="flex:1;font-size:10px;padding:6px 8px;font-weight:700">＋ Add Entry</button>
+    <button class="sbtn" id="mem-btn-summarize" style="font-size:10px;padding:6px 8px" title="Summarize conversation & store strategic decisions">⚡ Summarize</button>
+    <button class="sbtn" id="mem-btn-backup" style="font-size:10px;padding:6px 8px" title="Export or Import JSON Backup">💾 Backup</button>
+  </div>
+
+  <!-- Relevance Search / Filter Bar -->
+  <div style="padding:8px 12px;border-bottom:1px solid var(--bd);">
+    <div style="position:relative">
+      <input type="text" id="mem-search-input" placeholder="Search or test relevance..." style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:6px 26px 6px 8px;font-size:11px;color:var(--t1);outline:none">
+      <span id="mem-search-clear" style="position:absolute;right:8px;top:6px;font-size:10px;cursor:pointer;color:var(--t3);display:none">✕</span>
+    </div>
+  </div>
+
+  <!-- Tier Selector Tabs -->
+  <div class="mp-tabs" style="display:flex;border-bottom:1px solid var(--bd);background:var(--bg3);overflow-x:auto">
+    <button class="mp-tab-btn active" id="tab-facts" data-tab="facts">Facts (<span id="count-facts">0</span>)</button>
+    <button class="mp-tab-btn" id="tab-targets" data-tab="targets">Targets (<span id="count-targets">0</span>)</button>
+    <button class="mp-tab-btn" id="tab-assumptions" data-tab="assumptions">Hypotheses (<span id="count-assumptions">0</span>)</button>
+    <button class="mp-tab-btn" id="tab-summaries" data-tab="summaries">Ledger & Log</button>
+  </div>
+
+  <!-- Hidden legacy containers to maintain complete DOM backward compatibility -->
+  <div style="display:none">
+    <div id="mp-ventures" contenteditable="false"></div>
+    <div id="mp-projects" contenteditable="false"></div>
+    <div id="mp-feed"></div>
+  </div>
+
+  <!-- Dynamic Content Zone -->
+  <div class="mpe" id="mem-items-container">
+    <div style="text-align:center;padding:24px 10px;color:var(--t3);font-size:11px">Initializing Sovereign Vault…</div>
+  </div>
+
   <div class="mpf">
-    <div class="mpst"><span class="mpsl">Context Level</span><span class="mpsv" id="tok-pct">0%</span></div>
-    <div class="tbar-wrap"><div class="tfill" id="tbar-fill" style="width:0%"></div></div>
+    <div class="mpst"><span class="mpsl">Vault Ground Truth</span><span class="mpsv" id="mem-status-badge">100% Synchronized</span></div>
+    <div class="tbar-wrap"><div class="tfill" id="tbar-fill" style="width:100%;background:var(--pu2)"></div></div>
   </div>
 </aside>
+
+<!-- MEMORY ADD MODAL -->
+<div class="modal-overlay" id="mem-add-modal">
+  <div class="modal-card" style="max-width:480px">
+    <div class="modal-hdr"><div class="modal-t">💾 Add Memory Record</div><button class="icobtn" onclick="window.closeMemoryAddModal()">✕</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:10px;font-family:var(--mono);color:var(--pu2);text-transform:uppercase;margin-bottom:4px;display:block">1. Memory Classification Tier</label>
+        <select class="set-input" id="mem-input-type" style="width:100%">
+          <option value="confirmed_fact">🟢 Confirmed Fact (Audited Ground Truth — Treated as Reality)</option>
+          <option value="target">🎯 Active Target (Objective in Progress — Not Done Deal)</option>
+          <option value="assumption">💡 Working Assumption (Unverified Hypothesis — Never State as Fact)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;font-family:var(--mono);color:var(--pu2);text-transform:uppercase;margin-bottom:4px;display:block">2. Venture Scope</label>
+        <select class="set-input" id="mem-input-venture" style="width:100%">
+          <option value="Global">🌐 Global / All Ventures</option>
+          <option value="FormationPro">🎓 FormationPro</option>
+          <option value="Purgo Clean">✨ Purgo Clean</option>
+          <option value="Keo Jus">🍹 Keo Jus</option>
+          <option value="Entreprise AI">⚡ Entreprise AI</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;font-family:var(--mono);color:var(--pu2);text-transform:uppercase;margin-bottom:4px;display:block">3. Ground Truth Statement / Objective</label>
+        <textarea class="set-input" id="mem-input-text" rows="4" placeholder="Enter verified statement, target, or working hypothesis…" style="min-height:90px"></textarea>
+      </div>
+      <div id="mem-dup-warning" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:6px;padding:8px 10px;font-size:10px;color:#fca5a5">
+        ⚠️ <strong>Duplicate Detected:</strong> <span id="mem-dup-msg"></span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="mem-save-btn" class="nbtn" style="flex:1" onclick="window.submitMemoryAdd()">💾 Save to Vault</button>
+      <button class="icobtn" style="width:auto;padding:0 12px" onclick="window.closeMemoryAddModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEMORY SUPERSEDE / CORRECT MODAL -->
+<div class="modal-overlay" id="mem-supersede-modal">
+  <div class="modal-card" style="max-width:480px">
+    <div class="modal-hdr"><div class="modal-t">⟳ Correct Outdated Fact</div><button class="icobtn" onclick="window.closeMemorySupersedeModal()">✕</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:10px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;margin-bottom:4px;display:block">Outdated Fact to Archive & Supersede:</label>
+        <div id="mem-supersede-old-text" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:8px;font-size:11px;color:#fca5a5;text-decoration:line-through"></div>
+      </div>
+      <div>
+        <label style="font-size:10px;font-family:var(--mono);color:var(--pu2);text-transform:uppercase;margin-bottom:4px;display:block">New Verified Truth / Replacement Fact:</label>
+        <textarea class="set-input" id="mem-supersede-new-text" rows="4" placeholder="Enter the new verified fact that replaces the outdated one…" style="min-height:90px"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="nbtn" style="flex:1" onclick="window.submitMemorySupersede()">⟳ Supersede & Archive Outdated</button>
+      <button class="icobtn" style="width:auto;padding:0 12px" onclick="window.closeMemorySupersedeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEMORY BACKUP & RESTORE MODAL -->
+<div class="modal-overlay" id="mem-backup-modal">
+  <div class="modal-card" style="max-width:500px">
+    <div class="modal-hdr"><div class="modal-t">💾 Backup & Restore Memory Vault</div><button class="icobtn" onclick="window.closeMemoryBackupModal()">✕</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <!-- Export section -->
+      <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--pu2);margin-bottom:4px">📥 Export Vault Backup</div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:8px">Download all confirmed facts, active targets, working assumptions, and audited business transactions as a verified JSON backup.</div>
+        <button class="sbtn sbtn-primary" onclick="window.downloadMemoryBackup()" style="font-size:10px;padding:6px 12px">Download JSON Backup</button>
+      </div>
+
+      <!-- Import section -->
+      <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--pu2);margin-bottom:4px">📤 Restore from Backup</div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:8px">Upload or select a valid Bvmbino Memory Hub JSON backup file.</div>
+        <input type="file" id="mem-import-file" accept=".json,application/json" style="font-size:10px;margin-bottom:8px;display:block;width:100%">
+        <div style="display:flex;gap:12px;margin-bottom:8px;font-size:10px;color:var(--t2)">
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="mem-import-mode" value="merge" checked> Merge with existing</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="mem-import-mode" value="replace"> Replace entire vault</label>
+        </div>
+        <button class="sbtn" onclick="window.submitMemoryImport()" style="font-size:10px;padding:6px 12px">Restore Backup</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="icobtn" style="width:auto;padding:0 12px;margin-left:auto" onclick="window.closeMemoryBackupModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- TRAIN MODAL -->
 <div class="modal-overlay" id="train-modal">
@@ -2575,6 +2706,7 @@ function closeSb() {
 // FIX: openMpanel/closeMpanel defined (were on window bridge but never existed)
 function openMpanel() {
   document.getElementById('mpanel')?.classList.remove('closed');
+  try { if (typeof window.refreshMemoryHub === 'function') window.refreshMemoryHub(); } catch {}
 }
 function closeMpanel() {
   document.getElementById('mpanel')?.classList.add('closed');
@@ -3085,13 +3217,472 @@ function editMemoryTier(id) {
   }
 }
 
-function initMemoryHub() {
-  ['ventures', 'projects'].forEach(id => {
-    const val = loadMemoryTier(id);
-    const el = document.getElementById(`mp-${id}`);
-    if (el && val) el.textContent = val;
-    el?.addEventListener('blur', () => saveMemoryTier(id, el.textContent));
+// ── SOVEREIGN MEMORY HUB CONTROLLER ──
+window.MemoryHubState = {
+  activeTab: 'facts',
+  data: null,
+  searchQuery: '',
+  pendingSupersedeId: null
+};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function getAuthenticatedMemoryData() {
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  const res = await fetch('/api/memory', {
+    headers: { 'x-app-token': token },
+    credentials: 'include'
   });
+  if (!res.ok) throw new Error(`Memory fetch error: ${res.status}`);
+  return await res.json();
+}
+
+async function refreshMemoryHub() {
+  const container = document.getElementById('mem-items-container');
+  try {
+    const data = await getAuthenticatedMemoryData();
+    window.MemoryHubState.data = data;
+
+    const factsCount = data.tiers?.confirmedFacts?.length || 0;
+    const targetsCount = data.tiers?.targets?.length || 0;
+    const assumptionsCount = data.tiers?.assumptions?.length || 0;
+
+    const cfEl = document.getElementById('count-facts');
+    const ctEl = document.getElementById('count-targets');
+    const caEl = document.getElementById('count-assumptions');
+    if (cfEl) cfEl.textContent = factsCount;
+    if (ctEl) ctEl.textContent = targetsCount;
+    if (caEl) caEl.textContent = assumptionsCount;
+
+    const badge = document.getElementById('mem-status-badge');
+    if (badge) badge.textContent = `${data.totalActiveItems || (factsCount + targetsCount + assumptionsCount)} Active Items`;
+
+    renderMemoryHubItems();
+  } catch (err) {
+    console.warn('[MemoryHub] Sync error:', err.message);
+    if (container && !window.MemoryHubState.data) {
+      container.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--t3);font-size:11px">Local memory mode or sign in required.<br><button class="sbtn sbtn-primary" style="margin-top:8px;font-size:10px" onclick="refreshMemoryHub()">🔄 Retry</button></div>`;
+    }
+  }
+}
+window.refreshMemoryHub = refreshMemoryHub;
+
+function renderMemoryHubItems() {
+  const container = document.getElementById('mem-items-container');
+  if (!container) return;
+
+  const { activeTab, data, searchQuery } = window.MemoryHubState;
+  if (!data) {
+    container.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--t3);font-size:11px">No memory loaded. Click 🔄 to retry.</div>`;
+    return;
+  }
+
+  // 1. Tab: Summaries & Audited Ledger
+  if (activeTab === 'summaries') {
+    let html = '';
+    const ledger = data.ledger || { records: [] };
+    const summary = data.financialSummary || { totalEur: 0, byVenture: {} };
+
+    html += `
+      <div class="mem-card" style="border-left:3px solid #22c55e">
+        <div class="mem-card-hdr">
+          <span class="mem-venture-badge mem-v-global">Audited Business Ledger</span>
+          <span style="font-size:10px;font-weight:700;color:#22c55e">€${summary.totalEur.toLocaleString()} EUR</span>
+        </div>
+        <div class="mem-text" style="font-size:10px;color:var(--t2)">
+          Zero fabrication. Verified transactions on file: <strong>${ledger.records.length}</strong>
+        </div>
+        ${ledger.records.length > 0 ? `
+          <div style="margin-top:6px;max-height:100px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+            ${ledger.records.slice(0, 5).map(r => `
+              <div style="font-size:9px;color:var(--t3);display:flex;justify-content:space-between">
+                <span>[${escapeHtml(r.venture)}] ${escapeHtml(r.description)}</span>
+                <span style="font-weight:700;color:var(--t1)">+€${r.amount}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div style="font-size:9px;color:var(--t3);margin-top:4px">No audited revenue records logged yet.</div>`}
+      </div>
+    `;
+
+    const summaries = data.summaries || [];
+    if (!summaries.length) {
+      html += `
+        <div style="text-align:center;padding:24px 10px;color:var(--t3);font-size:10px">
+          No conversation summaries recorded yet.<br>
+          Click <strong>⚡ Summarize</strong> above to capture decisions from your active chat!
+        </div>
+      `;
+    } else {
+      for (const sum of summaries) {
+        html += `
+          <div class="mem-card" style="border-left:3px solid var(--pu2)">
+            <div class="mem-card-hdr">
+              <span class="mem-venture-badge mem-v-entrepriseai">${escapeHtml(sum.title || 'Strategy Session')}</span>
+              <span style="font-size:8px;font-family:var(--mono);color:var(--t3)">${(sum.timestamp || '').slice(0, 10)}</span>
+            </div>
+            <div class="mem-text">${escapeHtml(sum.summary)}</div>
+            ${sum.actionItems && sum.actionItems.length ? `
+              <div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:4px">
+                <div style="font-size:9px;font-weight:700;color:var(--pu2);text-transform:uppercase;margin-bottom:2px">Decisions & Action Items:</div>
+                ${sum.actionItems.map(a => `<div style="font-size:9px;color:var(--t2)">→ ${escapeHtml(a)}</div>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+    }
+    container.innerHTML = html;
+    return;
+  }
+
+  // 2. Tabs: Facts, Targets, Assumptions
+  let items = [];
+  if (activeTab === 'facts') items = data.tiers?.confirmedFacts || [];
+  else if (activeTab === 'targets') items = data.tiers?.targets || [];
+  else if (activeTab === 'assumptions') items = data.tiers?.assumptions || [];
+
+  if (searchQuery && searchQuery.trim()) {
+    const q = searchQuery.toLowerCase().trim();
+    items = items.filter(i =>
+      i.text.toLowerCase().includes(q) ||
+      i.venture.toLowerCase().includes(q) ||
+      (i.tags && i.tags.some(t => t.toLowerCase().includes(q)))
+    );
+  }
+
+  if (!items.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:30px 10px;color:var(--t3);font-size:11px">
+        ${searchQuery ? `No matching entries for "${escapeHtml(searchQuery)}"` : `No ${activeTab} recorded yet.`}<br>
+        <button class="sbtn sbtn-primary" style="margin-top:10px;font-size:10px;padding:4px 10px" onclick="window.openMemoryAddModal('${activeTab}')">＋ Add First Record</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    const vCls = `mem-v-${(item.venture || 'global').toLowerCase().replace(/\s+/g, '')}`;
+    const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '';
+    const safeText = escapeHtml(item.text);
+
+    return `
+      <div class="mem-card" id="mem-card-${item.id}">
+        <div class="mem-card-hdr">
+          <span class="mem-venture-badge ${vCls}">${escapeHtml(item.venture || 'Global')}</span>
+          <span style="font-size:8px;font-family:var(--mono);color:var(--t3)">${dateStr}</span>
+        </div>
+        <div class="mem-text" id="mem-text-${item.id}">${safeText}</div>
+        <div class="mem-footer">
+          <span style="font-size:8px;color:var(--t3)">Confidence: ${Math.round((item.confidence || 1) * 100)}%</span>
+          <div class="mem-act-btns">
+            <button class="mem-act-btn" onclick="window.editMemoryItemUI('${item.id}')" title="Edit text">✎ Edit</button>
+            <button class="mem-act-btn" onclick="window.openMemorySupersedeModal('${item.id}')" title="Supersede with updated fact">⟳ Correct</button>
+            <button class="mem-act-btn danger" onclick="window.deleteMemoryItemUI('${item.id}')" title="Delete record">✕</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Modal Handlers
+window.openMemoryAddModal = function(prefTab = 'facts') {
+  const modal = document.getElementById('mem-add-modal');
+  const typeSelect = document.getElementById('mem-input-type');
+  const textInput = document.getElementById('mem-input-text');
+  const dupWarn = document.getElementById('mem-dup-warning');
+
+  if (typeSelect) {
+    if (prefTab === 'targets') typeSelect.value = 'target';
+    else if (prefTab === 'assumptions') typeSelect.value = 'assumption';
+    else typeSelect.value = 'confirmed_fact';
+  }
+  if (textInput) textInput.value = '';
+  if (dupWarn) dupWarn.style.display = 'none';
+  if (modal) modal.classList.add('open');
+};
+
+window.closeMemoryAddModal = function() {
+  document.getElementById('mem-add-modal')?.classList.remove('open');
+};
+
+window.submitMemoryAdd = async function(allowDuplicate = false) {
+  const type = document.getElementById('mem-input-type')?.value || 'confirmed_fact';
+  const venture = document.getElementById('mem-input-venture')?.value || 'Global';
+  const text = document.getElementById('mem-input-text')?.value?.trim();
+
+  if (!text) {
+    toast('⚠️ Please enter statement text');
+    return;
+  }
+
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  try {
+    const res = await fetch('/api/memory', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-app-token': token
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        action: 'add_item',
+        type,
+        venture,
+        text,
+        allowDuplicate
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save');
+
+    if (data.isDuplicate && !allowDuplicate) {
+      const dupWarn = document.getElementById('mem-dup-warning');
+      const dupMsg = document.getElementById('mem-dup-msg');
+      if (dupWarn && dupMsg) {
+        dupMsg.innerHTML = `${escapeHtml(data.message)}<br><button class="sbtn sbtn-primary" style="margin-top:6px;font-size:9px" onclick="window.submitMemoryAdd(true)">Force Save Duplicate</button>`;
+        dupWarn.style.display = 'block';
+      }
+      return;
+    }
+
+    toast('💾 Saved to Sovereign Vault');
+    window.closeMemoryAddModal();
+    refreshMemoryHub();
+  } catch (err) {
+    toast(`⚠️ Error: ${err.message}`);
+  }
+};
+
+window.editMemoryItemUI = async function(id) {
+  const textEl = document.getElementById(`mem-text-${id}`);
+  if (!textEl) return;
+
+  const currentText = textEl.textContent.trim();
+  const newText = prompt('Edit memory text:', currentText);
+  if (newText === null || newText.trim() === '' || newText.trim() === currentText) return;
+
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  try {
+    const res = await fetch('/api/memory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-app-token': token },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'update_item', id, text: newText.trim() })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Update failed');
+    toast('💾 Memory updated');
+    refreshMemoryHub();
+  } catch (e) {
+    toast(`⚠️ ${e.message}`);
+  }
+};
+
+window.openMemorySupersedeModal = function(id) {
+  const textEl = document.getElementById(`mem-text-${id}`);
+  const oldText = textEl ? textEl.textContent.trim() : '';
+
+  window.MemoryHubState.pendingSupersedeId = id;
+  const oldEl = document.getElementById('mem-supersede-old-text');
+  const newEl = document.getElementById('mem-supersede-new-text');
+  if (oldEl) oldEl.textContent = oldText;
+  if (newEl) newEl.value = '';
+
+  document.getElementById('mem-supersede-modal')?.classList.add('open');
+};
+
+window.closeMemorySupersedeModal = function() {
+  window.MemoryHubState.pendingSupersedeId = null;
+  document.getElementById('mem-supersede-modal')?.classList.remove('open');
+};
+
+window.submitMemorySupersede = async function() {
+  const id = window.MemoryHubState.pendingSupersedeId;
+  const newText = document.getElementById('mem-supersede-new-text')?.value?.trim();
+  if (!id || !newText) {
+    toast('⚠️ Please enter the replacement truth');
+    return;
+  }
+
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  try {
+    const res = await fetch('/api/memory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-app-token': token },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'supersede_item', oldId: id, newText })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to supersede');
+    toast('⟳ Outdated fact superseded in audit vault');
+    window.closeMemorySupersedeModal();
+    refreshMemoryHub();
+  } catch (e) {
+    toast(`⚠️ ${e.message}`);
+  }
+};
+
+window.deleteMemoryItemUI = async function(id) {
+  if (!confirm('Are you sure you want to permanently delete this memory record?')) return;
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  try {
+    const res = await fetch('/api/memory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-app-token': token },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'delete_item', id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Delete failed');
+    toast('🗑️ Record deleted');
+    refreshMemoryHub();
+  } catch (e) {
+    toast(`⚠️ ${e.message}`);
+  }
+};
+
+window.summarizeChatUI = async function() {
+  const msgs = (window.state && window.state.msgs) ? window.state.msgs : [];
+  if (!msgs || msgs.length < 2) {
+    toast('💬 Not enough chat history to summarize yet');
+    return;
+  }
+
+  toast('⚡ Analyzing conversation for decisions…');
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  try {
+    const res = await fetch('/api/memory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-app-token': token },
+      credentials: 'include',
+      body: JSON.stringify({
+        action: 'summarize',
+        messages: msgs,
+        title: 'Executive Session'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Summarisation failed');
+    toast('⚡ Decisions & action items saved to vault!');
+
+    // Switch tab to summaries and refresh
+    window.MemoryHubState.activeTab = 'summaries';
+    document.querySelectorAll('.mp-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-summaries')?.classList.add('active');
+    refreshMemoryHub();
+  } catch (e) {
+    toast(`⚠️ ${e.message}`);
+  }
+};
+
+window.openMemoryBackupModal = function() {
+  document.getElementById('mem-backup-modal')?.classList.add('open');
+};
+
+window.closeMemoryBackupModal = function() {
+  document.getElementById('mem-backup-modal')?.classList.remove('open');
+};
+
+window.downloadMemoryBackup = async function() {
+  const token = localStorage.getItem('bvmbino_app_token') || '';
+  try {
+    const res = await fetch('/api/memory?action=export', {
+      headers: { 'x-app-token': token },
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Export failed');
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bvmbino-memory-backup-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('📥 Memory backup downloaded');
+  } catch (e) {
+    toast(`⚠️ Export failed: ${e.message}`);
+  }
+};
+
+window.submitMemoryImport = async function() {
+  const fileInput = document.getElementById('mem-import-file');
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    toast('⚠️ Please select a JSON backup file to import');
+    return;
+  }
+
+  const mode = document.querySelector('input[name="mem-import-mode"]:checked')?.value || 'merge';
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      const token = localStorage.getItem('bvmbino_app_token') || '';
+      const res = await fetch('/api/memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-app-token': token },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'import', backup, mode })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Import failed');
+      toast(`📥 Restored ${data.totalItems} items (${mode} mode)`);
+      window.closeMemoryBackupModal();
+      refreshMemoryHub();
+    } catch (err) {
+      toast(`⚠️ Import failed: ${err.message}`);
+    }
+  };
+  reader.readAsText(file);
+};
+
+function initMemoryHub() {
+  // 1. Wire Tab Buttons
+  ['facts', 'targets', 'assumptions', 'summaries'].forEach(tabKey => {
+    const btn = document.getElementById(`tab-${tabKey}`);
+    btn?.addEventListener('click', () => {
+      window.MemoryHubState.activeTab = tabKey;
+      document.querySelectorAll('.mp-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderMemoryHubItems();
+    });
+  });
+
+  // 2. Wire Header & Action Buttons
+  document.getElementById('refresh-memory-btn')?.addEventListener('click', () => refreshMemoryHub());
+  document.getElementById('mem-btn-add')?.addEventListener('click', () => window.openMemoryAddModal(window.MemoryHubState.activeTab));
+  document.getElementById('mem-btn-summarize')?.addEventListener('click', () => window.summarizeChatUI());
+  document.getElementById('mem-btn-backup')?.addEventListener('click', () => window.openMemoryBackupModal());
+
+  // 3. Wire Search / Relevance Filter Input
+  const sInput = document.getElementById('mem-search-input');
+  const sClear = document.getElementById('mem-search-clear');
+  sInput?.addEventListener('input', (e) => {
+    window.MemoryHubState.searchQuery = e.target.value;
+    if (sClear) sClear.style.display = e.target.value ? 'block' : 'none';
+    renderMemoryHubItems();
+  });
+  sClear?.addEventListener('click', () => {
+    if (sInput) sInput.value = '';
+    window.MemoryHubState.searchQuery = '';
+    if (sClear) sClear.style.display = 'none';
+    renderMemoryHubItems();
+  });
+
+  // 4. Initial Sync
+  refreshMemoryHub();
 }
 
 // ── SKILLS SIDEBAR (small chips) ──

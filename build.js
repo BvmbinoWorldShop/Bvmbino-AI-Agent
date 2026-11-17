@@ -65,8 +65,9 @@ function compressAssets(dir) {
 }
 
 console.log('── Bvmbino Sovereign Production Build ─────────────────────');
-console.log(`Syncing ${PUBLIC_DIR}/ to ${DIST_DIR}/...`);
+console.log(`Syncing ${PUBLIC_DIR}/ to ${DIST_DIR}/ and root...`);
 copyDir(PUBLIC_DIR, DIST_DIR);
+fs.copyFileSync(path.join(PUBLIC_DIR, 'index.html'), 'index.html');
 
 console.log('Generating production Brotli (.br) and Gzip (.gz) optimized bundles...');
 const { count, savedBytes } = compressAssets(DIST_DIR);
