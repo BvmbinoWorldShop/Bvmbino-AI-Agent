@@ -6,6 +6,7 @@ import { executeAnthropic, transformAnthropicPayload } from './anthropic.js';
 import { executeOpenAI } from './openai.js';
 import { executeMistral } from './mistral.js';
 import { executeOllama } from './ollama.js';
+import { executeFree } from './free.js';
 
 export const ADAPTERS = {
   groq: executeGroq,
@@ -16,7 +17,8 @@ export const ADAPTERS = {
   openai: executeOpenAI,
   mistral: executeMistral,
   ollama: executeOllama,
-  local: executeOllama
+  local: executeOllama,
+  free: executeFree
 };
 
 export async function executeAdapter(provider, options) {
@@ -38,5 +40,6 @@ export {
   transformAnthropicPayload,
   executeOpenAI,
   executeMistral,
-  executeOllama
+  executeOllama,
+  executeFree
 };

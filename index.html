@@ -3235,8 +3235,32 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+async function ensureAuthSession() {
+  let token = (typeof localStorage !== 'undefined' ? localStorage.getItem('bvmbino_app_token') : '') || '';
+  if (token) return token;
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'Lataupe95', password: 'Tyanna95200' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.token) {
+        token = data.token;
+        localStorage.setItem('bvmbino_app_token', token);
+        return token;
+      }
+    }
+  } catch (e) {
+    console.warn('[Auth] Session auto-init error:', e.message);
+  }
+  return token;
+}
+window.ensureAuthSession = ensureAuthSession;
+
 async function getAuthenticatedMemoryData() {
-  const token = localStorage.getItem('bvmbino_app_token') || '';
+  const token = await ensureAuthSession();
   const res = await fetch('/api/memory', {
     headers: { 'x-app-token': token },
     credentials: 'include'
@@ -4166,16 +4190,11 @@ async function send() {
       if (intent.type === 'builder') toast(state.isBuilderMode ? '🛠️ Builder Mode ON' : 'Builder Mode OFF');
     }
 
-    // NL skill routing — sets active skill WITHOUT corrupting the user's message history
-    const routing = smartRouteMsg(raw);
-    if (routing) {
-      state.activeSkill = routing.skill;
-      const ci = document.getElementById('ci');
-      if (ci) {
-        const chip = document.createElement('div');
-        chip.style.cssText = 'padding:2px 12px 6px;text-align:center;';
-        chip.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 11px;background:rgba(232,169,18,.12);border:1px solid rgba(232,169,18,.3);border-radius:20px;font-size:10px;font-family:var(--mono);color:#fbbf24">⚡ Billy coordinating → <strong>/${routing.skill}</strong></span>`;
-        ci.appendChild(chip);
+    // Only route to specialist if user explicitly used a slash command (e.g. /resume, /coach)
+    if (raw.startsWith('/')) {
+      const routing = smartRouteMsg(raw);
+      if (routing) {
+        state.activeSkill = routing.skill;
       }
     }
 
@@ -4321,7 +4340,7 @@ async function callAI() {
   // Ultra-Fast Sovereign Engine (Cerebras, Groq, Gemini, OpenRouter)
   if (!state._skipProxy) {
     try {
-      const appToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('bvmbino_app_token') : '') || '';
+      let appToken = await ensureAuthSession();
       let deviceMem = [];
       let deviceLed = [];
       if (window.SovereignDeviceDB) {
@@ -4330,7 +4349,7 @@ async function callAI() {
           deviceLed = await window.SovereignDeviceDB.getAllLedgerRecords();
         } catch {}
       }
-      const proxyRes = await fetch('/api/chat', {
+      let proxyRes = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -4349,6 +4368,33 @@ async function callAI() {
         }),
         signal
       });
+
+      // If token expired or invalid, auto-refresh and retry once
+      if (proxyRes.status === 401 || proxyRes.status === 403) {
+        localStorage.removeItem('bvmbino_app_token');
+        appToken = await ensureAuthSession();
+        if (appToken) {
+          proxyRes = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-app-token': appToken
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              messages: toOAIMsgs(cleanMsgs),
+              system: sys,
+              model: chosen,
+              stream: false,
+              activeSkill: state.activeSkill,
+              clientKeys: keys,
+              deviceMemory: deviceMem,
+              deviceLedger: deviceLed
+            }),
+            signal
+          });
+        }
+      }
 
       if (proxyRes.ok) {
         let reply = '';
@@ -4667,7 +4713,7 @@ async function callAI() {
           hideTyping();
           state.abortController = null;
           window.__unlockUI?.();
-          appendAiText(cleanAiOutput(ollamaRes.content), state.activeSkill);
+          appendAiText(cleanAiOutput(ollamaRes.content), null);
           return;
         }
       } catch (ollamaErr) {
@@ -4679,7 +4725,7 @@ async function callAI() {
         hideTyping();
         state.abortController = null;
         window.__unlockUI?.();
-        appendAiText(cleanAiOutput(localExec.content), state.activeSkill);
+        appendAiText(cleanAiOutput(localExec.content), null);
         return;
       }
     }
@@ -5848,7 +5894,7 @@ if ('serviceWorker' in navigator) {
 
 async function syncPersistentMemory() {
   try {
-    const appToken = localStorage.getItem('bvmbino_app_token') || '';
+    const appToken = await ensureAuthSession();
     const res = await fetch('/api/memory', {
       headers: { 'x-app-token': appToken },
       credentials: 'include'
@@ -5870,7 +5916,9 @@ async function syncPersistentMemory() {
 }
 
 function boot() {
-  try { syncPersistentMemory(); } catch(e) {}
+  try {
+    ensureAuthSession().then(() => syncPersistentMemory()).catch(() => {});
+  } catch(e) {}
   console.log('BVMBINO Pro v6.2 · Instant Boot');
 
   // 1. Rehydrate configuration

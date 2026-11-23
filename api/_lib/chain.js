@@ -22,8 +22,10 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
       chain.push({ provider: 'openrouter', model: requestedModel.replace(':free', '') });
     } else if ((rm === 'llama-3.3-70b' || rm.startsWith('llama3.1-') || rm.startsWith('cerebras/')) && keys.cerebras) {
       chain.push({ provider: 'cerebras', model: requestedModel.replace('cerebras/', '') });
-    } else if ((rm.startsWith('groq/') || rm.includes('llama-3.3-70b-versatile')) && keys.groq) {
-      chain.push({ provider: 'groq', model: requestedModel.replace('groq/', '') });
+    } else if ((rm.startsWith('groq/') || rm.includes('llama-3.3-70b') || rm.includes('llama-3.3-70b-versatile')) && keys.groq) {
+      chain.push({ provider: 'groq', model: 'llama-3.3-70b-versatile' });
+    } else if (rm.includes('llama-3.3-70b') && keys.openrouter) {
+      chain.push({ provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct' });
     } else if (rm.startsWith('local/') || rm.startsWith('ollama/')) {
       chain.push({ provider: 'ollama', model: requestedModel.replace(/^(local|ollama)\//, '') });
     }
@@ -74,6 +76,9 @@ export function buildExecutionChain({ keys = {}, requestedModel = null, pdfDocum
     chain.push({ provider: 'anthropic', model: 'claude-3-5-haiku-latest' });
     chain.push({ provider: 'anthropic', model: 'claude-3-5-sonnet-latest' });
   }
+
+  // Priority 4: Sovereign Free Inference (Zero-Key High-Speed Fallback)
+  chain.push({ provider: 'free', model: 'bvmbino-sovereign-free' });
 
   // Deduplicate entries preserving priority order
   const seen = new Set();

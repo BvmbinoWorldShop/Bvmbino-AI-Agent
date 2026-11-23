@@ -30,63 +30,48 @@ function cleanAiOutput(text) {
 }
 
 async function serverSingleSearch(query) {
-  // Primary: Swisscows via Jina Reader (Zero bot challenges, 100% clean live markdown snippets)
+  // Ultra-fast parallel search (DuckDuckGo Lite & Instant Answer) with strict 1800ms ceiling
   try {
-    const scUrl = 'https://swisscows.com/en/web?query=' + encodeURIComponent(query);
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 2800);
-    const res = await fetch('https://r.jina.ai/' + scUrl, {
-      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
-      signal: ctrl.signal
-    });
-    clearTimeout(tid);
-    if (res.ok) {
-      let text = (await res.text()).trim().slice(0, 6000);
-      if (text.length > 100 && !text.includes('confirm') && !text.includes('challenge')) return text;
-    }
-  } catch (e) {
-    console.warn('[serverSingleSearch] Swisscows via Jina failed:', e.message);
-  }
+    const tid = setTimeout(() => ctrl.abort(), 1800);
 
-  // Fallback 1: DuckDuckGo Lite via Jina Reader
-  try {
+    const ddgInstant = fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`, { signal: ctrl.signal })
+      .then(async (res) => {
+        if (!res.ok) return '';
+        const d = await res.json();
+        let r = '';
+        if (d.AbstractText) r += d.AbstractText + '\n';
+        if (d.Answer) r += 'Answer: ' + d.Answer + '\n';
+        if (d.Definition) r += 'Definition: ' + d.Definition + '\n';
+        const tops = (d.RelatedTopics || []).slice(0, 4).map(t => t.Text || '').filter(Boolean);
+        if (tops.length) r += tops.join('\n');
+        return r.trim();
+      })
+      .catch(() => '');
+
     const liteUrl = 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query);
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 2500);
-    const res = await fetch('https://r.jina.ai/' + liteUrl, {
+    const jinaLite = fetch('https://r.jina.ai/' + liteUrl, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
       signal: ctrl.signal
-    });
-    clearTimeout(tid);
-    if (res.ok) {
-      let text = await res.text();
-      text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
-        try { return decodeURIComponent(enc); } catch { return enc; }
-      });
-      text = text.trim().slice(0, 5500);
-      if (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) return text;
-    }
-  } catch (e) {
-    console.warn('[serverSingleSearch] DuckDuckGo Lite failed:', e.message);
-  }
+    })
+      .then(async (res) => {
+        if (!res.ok) return '';
+        let text = await res.text();
+        text = text.replace(/https?:\/\/duckduckgo\.com\/l\/\?uddg=([^&\s)]+)[^\s)]*/g, (_, enc) => {
+          try { return decodeURIComponent(enc); } catch { return enc; }
+        });
+        text = text.trim().slice(0, 4000);
+        return (text.length > 80 && !text.includes('confirm') && !text.includes('challenge')) ? text : '';
+      })
+      .catch(() => '');
 
-  // Fallback 2: DuckDuckGo Instant Answer API
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 2000);
-    const ddg = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`, { signal: ctrl.signal });
+    const results = await Promise.all([ddgInstant, jinaLite]);
     clearTimeout(tid);
-    if (ddg.ok) {
-      const d = await ddg.json();
-      let r = '';
-      if (d.AbstractText) r += d.AbstractText + '\n';
-      if (d.Answer)       r += 'Answer: ' + d.Answer + '\n';
-      if (d.Definition)   r += 'Definition: ' + d.Definition + '\n';
-      const tops = (d.RelatedTopics || []).slice(0, 5).map(t => t.Text || '').filter(Boolean);
-      if (tops.length) r += tops.join('\n');
-      if (r.trim().length > 50) return r.trim();
-    }
-  } catch {}
+    const combined = results.filter(Boolean).join('\n\n');
+    if (combined.length > 50) return combined.slice(0, 5000);
+  } catch (e) {
+    console.warn('[serverSingleSearch] Fast search fallback triggered:', e.message);
+  }
 
   return '';
 }
@@ -195,9 +180,13 @@ function needsLiveWebSearch(text) {
   if (text.includes('[WEB SEARCH') || text.includes('[PAGE CONTENT FROM')) return false;
   const t = text.trim().toLowerCase();
   if (t.startsWith('/') || t.split(/\s+/).length < 2) return false;
-  const hasContactIntent = /\b(client|clients|leint|leints|prospect|prospects|lead|leads|phone|number|numéro|numero|téléphone|telephone|tel|contact|contacts|email|mail|call|appeler|joindre|who is|qui est|coach|manager|player|joueur|roster|effectif|agent|agency|agence|club|team|équipe|equipe|address|adresse|headquarters|siège|siege|ceo|founder|president|président|director|directeur|owner|propriétaire|real madrid|barcelona|lakers|warriors|celtics|bulls|knicks|heat|spurs|bucks|suns|asvel|monaco|paris basketball|olympiacos|panathinaikos|fenerbahce|efes|partizan|zvezda|baskonia|maccabi|bayern|milan|virtus|alba|zalgiris|nba|euroleague|lnb|fiba|fibb|ncaa|acb|gleague|betclic|fifa|uefa|premier league|ligue 1|serie a|la liga|bundesliga)\b/i.test(t);
-  const hasLiveLookupIntent = /\b(search|find|trouve|trouver|cherche|chercher|recherche|rechercher|lookup|look up|google|scrape|scraping|scraper|online|en ligne|internet|web|website|site|url|link|lien|latest|current|today|now|recent|actuel|aujourd'hui|dernier|dernière|news|world news|actualité|actualités|actualite|actualites|infos|info|breaking|headline|politics|politique|finance|financial|financier|bourse|stock|stocks|actions|market|markets|marché|marchés|crypto|bitcoin|btc|eth|ethereum|solana|rates|taux|inflation|valuation|score|scores|standings|classement|weather|météo|meteo|annuaire)\b/i.test(t);
-  return hasContactIntent || hasLiveLookupIntent;
+
+  // Strict intent detection: only trigger when live external online information is explicitly asked
+  const explicitSearch = /\b(search (online|the web|google|internet)|recherche sur (le web|internet|google)|cherche sur (le web|internet|google)|look up online)\b/i.test(t);
+  const liveNewsIntel = /\b(latest news|breaking news|actualité(s)? du jour|cours de la bourse|stock price|scores en direct|météo aujourd'hui|weather today)\b/i.test(t);
+  const contactLookup = /\b(trouve(r)? (les contacts|l'email|le numéro|les prospects|les clients) (de|pour)|find (contact|phone|email|leads|prospects) for)\b/i.test(t);
+
+  return explicitSearch || liveNewsIntel || contactLookup;
 }
 
 export default async function handler(req, res) {
@@ -228,12 +217,8 @@ export default async function handler(req, res) {
       openai:     clientKeys.openai     || process.env.OPENAI_KEY     || process.env.OPENAI_API_KEY
     };
 
-    if (!KEYS.groq && !KEYS.openrouter && !KEYS.cerebras && !KEYS.gemini && !KEYS.mistral && !KEYS.anthropic && !KEYS.openai) {
-      return res.status(500).json({ 
-        error: 'Configuration Error: No authorized AI provider keys found.',
-        instructions: 'Check Vercel Dashboard -> Settings -> Environment Variables or add a key in ⚙️ Settings.'
-      });
-    }
+    // Prioritize user/deployment keys; free high-speed adapter serves as sovereign safety net
+    const hasAnyKey = Boolean(KEYS.groq || KEYS.openrouter || KEYS.cerebras || KEYS.gemini || KEYS.mistral || KEYS.anthropic || KEYS.openai);
 
     const validErr = validateMessages(messages);
     if (validErr) return res.status(400).json({ error: validErr });

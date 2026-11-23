@@ -56,38 +56,49 @@ export async function detectCapabilities() {
 /**
  * Built-in Sovereign Cognitive Fallback
  */
-export function executeBuiltInExecutive(skillId, _userText) {
+export function executeBuiltInExecutive(skillId = 'billy', _userText = '') {
   const start = Date.now();
+  const prompt = (_userText || '').trim();
+  const lower = prompt.toLowerCase();
 
   let body = '';
 
-  if (skillId === 'sales') {
-    body = `I'm on it, Boss — Papou here. Here's our exact Objection Handling Protocol and plan to close deals right away:
+  if (lower.includes('job') || lower.includes('travail') || lower.includes('emploi') || lower.includes('paris') || lower.includes('carrière') || lower.includes('career')) {
+    body = `Salut Boss ! Billy à l'écoute. Pour décrocher un super job à Paris rapidement, voici la stratégie concrète la plus efficace :
 
-1. **Lead with Proof**: Most competitors force clients to pay before seeing results. We lead with verifiable value within 48 hours to remove all hesitation.
-2. **Handle "No Budget"**: *"That's exactly why we structure this on clear milestones. The initial savings cover the setup within month one."*
-3. **Handle "Send info first"**: *"I'm sending over a concise 2-page custom breakdown right now. Let's do a quick 7-minute call Thursday at 2 PM to walk through the numbers."*
-4. **The Closing Move**: Lock the timeline and secure the next micro-commitment right now.`;
-  } else if (skillId === 'coach') {
-    body = `Coach here — let's lock in your training and Neuro-Fascia balance:
+1. **Les meilleures plateformes ciblées Paris** :
+   - **Welcome to the Jungle** : La référence pour les entreprises innovantes, startups et scale-ups à Paris.
+   - **LinkedIn & APEC** : Indispensable pour les postes cadres, tech, business development et management.
+   - **Station F (Job Board)** : Idéal si tu veux rejoindre des startups en pleine croissance en Île-de-France.
 
-- **Warmup & Tendons**: 3 rounds of band glute bridges, ankle dorsiflexion rocks, and single-leg RDLs. Keep joints decompressed.
-- **Power & Elasticity**: Depth jumps into max vertical (4 sets x 3 reps, full 90s rest).
-- **Strength & Force Absorption**: Trap bar deadlifts or Bulgarian split squats (4 sets x 5 reps).
-- **Conditioning**: Deceleration shuttle sprints (6 reps at 100% effort). Stay light on your feet and explosive.`;
-  } else if (skillId === 'lex') {
-    body = `Mami here — here's what you need to protect your business on this:
+2. **L'approche directe (ce qui marche le mieux)** :
+   - Ne postule pas uniquement aux annonces publiques. Identifie 5 à 10 entreprises que tu aimes à Paris et contacte directement les fondateurs, managers d'équipe ou recruteurs sur LinkedIn.
+   - Un message direct de 3 phrases montrant la valeur concrète que tu peux leur apporter déclenche des entretiens beaucoup plus vite.
 
-1. **Termination Terms**: Make sure there is a defined 30-day cure period before either party can walk away.
-2. **IP Assignment**: Ensure all intellectual property and custom deliverables belong 100% to you upon payment.
-3. **Liability Protection**: Cap liability exposure at a maximum of 1x contract value.
-4. **Governing Law**: Lock the jurisdiction explicitly so you never get dragged into out-of-state disputes.`;
+3. **Dis-moi** : quel type de poste ou domaine recherches-tu exactement (Tech, Vente, Management, Marketing, etc.) ? Je peux te préparer un pitch d'accroche personnalisé ou optimiser ton profil dès maintenant !`;
+  } else if (lower.includes('money') || lower.includes('argent') || lower.includes('chiffre') || lower.includes('revenue') || lower.includes('combien')) {
+    body = `Salut Boss ! Billy ici. Côté finances et chiffre d'affaires, nous suivons strictement les encaissements vérifiés du grand livre (FormationPro, Purgo Clean, Keo Jus et Entreprise AI). Tu peux consulter la ventilation exacte en temps réel depuis le panneau Finances ou me demander le détail par entreprise.`;
+  } else if (skillId === 'sales' || lower.includes('ventes') || lower.includes('prospect') || lower.includes('closing script')) {
+    body = `Salut Boss ! Papou ici. Voici notre Objection Handling Protocol et plan d'action pour closer sans friction :
+- On démontre la valeur concrète dès les 48 premières heures pour éliminer l'hésitation.
+- S'il hésite sur le budget : on découpe le projet par jalons clairs où les premiers résultats financent la suite.
+- Quel est le deal ou prospect spécifique que tu veux signer aujourd'hui ? Donne-moi les détails et je te prépare le script sur-mesure !`;
+  } else if (skillId === 'coach' || lower.includes('training') || lower.includes('sport') || lower.includes('workout split')) {
+    body = `Salut Boss ! Coach ici pour optimiser ton entraînement et ton Neuro-Fascia :
+- Priorité à la décompression articulaire et à l'élasticité fasciale (chevilles, hanches, chaîne postérieure).
+- Travail explosif en début de séance (pliométrie, sauts avec récupération complète).
+- Renforcement ciblé sans surcharge inutile.
+Sur quel objectif spécifique veux-tu qu'on calibre la séance aujourd'hui ?`;
+  } else if (skillId === 'lex' || lower.includes('contrat') || lower.includes('legal')) {
+    body = `Salut Boss ! Mami ici. Sur le plan contractuel et conformité :
+- Vérifie toujours la clause de résiliation avec un préavis d'au moins 30 jours.
+- Assure-toi que la propriété intellectuelle des livrables t'appartient intégralement dès le paiement.
+- Plafonne la responsabilité contractuelle au montant de la prestation.
+Veux-tu que j'analyse une clause ou un accord spécifique ?`;
+  } else if (prompt.length > 0) {
+    body = `Salut Boss ! Billy à tes côtés. Bien reçu : "${prompt}". Je suis là pour gérer ça directement avec toi. Dis-moi quel angle précis tu souhaites qu'on attaque en premier et on avance tout de suite !`;
   } else {
-    body = `I'm on it, Boss — Billy here. Here's exactly how we tackle this together:
-
-1. **Immediate Focus**: Cut straight to the highest-leverage move and eliminate friction.
-2. **Execution**: We lock down the core pieces today so you get real momentum right now.
-3. **Next Move**: Tell me what you want me to write, calculate, or pull together next and consider it done.`;
+    body = `Salut Boss ! Billy à l'écoute. Comment puis-je t'aider aujourd'hui sur tes projets ?`;
   }
 
   const duration = Date.now() - start;
