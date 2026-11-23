@@ -24,9 +24,17 @@ export function setCors(req, res) {
   }
 }
 
-// ── 2. APP TOKEN SECURITY (Strict Signed-Token Verification Only) ───────────
-export function validateAppToken(req) {
-  if (!req || !req.headers) return false;
+// ── 2. APP TOKEN SECURITY & TENANT EXTRACTION ──────────────────────────────
+export function sanitizeTenantId(rawId) {
+  if (!rawId || typeof rawId !== 'string') return 'default';
+  const clean = rawId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 64);
+  return clean || 'default';
+}
+
+export function getAuthSession(req) {
+  if (!req || !req.headers) {
+    return { authenticated: false, sub: null, role: null, tenantId: null, payload: null };
+  }
 
   // 1. Check cookies for signed token
   const cookieHeader = req.headers['cookie'] || '';
@@ -38,7 +46,14 @@ export function validateAppToken(req) {
   for (const cToken of cookieTokens) {
     const payload = verifyToken(cToken, JWT_SECRET, TOKEN_AUDIENCE);
     if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
-      return true;
+      const tenantId = sanitizeTenantId(payload.tenantId || payload.sub);
+      return {
+        authenticated: true,
+        sub: payload.sub,
+        role: payload.role || 'user',
+        tenantId,
+        payload
+      };
     }
   }
 
@@ -47,7 +62,14 @@ export function validateAppToken(req) {
   if (token) {
     const payload = verifyToken(token, JWT_SECRET, TOKEN_AUDIENCE);
     if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
-      return true;
+      const tenantId = sanitizeTenantId(payload.tenantId || payload.sub);
+      return {
+        authenticated: true,
+        sub: payload.sub,
+        role: payload.role || 'user',
+        tenantId,
+        payload
+      };
     }
   }
 
@@ -57,11 +79,22 @@ export function validateAppToken(req) {
     const bearerToken = auth.slice(7).trim();
     const payload = verifyToken(bearerToken, JWT_SECRET, TOKEN_AUDIENCE);
     if (payload && (payload.auth === 'elite' || payload.role === 'admin' || payload.sub)) {
-      return true;
+      const tenantId = sanitizeTenantId(payload.tenantId || payload.sub);
+      return {
+        authenticated: true,
+        sub: payload.sub,
+        role: payload.role || 'user',
+        tenantId,
+        payload
+      };
     }
   }
 
-  return false;
+  return { authenticated: false, sub: null, role: null, tenantId: null, payload: null };
+}
+
+export function validateAppToken(req) {
+  return getAuthSession(req).authenticated;
 }
 
 // ── 3. ABUSE PROTECTION & RATE LIMITING (Shared Engine) ────────────────────

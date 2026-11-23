@@ -1,4 +1,4 @@
-import { setCors, validateAppToken, isRateLimited } from './_cors.js';
+import { setCors, validateAppToken, getAuthSession, isRateLimited } from './_cors.js';
 import {
   loadPersistentMemory,
   addMemoryItem,
@@ -27,13 +27,15 @@ export const maxDuration = 60;
  * Memory Hub API v3.0
  * Comprehensive endpoint for user-editable facts, relevance retrieval,
  * duplicate detection, outdated info correction, summaries, and backup.
+ * Enforces strict per-tenant isolation: Client A cannot access Client B's data.
  */
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // Mandatory App Token Authentication
-  if (!validateAppToken(req)) {
+  const session = getAuthSession(req);
+  if (!session.authenticated) {
     return res.status(403).json({ error: 'Unauthorized: Valid Bvmbino session required' });
   }
 
@@ -42,6 +44,19 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Rate limit exceeded (60 req/min)' });
   }
 
+  // Tenant Resolution & Cross-Tenant Authorization
+  let bodyData = null;
+  if (req.body) {
+    bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  }
+
+  const requestedTenant = req.query?.tenantId || bodyData?.tenantId;
+  if (requestedTenant && requestedTenant !== session.tenantId && session.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden: Cross-tenant access denied' });
+  }
+
+  const tenantId = (session.role === 'admin' && requestedTenant) ? requestedTenant : session.tenantId;
+
   // 1. GET Requests
   if (req.method === 'GET') {
     try {
@@ -49,8 +64,8 @@ export default async function handler(req, res) {
 
       // Backup Export
       if (action === 'export') {
-        const backup = exportMemoryBackup();
-        res.setHeader('Content-Disposition', `attachment; filename="bvmbino-memory-backup-${Date.now()}.json"`);
+        const backup = exportMemoryBackup(tenantId);
+        res.setHeader('Content-Disposition', `attachment; filename="bvmbino-memory-backup-${tenantId}-${Date.now()}.json"`);
         return res.status(200).json(backup);
       }
 
@@ -59,22 +74,22 @@ export default async function handler(req, res) {
         const query = req.query?.query || '';
         const venture = req.query?.venture || null;
         const limit = parseInt(req.query?.limit, 10) || 10;
-        const retrieved = retrieveRelevantMemory({ query, venture, limit });
-        return res.status(200).json({ ok: true, query, ...retrieved });
+        const retrieved = retrieveRelevantMemory({ query, venture, limit }, tenantId);
+        return res.status(200).json({ ok: true, query, tenantId, ...retrieved });
       }
 
       // Check Duplicates
       if (action === 'check_duplicate') {
         const text = req.query?.text || '';
         const venture = req.query?.venture || null;
-        const dupResult = findDuplicateMemory(text, venture);
+        const dupResult = findDuplicateMemory(text, venture, 0.80, tenantId);
         return res.status(200).json({ ok: true, duplicate: dupResult });
       }
 
-      // Default: Load complete Memory Hub state
-      const memory = loadPersistentMemory();
-      const ledger = loadLedger();
-      const summary = getFinancialSummary(req.query?.period || null);
+      // Default: Load complete Memory Hub state for this tenant
+      const memory = loadPersistentMemory(tenantId);
+      const ledger = loadLedger(tenantId);
+      const summary = getFinancialSummary(req.query?.period || null, null, tenantId);
 
       // Separate items by tier for the UI
       const confirmedFacts = memory.items.filter(i => i.type === MEMORY_TIERS.CONFIRMED_FACT && i.status === 'active');
@@ -84,6 +99,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         ok: true,
+        tenantId,
         memory,
         profile: memory.profile,
         facts: memory.facts || [],
@@ -107,7 +123,7 @@ export default async function handler(req, res) {
   // 2. POST Requests
   if (req.method === 'POST') {
     try {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      const body = bodyData || {};
       const action = body.action || req.query?.action;
 
       // A. Add Memory Item (with tier: confirmed_fact | assumption | target)
@@ -120,8 +136,8 @@ export default async function handler(req, res) {
           tags: body.tags || [],
           source: body.source || 'user_edit',
           allowDuplicate: body.allowDuplicate === true
-        });
-        return res.status(201).json({ ok: true, ...result });
+        }, tenantId);
+        return res.status(201).json({ ok: true, tenantId, ...result });
       }
 
       // B. Update Memory Item (User-editable)
@@ -134,8 +150,8 @@ export default async function handler(req, res) {
           category: body.category,
           tags: body.tags,
           status: body.status
-        });
-        return res.status(200).json({ ok: true, item: updated });
+        }, tenantId);
+        return res.status(200).json({ ok: true, tenantId, item: updated });
       }
 
       // C. Correct Outdated Info (Supersede)
@@ -148,15 +164,15 @@ export default async function handler(req, res) {
           venture: body.venture,
           category: body.category,
           tags: body.tags
-        });
-        return res.status(200).json({ ok: true, ...result });
+        }, tenantId);
+        return res.status(200).json({ ok: true, tenantId, ...result });
       }
 
       // D. Delete Memory Item
       if (action === 'delete_item' || action === 'delete_fact') {
         if (!body.id) return res.status(400).json({ error: 'Item id is required' });
-        const success = deleteMemoryItem(body.id);
-        return res.status(200).json({ ok: success });
+        const success = deleteMemoryItem(body.id, tenantId);
+        return res.status(200).json({ ok: success, tenantId });
       }
 
       // E. Conversation Summarisation
@@ -165,16 +181,16 @@ export default async function handler(req, res) {
         if (!messages || !Array.isArray(messages)) {
           return res.status(400).json({ error: 'messages array is required for conversation summarisation' });
         }
-        const summary = createConversationSummary({ sessionId, messages, title });
-        return res.status(201).json({ ok: true, summary });
+        const summary = createConversationSummary({ sessionId, messages, title }, tenantId);
+        return res.status(201).json({ ok: true, tenantId, summary });
       }
 
       // F. Import / Restore Backup
       if (action === 'import') {
         const { backup, mode = 'merge' } = body;
         if (!backup) return res.status(400).json({ error: 'backup JSON data is required' });
-        const result = importMemoryBackup(backup, mode);
-        return res.status(200).json({ ok: true, ...result });
+        const result = importMemoryBackup(backup, mode, tenantId);
+        return res.status(200).json({ ok: true, tenantId, ...result });
       }
 
       // G. Business Records Ledger actions
@@ -187,13 +203,13 @@ export default async function handler(req, res) {
           type: body.type,
           date: body.date,
           description: body.description,
-          verifiedBy: body.verifiedBy || 'Boss',
+          verifiedBy: body.verifiedBy || session.sub || 'Boss',
           status: body.status,
           verificationStatus: body.verificationStatus,
           evidenceRef: body.evidenceRef
-        });
-        const summary = getFinancialSummary(record.date?.slice(0, 7));
-        return res.status(201).json({ ok: true, record, summary });
+        }, tenantId);
+        const summary = getFinancialSummary(record.date?.slice(0, 7), null, tenantId);
+        return res.status(201).json({ ok: true, tenantId, record, summary });
       }
 
       if (action === 'verify_record') {
@@ -201,28 +217,26 @@ export default async function handler(req, res) {
         const updated = updateRecordVerification(body.id, {
           verificationStatus: body.verificationStatus || body.status || FINANCIAL_VERIFICATION_STATES.VERIFIED,
           evidenceRef: body.evidenceRef,
-          verifiedBy: body.verifiedBy || 'Boss'
-        });
-        const summary = getFinancialSummary(updated.date?.slice(0, 7));
-        return res.status(200).json({ ok: true, record: updated, summary });
+          verifiedBy: body.verifiedBy || session.sub || 'Boss'
+        }, tenantId);
+        const summary = getFinancialSummary(updated.date?.slice(0, 7), null, tenantId);
+        return res.status(200).json({ ok: true, tenantId, record: updated, summary });
       }
 
       if (action === 'delete_record') {
         if (!body.id) return res.status(400).json({ error: 'Record id is required' });
-        const success = deleteRecord(body.id);
-        return res.status(200).json({ ok: success });
+        const success = deleteRecord(body.id, tenantId);
+        return res.status(200).json({ ok: success, tenantId });
       }
 
       if (action === 'summary') {
-        const summary = getFinancialSummary(body.period || null);
-        return res.status(200).json({ ok: true, summary });
+        const summary = getFinancialSummary(body.period || null, null, tenantId);
+        return res.status(200).json({ ok: true, tenantId, summary });
       }
 
-      return res.status(400).json({
-        error: `Unknown action: ${action}. Available: add_item, update_item, supersede_item, delete_item, summarize, import, add_record, verify_record, delete_record, summary`
-      });
-    } catch (err) {
-      return res.status(400).json({ error: err.message });
+      return res.status(400).json({ error: `Unknown action: ${action}` });
+    } catch (e) {
+      return res.status(400).json({ error: e.message });
     }
   }
 

@@ -1,4 +1,4 @@
-import { setCors, isRateLimited, validateMessages, validateAppToken, trackAbuse } from './_cors.js';
+import { setCors, isRateLimited, validateMessages, validateAppToken, getAuthSession, trackAbuse } from './_cors.js';
 import { CORE, SKILLS, detectSkill, getMaxTokens } from './_lib/prompts.js';
 import { executeAdapter } from './_lib/adapters/index.js';
 import { buildExecutionChain } from './_lib/chain.js';
@@ -276,10 +276,13 @@ export default async function handler(req, res) {
       lastUserText = String(enrichedMessages[lastUserIdx].content || '');
     }
 
+    const session = getAuthSession(req);
+    const tenantId = session.tenantId || 'default';
+
     const clientDeviceMemory = body?.deviceMemory || body?.clientMemory || null;
     const clientDeviceLedger = body?.deviceLedger || body?.clientLedger || null;
-    const persistentMemoryPrompt = '\n\n' + formatRelevantMemoryForPrompt(lastUserText, cleanSkill, clientDeviceMemory);
-    const verifiedLedgerPrompt = '\n\n' + formatLedgerForPrompt(null, clientDeviceLedger);
+    const persistentMemoryPrompt = '\n\n' + formatRelevantMemoryForPrompt(lastUserText, cleanSkill, clientDeviceMemory, tenantId);
+    const verifiedLedgerPrompt = '\n\n' + formatLedgerForPrompt(null, clientDeviceLedger, tenantId);
 
     const baseCore = (system && system.length > 250) ? system : (CORE + (system ? `\n\n${system}` : ''));
     const fullSystem = baseCore + clientPrompt + skillPrompt + persistentMemoryPrompt + verifiedLedgerPrompt + antiLeakDirective;
@@ -312,8 +315,8 @@ export default async function handler(req, res) {
                 currency: rawCur || 'EUR',
                 description: detail.slice(0, 150),
                 client: detail.replace(/.*(?:from|de|pour|client)\s+/i, '').slice(0, 80) || 'Client',
-                verifiedBy: 'Boss'
-              });
+                verifiedBy: session.sub || 'Boss'
+              }, tenantId);
               enrichedMessages[lastUserIdx].content += `\n\n[SYSTEM LEDGER AUDIT NOTICE]: Verified business record successfully saved into the ledger (ID: ${rec.id}, ${rec.amount} ${rec.currency} for ${rec.venture}). Report this confirmation directly to Boss.`;
             }
           }

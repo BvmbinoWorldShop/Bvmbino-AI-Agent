@@ -16,7 +16,28 @@ export const FINANCIAL_VERIFICATION_STATES = {
 
 // Persistent storage path (durable across restarts)
 const DATA_DIR = path.resolve(process.cwd(), '.data');
-const LEDGER_FILE = path.join(DATA_DIR, 'business_ledger.json');
+
+export function sanitizeTenantId(rawId) {
+  if (!rawId || typeof rawId !== 'string') return 'default';
+  const clean = rawId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 64);
+  return clean || 'default';
+}
+
+function getTenantLedgerDir(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  return path.join(DATA_DIR, 'tenants', cleanTenant);
+}
+
+function getLedgerFilePath(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  if (cleanTenant === 'default' || cleanTenant === 'lataupe95') {
+    const legacyPath = path.join(DATA_DIR, 'business_ledger.json');
+    if (fs.existsSync(legacyPath)) return legacyPath;
+  }
+  return path.join(getTenantLedgerDir(cleanTenant), 'business_ledger.json');
+}
+
+const _tenantLedgerCaches = new Map();
 
 // Canonical Venture Registry
 export const VENTURES = {
@@ -50,8 +71,6 @@ export const VENTURES = {
   }
 };
 
-let _memoryCache = null;
-
 function ensureStorage() {
   if (!fs.existsSync(DATA_DIR)) {
     try {
@@ -60,51 +79,74 @@ function ensureStorage() {
   }
 }
 
-/**
- * Load all business records from durable store
- */
-export function loadLedger() {
-  if (_memoryCache) return _memoryCache;
-
+function ensureTenantStorage(tenantId = 'default') {
   ensureStorage();
-  if (fs.existsSync(LEDGER_FILE)) {
+  const dir = getTenantLedgerDir(tenantId);
+  if (!fs.existsSync(dir)) {
     try {
-      const raw = fs.readFileSync(LEDGER_FILE, 'utf8');
-      _memoryCache = JSON.parse(raw);
-      if (!Array.isArray(_memoryCache.records)) {
-        _memoryCache.records = [];
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {}
+  }
+}
+
+/**
+ * Load all business records from durable store for a specific tenant
+ */
+export function loadLedger(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  if (_tenantLedgerCaches.has(cleanTenant)) {
+    return _tenantLedgerCaches.get(cleanTenant);
+  }
+
+  ensureTenantStorage(cleanTenant);
+  const filePath = getLedgerFilePath(cleanTenant);
+
+  if (fs.existsSync(filePath)) {
+    try {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.records)) {
+        data.records = [];
       }
-      return _memoryCache;
+      data.tenantId = cleanTenant;
+      _tenantLedgerCaches.set(cleanTenant, data);
+      return data;
     } catch (e) {
-      console.warn('[Ledger] Failed to read ledger file, initializing new:', e.message);
+      console.warn(`[Ledger] Failed to read ledger file for ${cleanTenant}:`, e.message);
     }
   }
 
   // Initial clean state with ZERO fabricated records
-  _memoryCache = {
+  const initial = {
     version: 1,
+    tenantId: cleanTenant,
     records: [],
     updatedAt: new Date().toISOString()
   };
-  saveLedger(_memoryCache);
-  return _memoryCache;
+  saveLedger(initial, cleanTenant);
+  return initial;
 }
 
 /**
- * Persist business records to durable store
+ * Persist business records to durable store for a specific tenant
  */
-export function saveLedger(data) {
-  _memoryCache = data;
-  ensureStorage();
+export function saveLedger(data, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId || data?.tenantId);
+  if (data) data.tenantId = cleanTenant;
+  _tenantLedgerCaches.set(cleanTenant, data);
+  ensureTenantStorage(cleanTenant);
+  const filePath = getLedgerFilePath(cleanTenant);
   try {
-    fs.writeFileSync(LEDGER_FILE, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
   } catch (e) {
-    console.warn('[Ledger] Failed to write ledger file to disk:', e.message);
+    console.warn(`[Ledger] Failed to write ledger file for ${cleanTenant} to disk:`, e.message);
   }
 }
 
 /**
  * Add a business record with explicit verification state
+ * New records default strictly to pending_review.
+ * Only entries explicitly marked verified/reconciled WITH valid evidenceRef contribute to audited totals.
  */
 export function addRecord({
   venture,
@@ -115,11 +157,11 @@ export function addRecord({
   date = new Date().toISOString().split('T')[0],
   description = '',
   verifiedBy = 'Boss',
-  status = 'verified',
+  status = null,
   verificationStatus = null,
   evidenceRef = ''
-}) {
-  if (!venture || !amount) {
+}, tenantId = 'default') {
+  if (!venture || amount === undefined || amount === null) {
     throw new Error('venture and amount are required to log a business record');
   }
 
@@ -127,6 +169,8 @@ export function addRecord({
   if (isNaN(numAmount) || numAmount < 0) {
     throw new Error('amount must be a valid positive number');
   }
+
+  const cleanTenant = sanitizeTenantId(tenantId);
 
   // Canonicalize venture name
   let matchedVenture = Object.keys(VENTURES).find(
@@ -144,28 +188,35 @@ export function addRecord({
     throw new Error(`Unsupported currency: ${currency}. Supported: EUR, FCFA, USD, GBP`);
   }
 
-  // Resolve verification status
-  let resolvedStatus = FINANCIAL_VERIFICATION_STATES.VERIFIED;
+  const cleanEvidence = (evidenceRef || '').trim();
+  const hasEvidence = cleanEvidence.length > 0;
+
+  // Resolve verification status — NEW RECORDS DEFAULT STRICTLY TO PENDING_REVIEW
+  let resolvedStatus = FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW;
   const rawStatus = (verificationStatus || status || '').toLowerCase().trim();
-  if (rawStatus === 'pending' || rawStatus === 'pending_review') {
-    resolvedStatus = FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW;
-  } else if (rawStatus === 'reconciled') {
+
+  if (rawStatus === 'reconciled' && hasEvidence) {
     resolvedStatus = FINANCIAL_VERIFICATION_STATES.RECONCILED;
+  } else if (rawStatus === 'verified' && hasEvidence) {
+    resolvedStatus = FINANCIAL_VERIFICATION_STATES.VERIFIED;
   } else if (rawStatus === 'disputed') {
     resolvedStatus = FINANCIAL_VERIFICATION_STATES.DISPUTED;
-  } else if (rawStatus === 'verified' || rawStatus === 'active') {
-    resolvedStatus = FINANCIAL_VERIFICATION_STATES.VERIFIED;
+  } else {
+    // Missing evidence or explicitly pending
+    resolvedStatus = FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW;
   }
 
-  const isAuditedGroundTruth = resolvedStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED ||
-                               resolvedStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED;
+  const isAuditedGroundTruth = (resolvedStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED ||
+                               resolvedStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED) &&
+                               hasEvidence;
 
-  const ledger = loadLedger();
+  const ledger = loadLedger(cleanTenant);
   const id = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const nowIso = new Date().toISOString();
 
   const newRecord = {
     id,
+    tenantId: cleanTenant,
     venture: matchedVenture,
     amount: numAmount,
     currency: cleanCurrency,
@@ -175,7 +226,7 @@ export function addRecord({
     description: description.trim(),
     verificationStatus: resolvedStatus,
     verified: isAuditedGroundTruth,
-    evidenceRef: evidenceRef ? evidenceRef.trim() : '',
+    evidenceRef: cleanEvidence,
     verifiedBy: verifiedBy.trim(),
     verifiedAt: isAuditedGroundTruth ? nowIso : null,
     reconciledAt: resolvedStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED ? nowIso : null,
@@ -184,7 +235,7 @@ export function addRecord({
 
   ledger.records.unshift(newRecord);
   ledger.updatedAt = nowIso;
-  saveLedger(ledger);
+  saveLedger(ledger, cleanTenant);
 
   return newRecord;
 }
@@ -196,8 +247,9 @@ export function updateRecordVerification(id, {
   verificationStatus,
   evidenceRef = '',
   verifiedBy = 'Boss'
-}) {
-  const ledger = loadLedger();
+}, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const ledger = loadLedger(cleanTenant);
   const record = ledger.records.find(r => r.id === id);
   if (!record) {
     throw new Error(`Business record not found: ${id}`);
@@ -209,9 +261,20 @@ export function updateRecordVerification(id, {
     throw new Error(`Invalid verification status: ${verificationStatus}. Allowed: ${validStates.join(', ')}`);
   }
 
+  const cleanEvidence = (evidenceRef || record.evidenceRef || '').trim();
+
+  if (cleanStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED || cleanStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED) {
+    if (!cleanEvidence) {
+      throw new Error(`Cannot verify record ${id} without valid invoice, receipt, or contract evidenceRef.`);
+    }
+    record.verified = true;
+  } else {
+    record.verified = false;
+  }
+
   record.verificationStatus = cleanStatus;
-  record.verified = cleanStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED ||
-                    cleanStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED;
+  record.evidenceRef = cleanEvidence;
+  record.verifiedBy = verifiedBy.trim();
 
   const nowIso = new Date().toISOString();
   if (record.verified && !record.verifiedAt) {
@@ -220,27 +283,24 @@ export function updateRecordVerification(id, {
   if (cleanStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED) {
     record.reconciledAt = nowIso;
   }
-  if (evidenceRef) {
-    record.evidenceRef = evidenceRef.trim();
-  }
-  record.verifiedBy = verifiedBy.trim();
   record.updatedAt = nowIso;
 
   ledger.updatedAt = nowIso;
-  saveLedger(ledger);
+  saveLedger(ledger, cleanTenant);
   return record;
 }
 
 /**
  * Delete a business record by ID
  */
-export function deleteRecord(id) {
-  const ledger = loadLedger();
+export function deleteRecord(id, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const ledger = loadLedger(cleanTenant);
   const initialLen = ledger.records.length;
   ledger.records = ledger.records.filter(r => r.id !== id);
   if (ledger.records.length !== initialLen) {
     ledger.updatedAt = new Date().toISOString();
-    saveLedger(ledger);
+    saveLedger(ledger, cleanTenant);
     return true;
   }
   return false;
@@ -251,10 +311,11 @@ export function deleteRecord(id) {
  * STRICTLY returns audited totals from real records. If zero records, returns 0.
  * Clearly separates Verified/Reconciled revenue from Pending Drafts and Disputed items.
  */
-export function getFinancialSummary(filterMonth = null, customLedger = null) {
+export function getFinancialSummary(filterMonth = null, customLedger = null, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
   const ledger = customLedger && Array.isArray(customLedger)
     ? { records: customLedger }
-    : (customLedger && Array.isArray(customLedger.records) ? customLedger : loadLedger());
+    : (customLedger && Array.isArray(customLedger.records) ? customLedger : loadLedger(cleanTenant));
   const targetPrefix = filterMonth || new Date().toISOString().slice(0, 7); // 'YYYY-MM'
 
   const recordsInPeriod = ledger.records.filter(r => {
@@ -262,10 +323,18 @@ export function getFinancialSummary(filterMonth = null, customLedger = null) {
     return r.date.startsWith(targetPrefix);
   });
 
-  const auditedRecords = recordsInPeriod.filter(r => r.verified === true);
-  const pendingRecords = recordsInPeriod.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW);
+  // Only records explicitly verified/reconciled WITH evidence contribute to audited totals
+  const auditedRecords = recordsInPeriod.filter(r => 
+    r.verified === true &&
+    (r.verificationStatus === FINANCIAL_VERIFICATION_STATES.VERIFIED || r.verificationStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED) &&
+    Boolean(r.evidenceRef && r.evidenceRef.trim().length > 0)
+  );
+  const pendingRecords = recordsInPeriod.filter(r => 
+    r.verificationStatus === FINANCIAL_VERIFICATION_STATES.PENDING_REVIEW ||
+    (r.verificationStatus !== FINANCIAL_VERIFICATION_STATES.DISPUTED && (!r.verified || !r.evidenceRef))
+  );
   const disputedRecords = recordsInPeriod.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.DISPUTED);
-  const reconciledRecords = recordsInPeriod.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED);
+  const reconciledRecords = auditedRecords.filter(r => r.verificationStatus === FINANCIAL_VERIFICATION_STATES.RECONCILED);
 
   const totals = {
     period: targetPrefix,
@@ -353,8 +422,8 @@ export function getFinancialSummary(filterMonth = null, customLedger = null) {
  * Format verified financial ledger string for injection into LLM system prompt.
  * Zero fabrication: guarantees truthfulness.
  */
-export function formatLedgerForPrompt(filterMonth = null, customLedger = null) {
-  const summary = getFinancialSummary(filterMonth, customLedger);
+export function formatLedgerForPrompt(filterMonth = null, customLedger = null, tenantId = 'default') {
+  const summary = getFinancialSummary(filterMonth, customLedger, tenantId);
 
   if (summary.recordCount === 0) {
     return `[VERIFIED BUSINESS LEDGER — ZERO FABRICATION GROUND TRUTH]:
@@ -397,11 +466,14 @@ export function formatLedgerForPrompt(filterMonth = null, customLedger = null) {
 /**
  * Reset ledger (used for automated tests)
  */
-export function resetLedger() {
-  _memoryCache = {
+export function resetLedger(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const initial = {
     version: 1,
+    tenantId: cleanTenant,
     records: [],
     updatedAt: new Date().toISOString()
   };
-  saveLedger(_memoryCache);
+  _tenantLedgerCaches.set(cleanTenant, initial);
+  saveLedger(initial, cleanTenant);
 }

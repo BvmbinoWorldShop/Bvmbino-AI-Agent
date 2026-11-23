@@ -119,7 +119,9 @@ test('Persistent Memory API: adds a verified record via POST action=add_record',
       amount: 4500,
       currency: 'EUR',
       client: 'Bureaux Saint-Lazare',
-      description: 'Annual cleaning contract installment'
+      description: 'Annual cleaning contract installment',
+      verificationStatus: 'verified',
+      evidenceRef: 'INV-2026-SL01'
     }
   };
   const res = mockRes();

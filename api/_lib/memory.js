@@ -15,7 +15,26 @@ import { loadLedger, VENTURES } from './business_records.js';
  */
 
 const DATA_DIR = path.resolve(process.cwd(), '.data');
-const MEMORY_FILE = path.join(DATA_DIR, 'persistent_memory.json');
+
+export function sanitizeTenantId(rawId) {
+  if (!rawId || typeof rawId !== 'string') return 'default';
+  const clean = rawId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 64);
+  return clean || 'default';
+}
+
+function getTenantMemoryDir(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  return path.join(DATA_DIR, 'tenants', cleanTenant);
+}
+
+function getMemoryFilePath(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  if (cleanTenant === 'default' || cleanTenant === 'lataupe95') {
+    const legacyPath = path.join(DATA_DIR, 'persistent_memory.json');
+    if (fs.existsSync(legacyPath)) return legacyPath;
+  }
+  return path.join(getTenantMemoryDir(cleanTenant), 'persistent_memory.json');
+}
 
 // Supported memory tiers
 export const MEMORY_TIERS = {
@@ -24,12 +43,22 @@ export const MEMORY_TIERS = {
   TARGET: 'target'
 };
 
-let _persistentCache = null;
+const _tenantMemoryCaches = new Map();
 
 function ensureStorage() {
   if (!fs.existsSync(DATA_DIR)) {
     try {
       fs.mkdirSync(DATA_DIR, { recursive: true });
+    } catch {}
+  }
+}
+
+function ensureTenantMemoryStorage(tenantId = 'default') {
+  ensureStorage();
+  const dir = getTenantMemoryDir(tenantId);
+  if (!fs.existsSync(dir)) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
     } catch {}
   }
 }
@@ -75,43 +104,53 @@ function jaccardSimilarity(tokensA, tokensB) {
 }
 
 /**
- * Load persistent memory from server-side store
+ * Load persistent memory from server-side store for a specific tenant
  */
-export function loadPersistentMemory() {
-  if (_persistentCache) return _persistentCache;
+export function loadPersistentMemory(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  if (_tenantMemoryCaches.has(cleanTenant)) {
+    return _tenantMemoryCaches.get(cleanTenant);
+  }
 
-  ensureStorage();
-  if (fs.existsSync(MEMORY_FILE)) {
+  ensureTenantMemoryStorage(cleanTenant);
+  const filePath = getMemoryFilePath(cleanTenant);
+
+  if (fs.existsSync(filePath)) {
     try {
-      const raw = fs.readFileSync(MEMORY_FILE, 'utf8');
-      _persistentCache = JSON.parse(raw);
-      if (!Array.isArray(_persistentCache.items)) _persistentCache.items = [];
-      if (!Array.isArray(_persistentCache.summaries)) _persistentCache.summaries = [];
-      if (!Array.isArray(_persistentCache.facts)) _persistentCache.facts = [];
-      return _persistentCache;
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.items)) data.items = [];
+      if (!Array.isArray(data.summaries)) data.summaries = [];
+      if (!Array.isArray(data.facts)) data.facts = [];
+      data.tenantId = cleanTenant;
+      _tenantMemoryCaches.set(cleanTenant, data);
+      return data;
     } catch (e) {
-      console.warn('[Memory] Failed to read memory file, initializing new:', e.message);
+      console.warn(`[Memory] Failed to read memory file for ${cleanTenant}, initializing new:`, e.message);
     }
   }
 
-  // Initial clean state with real structural foundation
-  _persistentCache = {
+  const isDefaultTenant = cleanTenant === 'default' || cleanTenant === 'lataupe95';
+
+  // Initial state partitioned for this tenant
+  const initial = {
     version: 2,
+    tenantId: cleanTenant,
     profile: {
-      user: 'Boss',
+      user: isDefaultTenant ? 'Boss' : `Customer_${cleanTenant}`,
       callsign: 'Bvmbino',
-      handle: 'Lataupe95',
-      title: 'Founder & Managing Director',
+      handle: isDefaultTenant ? 'Lataupe95' : cleanTenant,
+      title: isDefaultTenant ? 'Founder & Managing Director' : 'Business Client',
       activeVentures: Object.values(VENTURES).map(v => v.name)
     },
-    facts: [
+    facts: isDefaultTenant ? [
       { id: 'fact_ventures', text: 'Boss operates 4 ventures: FormationPro, Purgo Clean, Keo Jus, and Entreprise AI.', createdAt: new Date().toISOString() },
       { id: 'fact_circle', text: 'Executive team consists of 24 specialist agents coordinated by Billy.', createdAt: new Date().toISOString() }
-    ],
-    // Structured memory items separating Confirmed Facts, Assumptions, and Targets
-    items: [
+    ] : [],
+    items: isDefaultTenant ? [
       {
         id: 'fact_ventures',
+        tenantId: cleanTenant,
         type: MEMORY_TIERS.CONFIRMED_FACT,
         venture: 'Global',
         category: 'structure',
@@ -125,6 +164,7 @@ export function loadPersistentMemory() {
       },
       {
         id: 'fact_circle',
+        tenantId: cleanTenant,
         type: MEMORY_TIERS.CONFIRMED_FACT,
         venture: 'Global',
         category: 'team',
@@ -138,6 +178,7 @@ export function loadPersistentMemory() {
       },
       {
         id: 'mem_fpro_core',
+        tenantId: cleanTenant,
         type: MEMORY_TIERS.CONFIRMED_FACT,
         venture: 'FormationPro',
         category: 'venture',
@@ -151,6 +192,7 @@ export function loadPersistentMemory() {
       },
       {
         id: 'mem_purgo_core',
+        tenantId: cleanTenant,
         type: MEMORY_TIERS.CONFIRMED_FACT,
         venture: 'Purgo Clean',
         category: 'venture',
@@ -164,6 +206,7 @@ export function loadPersistentMemory() {
       },
       {
         id: 'mem_keo_core',
+        tenantId: cleanTenant,
         type: MEMORY_TIERS.CONFIRMED_FACT,
         venture: 'Keo Jus',
         category: 'venture',
@@ -177,6 +220,7 @@ export function loadPersistentMemory() {
       },
       {
         id: 'mem_eai_core',
+        tenantId: cleanTenant,
         type: MEMORY_TIERS.CONFIRMED_FACT,
         venture: 'Entreprise AI',
         category: 'venture',
@@ -188,25 +232,28 @@ export function loadPersistentMemory() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
-    ],
+    ] : [],
     summaries: [],
     updatedAt: new Date().toISOString()
   };
 
-  savePersistentMemory(_persistentCache);
-  return _persistentCache;
+  savePersistentMemory(initial, cleanTenant);
+  return initial;
 }
 
 /**
- * Save persistent memory to server-side store
+ * Save persistent memory to server-side store for a specific tenant
  */
-export function savePersistentMemory(data) {
-  _persistentCache = data;
-  ensureStorage();
+export function savePersistentMemory(data, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId || data?.tenantId);
+  if (data) data.tenantId = cleanTenant;
+  _tenantMemoryCaches.set(cleanTenant, data);
+  ensureTenantMemoryStorage(cleanTenant);
+  const filePath = getMemoryFilePath(cleanTenant);
   try {
-    fs.writeFileSync(MEMORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
   } catch (e) {
-    console.warn('[Memory] Failed to write memory file to disk:', e.message);
+    console.warn(`[Memory] Failed to write memory file for ${cleanTenant} to disk:`, e.message);
   }
 }
 
@@ -214,8 +261,8 @@ export function savePersistentMemory(data) {
  * Duplicate Detection Engine:
  * Compares text against active memory items of the same venture or type.
  */
-export function findDuplicateMemory(text, venture = null, threshold = 0.80) {
-  const memory = loadPersistentMemory();
+export function findDuplicateMemory(text, venture = null, threshold = 0.80, tenantId = 'default') {
+  const memory = loadPersistentMemory(tenantId);
   const inputTokens = tokenize(text);
   if (!inputTokens.length) return null;
 
@@ -254,11 +301,12 @@ export function addMemoryItem({
   source = 'user_edit',
   confidence = 1.0,
   allowDuplicate = false
-}) {
+}, tenantId = 'default') {
   if (!text || typeof text !== 'string' || !text.trim()) {
     throw new Error('Memory text is required');
   }
 
+  const cleanTenant = sanitizeTenantId(tenantId);
   const cleanText = text.trim();
   const validTypes = Object.values(MEMORY_TIERS);
   if (!validTypes.includes(type)) {
@@ -267,7 +315,7 @@ export function addMemoryItem({
 
   // Duplicate Check
   if (!allowDuplicate) {
-    const dup = findDuplicateMemory(cleanText, venture);
+    const dup = findDuplicateMemory(cleanText, venture, 0.80, cleanTenant);
     if (dup && dup.isDuplicate) {
       return {
         item: dup.existingItem,
@@ -278,7 +326,7 @@ export function addMemoryItem({
     }
   }
 
-  const memory = loadPersistentMemory();
+  const memory = loadPersistentMemory(cleanTenant);
   const idPrefix = type === MEMORY_TIERS.CONFIRMED_FACT ? 'fact_' : 'mem_';
   const id = `${idPrefix}${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
@@ -288,6 +336,7 @@ export function addMemoryItem({
 
   const newItem = {
     id,
+    tenantId: cleanTenant,
     type,
     venture: venture.trim(),
     category: category.toLowerCase().trim(),
@@ -306,7 +355,7 @@ export function addMemoryItem({
     memory.facts.unshift({ id, text: cleanText, createdAt: newItem.createdAt });
   }
   memory.updatedAt = new Date().toISOString();
-  savePersistentMemory(memory);
+  savePersistentMemory(memory, cleanTenant);
 
   return { item: newItem, isDuplicate: false };
 }
@@ -314,8 +363,9 @@ export function addMemoryItem({
 /**
  * User-Editable Facts: Update an existing memory item
  */
-export function updateMemoryItem(id, updates = {}) {
-  const memory = loadPersistentMemory();
+export function updateMemoryItem(id, updates = {}, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = loadPersistentMemory(cleanTenant);
   const idx = memory.items.findIndex(m => m.id === id);
   if (idx === -1) {
     throw new Error(`Memory item not found: ${id}`);
@@ -326,6 +376,7 @@ export function updateMemoryItem(id, updates = {}) {
     ...cur,
     ...updates,
     id: cur.id, // Immutable ID
+    tenantId: cleanTenant,
     updatedAt: new Date().toISOString()
   };
 
@@ -336,7 +387,7 @@ export function updateMemoryItem(id, updates = {}) {
 
   memory.items[idx] = updated;
   memory.updatedAt = new Date().toISOString();
-  savePersistentMemory(memory);
+  savePersistentMemory(memory, cleanTenant);
 
   return updated;
 }
@@ -344,8 +395,9 @@ export function updateMemoryItem(id, updates = {}) {
 /**
  * Correct Outdated Information: Supersede an old item with a corrected version
  */
-export function supersedeMemoryItem(oldId, newText, newProperties = {}) {
-  const memory = loadPersistentMemory();
+export function supersedeMemoryItem(oldId, newText, newProperties = {}, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = loadPersistentMemory(cleanTenant);
   const oldItem = memory.items.find(m => m.id === oldId);
   if (!oldItem) {
     throw new Error(`Cannot supersede: item ${oldId} not found`);
@@ -364,22 +416,23 @@ export function supersedeMemoryItem(oldId, newText, newProperties = {}) {
     source: 'user_correction',
     tags: newProperties.tags || oldItem.tags,
     allowDuplicate: true
-  });
+  }, cleanTenant);
 
   // Mark old item as superseded and link to the new item
   oldItem.status = 'superseded';
   oldItem.supersededBy = newItem.id;
   oldItem.updatedAt = new Date().toISOString();
 
-  savePersistentMemory(memory);
+  savePersistentMemory(memory, cleanTenant);
   return { newItem, oldItem };
 }
 
 /**
  * Delete a memory item by ID
  */
-export function deleteMemoryItem(id) {
-  const memory = loadPersistentMemory();
+export function deleteMemoryItem(id, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = loadPersistentMemory(cleanTenant);
   const initialLen = memory.items.length;
   memory.items = memory.items.filter(m => m.id !== id);
   if (Array.isArray(memory.facts)) {
@@ -387,7 +440,7 @@ export function deleteMemoryItem(id) {
   }
   if (memory.items.length !== initialLen) {
     memory.updatedAt = new Date().toISOString();
-    savePersistentMemory(memory);
+    savePersistentMemory(memory, cleanTenant);
     return true;
   }
   return false;
@@ -397,10 +450,11 @@ export function deleteMemoryItem(id) {
  * Conversation Summarisation:
  * Ingests a conversation session, extracts decisions and action items, and saves a summary.
  */
-export function createConversationSummary({ sessionId, messages = [], title = 'Strategy Session' }) {
+export function createConversationSummary({ sessionId, messages = [], title = 'Strategy Session' }, tenantId = 'default') {
   if (!messages || !messages.length) return null;
 
-  const memory = loadPersistentMemory();
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = loadPersistentMemory(cleanTenant);
   const now = new Date().toISOString();
 
   // Extract key phrases and content from user and assistant turns
@@ -435,6 +489,7 @@ export function createConversationSummary({ sessionId, messages = [], title = 'S
 
   const newSummary = {
     id: `sum_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    tenantId: cleanTenant,
     sessionId: sessionId || `sess_${Date.now()}`,
     title: title.slice(0, 80),
     timestamp: now,
@@ -446,7 +501,7 @@ export function createConversationSummary({ sessionId, messages = [], title = 'S
   memory.summaries.unshift(newSummary);
   if (memory.summaries.length > 50) memory.summaries = memory.summaries.slice(0, 50);
   memory.updatedAt = now;
-  savePersistentMemory(memory);
+  savePersistentMemory(memory, cleanTenant);
 
   return newSummary;
 }
@@ -456,8 +511,9 @@ export function createConversationSummary({ sessionId, messages = [], title = 'S
  * Retrieves most relevant memory items based on query tokens, venture match, and tier confidence.
  * Strictly excludes superseded/archived items to prevent acting on stale data.
  */
-export function retrieveRelevantMemory({ query = '', venture = null, limit = 8, sourceMemory = null }) {
-  const memory = sourceMemory || loadPersistentMemory();
+export function retrieveRelevantMemory({ query = '', venture = null, limit = 8, sourceMemory = null }, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = sourceMemory || loadPersistentMemory(cleanTenant);
   const queryTokens = tokenize(query);
 
   const items = Array.isArray(memory.items) ? memory.items : [];
@@ -513,14 +569,15 @@ export function retrieveRelevantMemory({ query = '', venture = null, limit = 8, 
 /**
  * Format retrieved memory for LLM system prompt injection with clear tier separation.
  */
-export function formatRelevantMemoryForPrompt(query = '', venture = null, clientDeviceMemory = null) {
-  const memory = (clientDeviceMemory && typeof clientDeviceMemory === 'object') ? clientDeviceMemory : loadPersistentMemory();
-  const { confirmedFacts, assumptions, targets } = retrieveRelevantMemory({ query, venture, limit: 10, sourceMemory: memory });
-  const ledger = loadLedger();
+export function formatRelevantMemoryForPrompt(query = '', venture = null, clientDeviceMemory = null, tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = (clientDeviceMemory && typeof clientDeviceMemory === 'object') ? clientDeviceMemory : loadPersistentMemory(cleanTenant);
+  const { confirmedFacts, assumptions, targets } = retrieveRelevantMemory({ query, venture, limit: 10, sourceMemory: memory }, cleanTenant);
+  const ledger = loadLedger(cleanTenant);
 
   let out = `━━ PERSISTENT SOVEREIGN MEMORY HUB ━━━━━━━━━━━━━\n`;
-  out += `User: ${memory.profile.user} (${memory.profile.handle}) · Status: Active Managing Director\n`;
-  out += `Ventures: ${memory.profile.activeVentures.join(' · ')}\n\n`;
+  out += `User: ${memory.profile?.user || 'User'} (${memory.profile?.handle || cleanTenant}) · Status: Active Managing Director\n`;
+  out += `Ventures: ${(memory.profile?.activeVentures || []).join(' · ')}\n\n`;
 
   // 1. Confirmed Facts (Ground Truth)
   if (confirmedFacts.length > 0) {
@@ -550,7 +607,7 @@ export function formatRelevantMemoryForPrompt(query = '', venture = null, client
   }
 
   // 4. Recent conversation decision/summary
-  if (memory.summaries.length > 0) {
+  if (memory.summaries && memory.summaries.length > 0) {
     const latestSum = memory.summaries[0];
     out += `[LATEST STRATEGIC DECISIONS (${latestSum.timestamp.slice(0, 10)})]:\n`;
     if (latestSum.actionItems && latestSum.actionItems.length) {
@@ -569,12 +626,14 @@ export function formatRelevantMemoryForPrompt(query = '', venture = null, client
 /**
  * Import/Export & Backup
  */
-export function exportMemoryBackup() {
-  const memory = loadPersistentMemory();
-  const ledger = loadLedger();
+export function exportMemoryBackup(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = loadPersistentMemory(cleanTenant);
+  const ledger = loadLedger(cleanTenant);
 
   return {
     exportVersion: 3,
+    tenantId: cleanTenant,
     exportedAt: new Date().toISOString(),
     profile: memory.profile,
     memoryItems: memory.items,
@@ -583,41 +642,47 @@ export function exportMemoryBackup() {
   };
 }
 
-export function importMemoryBackup(backupData, mode = 'merge') {
+export function importMemoryBackup(backupData, mode = 'merge', tenantId = 'default') {
   if (!backupData || typeof backupData !== 'object') {
     throw new Error('Invalid backup data format: must be JSON object');
   }
 
-  const memory = loadPersistentMemory();
+  const cleanTenant = sanitizeTenantId(tenantId);
+  const memory = loadPersistentMemory(cleanTenant);
   const incomingItems = Array.isArray(backupData.memoryItems) ? backupData.memoryItems : [];
   const incomingSummaries = Array.isArray(backupData.summaries) ? backupData.summaries : [];
 
   if (mode === 'replace') {
-    memory.items = incomingItems;
-    memory.summaries = incomingSummaries;
+    memory.items = incomingItems.map(i => ({ ...i, tenantId: cleanTenant }));
+    memory.summaries = incomingSummaries.map(s => ({ ...s, tenantId: cleanTenant }));
     if (backupData.profile) memory.profile = backupData.profile;
   } else {
-    // Merge: add items that don't exist by id
-    const existingIds = new Set(memory.items.map(m => m.id));
+    // Merge: add items that don't exist by id, or update if newer
+    const itemMap = new Map(memory.items.map(m => [m.id, m]));
     for (const item of incomingItems) {
-      if (!existingIds.has(item.id)) {
-        memory.items.push(item);
+      const existing = itemMap.get(item.id);
+      if (!existing) {
+        memory.items.push({ ...item, tenantId: cleanTenant });
+      } else if (item.updatedAt && existing.updatedAt && new Date(item.updatedAt) > new Date(existing.updatedAt)) {
+        // Last-Write-Wins based on ISO updatedAt
+        Object.assign(existing, item, { tenantId: cleanTenant });
       }
     }
 
     const existingSumIds = new Set(memory.summaries.map(s => s.id));
     for (const sum of incomingSummaries) {
       if (!existingSumIds.has(sum.id)) {
-        memory.summaries.push(sum);
+        memory.summaries.push({ ...sum, tenantId: cleanTenant });
       }
     }
   }
 
   memory.updatedAt = new Date().toISOString();
-  savePersistentMemory(memory);
+  savePersistentMemory(memory, cleanTenant);
 
   return {
     success: true,
+    tenantId: cleanTenant,
     totalItems: memory.items.length,
     totalSummaries: memory.summaries.length,
     mode
@@ -627,27 +692,29 @@ export function importMemoryBackup(backupData, mode = 'merge') {
 /**
  * Backward compatibility helpers
  */
-export function addPersistentFact(text, source = 'Boss') {
+export function addPersistentFact(text, source = 'Boss', tenantId = 'default') {
   const { item } = addMemoryItem({
     text,
     type: MEMORY_TIERS.CONFIRMED_FACT,
     source,
     allowDuplicate: false
-  });
+  }, tenantId);
   return item;
 }
 
-export function deletePersistentFact(id) {
-  return deleteMemoryItem(id);
+export function deletePersistentFact(id, tenantId = 'default') {
+  return deleteMemoryItem(id, tenantId);
 }
 
-export function formatPersistentMemoryForPrompt(query = '') {
-  return formatRelevantMemoryForPrompt(query);
+export function formatPersistentMemoryForPrompt(query = '', tenantId = 'default') {
+  return formatRelevantMemoryForPrompt(query, null, null, tenantId);
 }
 
-export function resetPersistentMemory() {
-  _persistentCache = null;
-  if (fs.existsSync(MEMORY_FILE)) {
-    try { fs.unlinkSync(MEMORY_FILE); } catch {}
+export function resetPersistentMemory(tenantId = 'default') {
+  const cleanTenant = sanitizeTenantId(tenantId);
+  _tenantMemoryCaches.delete(cleanTenant);
+  const filePath = getMemoryFilePath(cleanTenant);
+  if (fs.existsSync(filePath)) {
+    try { fs.unlinkSync(filePath); } catch {}
   }
 }

@@ -1,0 +1,39 @@
+name: Bvmbino Sovereign CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    name: Node ${{ matrix.node-version }} - Build, Lint & Security Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Production Build
+        run: npm run build
+
+      - name: Run Security, Memory, Tenant & Integration Tests
+        run: npm test
+        env:
+          JWT_SECRET: 'bvmbino-ci-test-secure-key-32-chars-long!!'
+          ADMIN_USER: 'Lataupe95'
+          ADMIN_PASSWORD: 'Tyanna95200'

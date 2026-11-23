@@ -35,7 +35,9 @@ test('Verified Ledger: accurately calculates audited totals from logged business
     client: 'Coworking Opéra',
     type: 'invoice',
     date: '2026-11-05',
-    description: 'Monthly office maintenance'
+    description: 'Monthly office maintenance',
+    verificationStatus: 'verified',
+    evidenceRef: 'INV-2026-001'
   });
 
   addRecord({
@@ -45,7 +47,9 @@ test('Verified Ledger: accurately calculates audited totals from logged business
     client: 'Cabinet Alpha',
     type: 'invoice',
     date: '2026-11-10',
-    description: 'Executive leadership coaching cohort'
+    description: 'Executive leadership coaching cohort',
+    verificationStatus: 'verified',
+    evidenceRef: 'INV-2026-002'
   });
 
   addRecord({
@@ -55,7 +59,9 @@ test('Verified Ledger: accurately calculates audited totals from logged business
     client: 'Accor Hotels Abidjan',
     type: 'contract',
     date: '2026-11-12',
-    description: 'Batch artisanal juice supply'
+    description: 'Batch artisanal juice supply',
+    verificationStatus: 'verified',
+    evidenceRef: 'CON-2026-003'
   });
 
   assert.ok(r1.id.startsWith('rec_'));
@@ -101,7 +107,9 @@ test('Verified Ledger: supports record deletion and updates financial summary in
     currency: 'EUR',
     client: 'Startup Hub',
     type: 'retainer',
-    date: '2026-11-15'
+    date: '2026-11-15',
+    verificationStatus: 'verified',
+    evidenceRef: 'RET-2026-004'
   });
 
   let summary = getFinancialSummary('2026-11');
